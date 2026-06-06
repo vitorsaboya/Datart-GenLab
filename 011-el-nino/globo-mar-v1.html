@@ -18,6 +18,7 @@
   <style>
     html, body { margin: 0; height: 100%; background: #04060d; overflow: hidden; }
     #globo { width: 100vw; height: 100vh; }
+    #globo canvas { touch-action: none; }   /* dedo gira o globo, nao rola a pagina */
     #hud { position: fixed; left: 18px; top: 16px; z-index: 10;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
       color: #eaf2ff; text-shadow: 0 1px 4px rgba(0,0,0,.8); pointer-events: none; user-select: none; }
@@ -109,6 +110,10 @@
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
     const el = document.getElementById('globo');
+    // MOBILE (s.28 versao celular): detecta telefone/tablet de forma ROBUSTA (NAO pela largura do
+    // iframe, que no duo desktop tambem e estreita e enganaria). UA + ponteiro grosso/tela pequena.
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) <= 820);
 
     // dials por variante (magnitude/carater). foamDens = densidade da espuma; glow = forca do ambar.
     const VARIANTES = [
@@ -331,7 +336,7 @@
       `,
     });
 
-    const world = Globe({ rendererConfig: { preserveDrawingBuffer: true, antialias: true } })(el)
+    const world = Globe({ rendererConfig: { preserveDrawingBuffer: true, antialias: !isMobile } })(el)
       .backgroundColor('#04060d')
       .showAtmosphere(true).atmosphereColor('#5b8cff').atmosphereAltitude(0.18)
       .globeMaterial(oceanMat);
@@ -339,11 +344,15 @@
     const renderer = world.renderer();
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.95;
-    const bloom = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.26, 0.40, 0.90   // threshold ALTO: so o glow do calor (que passa de 1) + glint florescem
-    );
-    world.postProcessingComposer().addPass(bloom);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2));  // DPR capado: retina 3x mata a GPU do celular
+    let bloom = null;
+    if (!isMobile) {                         // pos-processamento OFF no mobile (regra da pesquisa)
+      bloom = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.26, 0.40, 0.90   // threshold ALTO: so o glow do calor (que passa de 1) + glint florescem
+      );
+      world.postProcessingComposer().addPass(bloom);
+    }
 
     world.pointOfView({ lat: -5, lng: -120, altitude: 1.6 }, 0);
     const controls = world.controls();
@@ -371,7 +380,7 @@
       oceanMat.uniforms.uRelief.value = v.reliefAmp; oceanMat.uniforms.uFreq.value = v.freqMul;
       oceanMat.uniforms.uDrama.value = v.drama; oceanMat.uniforms.uSSS.value = v.sss;
       oceanMat.uniforms.uFoam.value = v.foam; oceanMat.uniforms.uFoamDens.value = v.foamDens;
-      oceanMat.uniforms.uGlow.value = v.glow; bloom.strength = v.bloom;
+      oceanMat.uniforms.uGlow.value = v.glow; if (bloom) bloom.strength = v.bloom;
       botoes.forEach((b, k) => b.classList.toggle('ativo', k === i));
       vcard.innerHTML = `<b>variante ${i+1} · ${v.nome}</b><br>` +
         `onda ${v.reliefAmp.toFixed(1)} · espuma ${v.foamDens.toFixed(2)} · glow ${v.glow.toFixed(2)}`;

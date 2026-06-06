@@ -2,20 +2,21 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>011 · El Niño — dois globos lado a lado (anomalia | temperatura real)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>011 · El Niño — anomalia | temperatura real</title>
   <!--
-    011 — DUO (s.28). Os dois estados da obra na mesma tela:
-      ESQUERDA = globo-mar-v1.html (ANOMALIA — o El Nino salta na COR)
-      DIREITA  = globo-mar-v2.html (TEMPERATURA REAL — cor=°C; agitacao=El Nino/anomalia)
-    Dois botoes de sincronia (o globo da ESQUERDA comanda, o da DIREITA segue, via postMessage):
-      - SINCRONIZAR TEMPO     -> a linha do tempo dos dois anda junta
-      - SINCRONIZAR MOVIMENTO -> girar/zoom dos dois junto (a camera/pointOfView)
+    011 — DUO RESPONSIVO (s.28 + versao mobile).
+      DESKTOP: os dois estados lado a lado (ANOMALIA | TEMPERATURA REAL), sincronizados por postMessage.
+      CELULAR: UM globo so + toggle (Anomalia / Temperatura real) -> 1 contexto WebGL, metade da carga.
+        (a comparacao lado a lado e gesto de tela grande; no telefone o duo fica ilegivel e pesado.)
+      Os caps de performance (DPR, bloom off, antialias off, touch) vivem dentro de cada globo.
   -->
   <style>
     html, body { margin: 0; height: 100%; background: #04060d; overflow: hidden;
       font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; }
-    #wrap { display: flex; flex-direction: column; width: 100vw; height: 100vh; }
+    #wrap { display: flex; flex-direction: column; width: 100vw; height: 100vh; height: 100dvh; }
+
+    /* --- barra DESKTOP: rotulos + sincronia --- */
     #bar { position: relative; display: flex; align-items: stretch; height: 34px; flex: 0 0 34px;
       background: #070b12; border-bottom: 1px solid #161b24; }
     #bar .lbl { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center;
@@ -30,10 +31,26 @@
       padding: 3px 10px; cursor: pointer; user-select: none; white-space: nowrap; }
     #sync label.on { background: #1f6f3f; border-color: #2ea05a; color: #fff; }
     #sync input { accent-color: #2b6fd6; cursor: pointer; }
+
+    /* --- barra MOBILE: toggle entre os dois estados --- */
+    #mbar { display: none; flex: 0 0 48px; align-items: center; gap: 8px; padding: 0 10px;
+      background: #070b12; border-bottom: 1px solid #161b24; }
+    #mbar button { flex: 1; height: 36px; border-radius: 9px; cursor: pointer;
+      border: 1px solid rgba(150,180,230,.35); background: rgba(8,16,30,.72); color: #cfe0ff;
+      font-size: 13px; font-weight: 600; -webkit-tap-highlight-color: transparent; }
+    #mbar button.on { background: #2b6fd6; color: #fff; border-color: #5b8cff; }
+
     #globes { display: flex; flex: 1; min-height: 0; }
     .half { position: relative; flex: 1; min-width: 0; border-left: 1px solid #161b24; }
     .half:first-child { border-left: none; }
     iframe { width: 100%; height: 100%; border: 0; display: block; background: #04060d; }
+
+    /* --- ponto de virada: celular --- */
+    @media (max-width: 768px) {
+      #bar { display: none; }
+      #mbar { display: flex; }
+      #halfB { display: none; }     /* mobile: um globo so (o ifrB nem carrega) */
+    }
   </style>
 </head>
 <body>
@@ -46,36 +63,62 @@
         <label id="lblMov"><input type="checkbox" id="ckMov"> sincronizar movimento</label>
       </div>
     </div>
+    <div id="mbar">
+      <button id="tgA" class="on">Anomalia</button>
+      <button id="tgB">Temperatura real</button>
+    </div>
     <div id="globes">
-      <div class="half"><iframe id="ifrA" src="globo-mar-v1.html" title="v1 · anomalia" loading="eager"></iframe></div>
-      <div class="half"><iframe id="ifrB" src="globo-mar-v2.html" title="v2 · temperatura real" loading="eager"></iframe></div>
+      <div class="half" id="halfA"><iframe id="ifrA" title="anomalia" loading="eager"></iframe></div>
+      <div class="half" id="halfB"><iframe id="ifrB" title="temperatura real" loading="eager"></iframe></div>
     </div>
   </div>
 
   <script>
-    const ifrA = document.getElementById('ifrA');   // ESQUERDA = comanda (lider)
-    const ifrB = document.getElementById('ifrB');   // DIREITA  = segue
-    const ckTempo = document.getElementById('ckTempo'), lblTempo = document.getElementById('lblTempo');
-    const ckMov   = document.getElementById('ckMov'),   lblMov   = document.getElementById('lblMov');
-    let syncTempo = false, syncMov = false;
+    const V1 = 'globo-mar-v1.html', V2 = 'globo-mar-v2.html';
+    const ifrA = document.getElementById('ifrA');
+    const ifrB = document.getElementById('ifrB');
 
-    // relay: a ESQUERDA (A) comanda; repassa o estado pra DIREITA (B). B segue (controles travados
-    // quando sincronizado, pra nao brigar). B alinha sozinho em ~80ms (A transmite continuamente).
-    window.addEventListener('message', (e) => {
-      if (e.source !== ifrA.contentWindow) return;
-      const m = e.data; if (!m || !m.duoState) return;
-      if (syncTempo) ifrB.contentWindow.postMessage({ duoCmd: 'frame', t: m.t }, '*');
-      if (syncMov && m.pov) ifrB.contentWindow.postMessage({ duoCmd: 'cam', pov: m.pov }, '*');
-    });
+    // layout pela largura da viewport (aqui e a janela do TOPO, entao a largura e do device).
+    const mobileLayout = matchMedia('(max-width: 768px)').matches;
 
-    ckTempo.addEventListener('change', () => {
-      syncTempo = ckTempo.checked; lblTempo.classList.toggle('on', syncTempo);
-      ifrB.contentWindow.postMessage({ duoCmd: syncTempo ? 'follow' : 'unfollow' }, '*');
-    });
-    ckMov.addEventListener('change', () => {
-      syncMov = ckMov.checked; lblMov.classList.toggle('on', syncMov);
-      ifrB.contentWindow.postMessage({ duoCmd: syncMov ? 'camlock' : 'camfree' }, '*');
-    });
+    if (mobileLayout) {
+      // ---- CELULAR: um globo so, toggle troca o estado (so ifrA carrega -> 1 contexto WebGL) ----
+      const tgA = document.getElementById('tgA');
+      const tgB = document.getElementById('tgB');
+      let cur = 'B';                 // abre na TEMPERATURA REAL (a obra final: a temperatura governa)
+      ifrA.src = V2;
+      tgB.classList.add('on'); tgA.classList.remove('on');
+      function mostra(which) {
+        if (which === cur) return;   // ja esta nesse -> nao recarrega
+        cur = which;
+        ifrA.src = (which === 'A') ? V1 : V2;
+        tgA.classList.toggle('on', which === 'A');
+        tgB.classList.toggle('on', which === 'B');
+      }
+      tgA.addEventListener('click', () => mostra('A'));
+      tgB.addEventListener('click', () => mostra('B'));
+    } else {
+      // ---- DESKTOP: o duo lado a lado + sincronia (a ESQUERDA comanda; a DIREITA segue) ----
+      ifrA.src = V1; ifrB.src = V2;
+      const ckTempo = document.getElementById('ckTempo'), lblTempo = document.getElementById('lblTempo');
+      const ckMov   = document.getElementById('ckMov'),   lblMov   = document.getElementById('lblMov');
+      let syncTempo = false, syncMov = false;
+
+      window.addEventListener('message', (e) => {
+        if (e.source !== ifrA.contentWindow) return;
+        const m = e.data; if (!m || !m.duoState) return;
+        if (syncTempo) ifrB.contentWindow.postMessage({ duoCmd: 'frame', t: m.t }, '*');
+        if (syncMov && m.pov) ifrB.contentWindow.postMessage({ duoCmd: 'cam', pov: m.pov }, '*');
+      });
+      ckTempo.addEventListener('change', () => {
+        syncTempo = ckTempo.checked; lblTempo.classList.toggle('on', syncTempo);
+        ifrB.contentWindow.postMessage({ duoCmd: syncTempo ? 'follow' : 'unfollow' }, '*');
+      });
+      ckMov.addEventListener('change', () => {
+        syncMov = ckMov.checked; lblMov.classList.toggle('on', syncMov);
+        ifrB.contentWindow.postMessage({ duoCmd: syncMov ? 'camlock' : 'camfree' }, '*');
+      });
+    }
   </script>
 </body>
 </html>
