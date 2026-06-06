@@ -3,32 +3,66 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Datart GenLab — Galeria</title>
+  <title>Datart GenLab — arte generativa de dados</title>
+  <meta name="description" content="Arte generativa de dados: bases públicas reais viram peças navegáveis, onde cada elemento visual volta ao dado que o gerou." />
+  <link rel="icon" href="marca/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="marca/favicon-32.png" />
+  <meta property="og:title" content="Datart GenLab" />
+  <meta property="og:description" content="arte generativa de dados — a arte que abre de volta ao dado" />
+  <meta property="og:image" content="marca/og.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Spectral:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" />
   <style>
-    :root { color-scheme: dark; }
-    html, body { margin: 0; min-height: 100%; background: #04060d; color: #eaf2ff;
-      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; }
-    .wrap { max-width: 880px; margin: 0 auto; padding: 64px 24px 80px; }
-    header h1 { font-size: 26px; font-weight: 650; letter-spacing: .3px; margin: 0 0 6px; }
-    header p { color: #93a3b8; font-size: 14.5px; margin: 0 0 40px; max-width: 60ch; line-height: 1.5; }
-    .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-    a.card { display: block; text-decoration: none; color: inherit; border: 1px solid #1b2230;
-      border-radius: 14px; padding: 22px; background: linear-gradient(160deg, #0a1018, #070b12);
-      transition: border-color .15s, transform .15s; }
-    a.card:hover { border-color: #2ea05a; transform: translateY(-2px); }
-    a.card .n { color: #6f8198; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
-    a.card h2 { font-size: 18px; margin: 8px 0 6px; font-weight: 600; }
-    a.card p { color: #93a3b8; font-size: 13.5px; margin: 0; line-height: 1.45; }
-    footer { margin-top: 56px; color: #5b6a7e; font-size: 12.5px; }
+    :root{
+      --ground:#15110c; --surface:#1d1813; --line:#2e2619;
+      --ink:#f1ece1; --mute:#9b9180; --faint:#6b6354; --accent:#d2703f; --accent-soft:#e2916a;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%}
+    body{background:var(--ground);color:var(--ink);
+      font-family:Spectral,Georgia,serif;-webkit-font-smoothing:antialiased;line-height:1.6}
+    .wrap{max-width:840px;margin:0 auto;padding:72px 24px 90px}
+
+    header{display:flex;align-items:center;gap:20px;margin-bottom:30px}
+    header .av{width:64px;height:64px;border-radius:50%;overflow:hidden;border:1px solid var(--line);flex:0 0 auto}
+    header .av img{width:100%;height:100%;display:block}
+    .wm{font-family:Archivo;font-weight:800;font-size:30px;letter-spacing:-.02em;line-height:1}
+    .wm i{font-family:Spectral;font-style:italic;font-weight:500;color:var(--accent)}
+    .tag{font-style:italic;color:var(--accent-soft);font-size:14.5px;margin-top:6px}
+
+    .intro{color:var(--mute);font-size:16px;max-width:62ch;margin:0 0 48px;border-left:2px solid var(--line);padding-left:18px}
+    .intro b{color:var(--ink);font-weight:500}
+
+    .lbl{font-family:Archivo;font-weight:700;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:16px}
+    .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+    a.card{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:14px;
+      padding:22px;background:linear-gradient(160deg,#1d1813,#15110c);transition:border-color .15s,transform .15s}
+    a.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+    a.card .n{font-family:Archivo;font-weight:700;color:var(--faint);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+    a.card h2{font-family:Archivo;font-weight:700;font-size:18px;margin:8px 0 6px;letter-spacing:-.01em}
+    a.card p{color:var(--mute);font-size:13.5px;margin:0}
+
+    .sobre{margin-top:56px;color:var(--mute);font-size:14px;max-width:62ch;font-style:italic;line-height:1.7}
+    footer{margin-top:48px;padding-top:22px;border-top:1px solid var(--line);color:var(--faint);
+      font-family:Archivo;font-weight:600;font-size:12px;letter-spacing:.06em}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Datart GenLab — Galeria</h1>
-      <p>Arte generativa de dados: bases públicas reais viram peças navegáveis, onde cada
-         elemento visual volta ao dado que o gerou.</p>
+      <div class="av"><img src="marca/og.png" alt="Datart GenLab" /></div>
+      <div>
+        <div class="wm">Datart <i>Gen</i>Lab</div>
+        <div class="tag">a arte que abre de volta ao dado</div>
+      </div>
     </header>
+
+    <p class="intro">Um laboratório de <b>arte generativa de dados</b>: bases públicas reais —
+       climáticas, geográficas, ambientais — viram peças navegáveis, onde <b>cada elemento visual
+       volta ao dado que o gerou</b>. Feito em escala doméstica, ao lado da inteligência artificial.</p>
+
+    <div class="lbl">Obras</div>
     <div class="grid">
       <a class="card" href="011-el-nino/">
         <div class="n">011 · El Niño</div>
@@ -37,6 +71,10 @@
            Anomalia × temperatura real, lado a lado.</p>
       </a>
     </div>
+
+    <p class="sobre">O lab não é um produto nem uma demonstração de tecnologia — é a obra de
+       alguém que precisa fazê-la, no ritmo que a vida permite. Tempestade não é histograma; é evento.</p>
+
     <footer>Datart GenLab · departamento de Produtos</footer>
   </div>
 </body>
