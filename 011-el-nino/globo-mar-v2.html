@@ -471,33 +471,38 @@
       const r = trilhoI.getBoundingClientRect();
       let f = (ev.clientX - r.left) / r.width; f = Math.min(Math.max(f, 0), 1);
       aplicaFrame(f * (COUNT - 1));
+      if (window.__duoTime) window.__duoTime({ frame: tSerie });
     }
     let scrub = false;
     function setPP() { ppEl.textContent = playing ? '❚❚ pausar' : '► tocar'; }
-    trilhoI.addEventListener('pointerdown', e => { scrub = true; playing = false; setPP(); seekEv(e); try { trilhoI.setPointerCapture(e.pointerId); } catch (_) {} });
+    trilhoI.addEventListener('pointerdown', e => { scrub = true; playing = false; setPP(); if (window.__duoTime) window.__duoTime({ playing: false }); seekEv(e); try { trilhoI.setPointerCapture(e.pointerId); } catch (_) {} });
     trilhoI.addEventListener('pointermove', e => { if (scrub) seekEv(e); });
     window.addEventListener('pointerup', () => { scrub = false; });
-    ppEl.addEventListener('click', () => { playing = !playing; if (playing) last = null; setPP(); });
+    ppEl.addEventListener('click', () => { playing = !playing; if (playing) last = null; setPP(); if (window.__duoTime) window.__duoTime({ playing }); });
     window.addEventListener('keydown', ev => {
       if (ev.key === 'ArrowRight') { playing = false; setPP(); aplicaFrame(Math.floor(tSerie) + 1); }
       else if (ev.key === 'ArrowLeft') { playing = false; setPP(); aplicaFrame(Math.floor(tSerie) - 1); }
     });
     setPP();
 
-    // ---------- DUO: sincronizacao de TEMPO e MOVIMENTO via postMessage (dentro de iframe) ----------
-    // a ESQUERDA comanda; a DIREITA segue. Quando segue, seus controles ficam travados (nao briga).
+    // ---------- DUO: sincronizacao BIDIRECIONAL (qualquer globo comanda; o outro espelha) ----------
+    // Camera: emite continuo marcado se ESTE globo esta sendo girado; o outro aplica so quando ocioso
+    // (sem feedback). Tempo: eventos discretos (scrub / play / pause). Nada trava os controles.
     if (window.parent !== window) {
+      let camActive = false;
+      controls.addEventListener('start', () => { camActive = true; });
+      controls.addEventListener('end',   () => { camActive = false; });
       setInterval(() => {
-        window.parent.postMessage({ duoState: true, t: tSerie, playing: playing, pov: world.pointOfView() }, '*');
+        window.parent.postMessage({ duoCam: true, active: camActive, pov: world.pointOfView() }, '*');
       }, 80);
+      window.__duoTime = (o) => window.parent.postMessage(Object.assign({ duoTime: true }, o), '*');
       window.addEventListener('message', (e) => {
         const m = e.data; if (!m || !m.duoCmd) return;
-        if (m.duoCmd === 'follow')        { playing = false; setPP(); }
-        else if (m.duoCmd === 'unfollow') { playing = true; last = null; setPP(); }
-        else if (m.duoCmd === 'frame')    { aplicaFrame(m.t); }
-        else if (m.duoCmd === 'camlock')  { controls.autoRotate = false; controls.enabled = false; }
-        else if (m.duoCmd === 'camfree')  { controls.enabled = true; }
-        else if (m.duoCmd === 'cam')      { world.pointOfView(m.pov, 0); }
+        if (m.duoCmd === 'cam')        { controls.autoRotate = false; if (!camActive) world.pointOfView(m.pov, 0); }
+        else if (m.duoCmd === 'frame') { aplicaFrame(m.t); }
+        else if (m.duoCmd === 'play')  { if (!playing) { playing = true; last = null; setPP(); } }
+        else if (m.duoCmd === 'pause') { if (playing)  { playing = false; setPP(); } }
+        else if (m.duoCmd === 'freeze'){ controls.autoRotate = false; }
       });
     }
 

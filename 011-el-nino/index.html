@@ -81,29 +81,36 @@
 
   <script>
     // Carrega SEMPRE os dois (a comparacao e a obra). O layout (lado a lado / empilhado) e so CSS.
-    const ifrA = document.getElementById('ifrA');   // CIMA/ESQUERDA = comanda
-    const ifrB = document.getElementById('ifrB');   // BAIXO/DIREITA  = segue
+    const ifrA = document.getElementById('ifrA');
+    const ifrB = document.getElementById('ifrB');
     ifrA.src = 'globo-mar-v1.html';
     ifrB.src = 'globo-mar-v2.html';
 
     const ckTempo = document.getElementById('ckTempo'), lblTempo = document.getElementById('lblTempo');
     const ckMov   = document.getElementById('ckMov'),   lblMov   = document.getElementById('lblMov');
     let syncTempo = false, syncMov = false;
+    const wA = () => ifrA.contentWindow, wB = () => ifrB.contentWindow;
 
-    // relay: A comanda; repassa o estado pra B quando a sincronia esta ligada.
+    // RELAY BIDIRECIONAL: o globo ATIVO comanda; o outro espelha. Vale nos dois sentidos (A<->B),
+    // entao da pra girar/arrastar/scrubar QUALQUER um dos dois e o outro acompanha.
     window.addEventListener('message', (e) => {
-      if (e.source !== ifrA.contentWindow) return;
-      const m = e.data; if (!m || !m.duoState) return;
-      if (syncTempo) ifrB.contentWindow.postMessage({ duoCmd: 'frame', t: m.t }, '*');
-      if (syncMov && m.pov) ifrB.contentWindow.postMessage({ duoCmd: 'cam', pov: m.pov }, '*');
-    });
-    ckTempo.addEventListener('change', () => {
-      syncTempo = ckTempo.checked; lblTempo.classList.toggle('on', syncTempo);
-      ifrB.contentWindow.postMessage({ duoCmd: syncTempo ? 'follow' : 'unfollow' }, '*');
+      const dst = (e.source === wA()) ? wB() : (e.source === wB() ? wA() : null);
+      if (!dst) return;
+      const m = e.data; if (!m) return;
+      if (m.duoCam) {                                   // camera (continua, so do globo que esta ativo)
+        if (syncMov && m.active && m.pov) dst.postMessage({ duoCmd: 'cam', pov: m.pov }, '*');
+      } else if (m.duoTime) {                            // tempo (evento: scrub / play / pause)
+        if (!syncTempo) return;
+        if (m.frame   !== undefined) dst.postMessage({ duoCmd: 'frame', t: m.frame }, '*');
+        if (m.playing !== undefined) dst.postMessage({ duoCmd: m.playing ? 'play' : 'pause' }, '*');
+      }
     });
     ckMov.addEventListener('change', () => {
       syncMov = ckMov.checked; lblMov.classList.toggle('on', syncMov);
-      ifrB.contentWindow.postMessage({ duoCmd: syncMov ? 'camlock' : 'camfree' }, '*');
+      if (syncMov) { wA().postMessage({ duoCmd: 'freeze' }, '*'); wB().postMessage({ duoCmd: 'freeze' }, '*'); }
+    });
+    ckTempo.addEventListener('change', () => {
+      syncTempo = ckTempo.checked; lblTempo.classList.toggle('on', syncTempo);
     });
   </script>
 </body>
