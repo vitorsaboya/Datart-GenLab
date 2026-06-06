@@ -68,6 +68,23 @@
     /* DESIGN FINAL (s.28): esconde os controles de exploracao (magnitude + telemetria de dev).
        o teclado 1/2/3 segue funcionando; o globo/oceano nao muda. */
     #jogo, #vcard { display: none !important; }
+
+    /* CELULAR (toque): compacta o HUD e SEPARA as legendas -> mata a sobreposicao no rodape.
+       HUD em cima-esquerda, legenda em cima-direita, tempo embaixo; a dica some. */
+    @media (pointer: coarse), (max-width: 500px) {
+      #dica { display: none; }
+      #hud { left: 10px; top: 8px; }
+      #hud h1 { font-size: 13px; }
+      #hud p { font-size: 9.5px; max-width: 50vw; }
+      #legenda { left: auto; right: 10px; top: 9px; bottom: auto; text-align: right; font-size: 9px; opacity: .82; max-width: 150px; }
+      #barra { width: 130px; height: 8px; margin-left: auto; }
+      #legenda .ticks { width: 130px; margin-left: auto; }
+      #ano-wrap { width: calc(100% - 20px); bottom: 8px; }
+      #ano { font-size: 18px; }
+      #ano .mesnum { font-size: 11px; }
+      #trilho { height: 10px; }
+      #playpause { margin-top: 5px; padding: 6px 14px; }
+    }
   </style>
   <script type="importmap">
   {
