@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Datart GenLab — Galeria</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; min-height: 100%; background: #04060d; color: #eaf2ff;
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 64px 24px 80px; }
+    header h1 { font-size: 26px; font-weight: 650; letter-spacing: .3px; margin: 0 0 6px; }
+    header p { color: #93a3b8; font-size: 14.5px; margin: 0 0 40px; max-width: 60ch; line-height: 1.5; }
+    .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    a.card { display: block; text-decoration: none; color: inherit; border: 1px solid #1b2230;
+      border-radius: 14px; padding: 22px; background: linear-gradient(160deg, #0a1018, #070b12);
+      transition: border-color .15s, transform .15s; }
+    a.card:hover { border-color: #2ea05a; transform: translateY(-2px); }
+    a.card .n { color: #6f8198; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+    a.card h2 { font-size: 18px; margin: 8px 0 6px; font-weight: 600; }
+    a.card p { color: #93a3b8; font-size: 13.5px; margin: 0; line-height: 1.45; }
+    footer { margin-top: 56px; color: #5b6a7e; font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Datart GenLab — Galeria</h1>
+      <p>Arte generativa de dados: bases públicas reais viram peças navegáveis, onde cada
+         elemento visual volta ao dado que o gerou.</p>
+    </header>
+    <div class="grid">
+      <a class="card" href="011-el-nino/">
+        <div class="n">011 · El Niño</div>
+        <h2>A temperatura do Pacífico, navegável</h2>
+        <p>Um globo onde a temperatura real do mar (NOAA, 2020–2026) governa a obra.
+           Anomalia × temperatura real, lado a lado.</p>
+      </a>
+    </div>
+    <footer>Datart GenLab · departamento de Produtos</footer>
+  </div>
+</body>
+</html>

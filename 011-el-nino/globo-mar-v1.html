@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>011 · El Niño — MAR v1 (espuma fervendo + glow do calor, gateados pelo dado)</title>
+  <!--
+    011 — MAR v1 (s.28). Incremento 1 rumo a `ref final obra 011.png`: a base de ESCALA
+    CONSTANTE (jogo-onda, achado s.27) + duas camadas novas, HONESTAS por construcao (gate D33,
+    legenda-viva s.28 + pesquisa nivel 2 2026-06-05):
+      - ESPUMA multi-escala "fervendo" (FBM + flow-map): a TEXTURA e MOLDURA; a COBERTURA e CANAL
+        -> gateada por pow(warm, g): frio = 0 espuma, nao importa a onda.
+      - GLOW do calor (ambar emissivo): CANAL (∝ warm), MASCARADO ao OCEANO (zero na terra -> mata
+        o falso "luz de cidade"); frio fica escuro; bloom seletivo so nos hotspots.
+    Ainda PROCEDURAL (Gerstner+FBM), nao o FFT cheio (passo barato pra provar o look; $0).
+    Tecle 1/2/3 = contido/pleno/extremo.
+  -->
+  <style>
+    html, body { margin: 0; height: 100%; background: #04060d; overflow: hidden; }
+    #globo { width: 100vw; height: 100vh; }
+    #hud { position: fixed; left: 18px; top: 16px; z-index: 10;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      color: #eaf2ff; text-shadow: 0 1px 4px rgba(0,0,0,.8); pointer-events: none; user-select: none; }
+    #hud h1 { margin: 0 0 2px; font-size: 16px; font-weight: 600; letter-spacing: .3px; }
+    #hud p  { margin: 0; font-size: 12px; opacity: .72; }
+    #hud .mes { font-variant-numeric: tabular-nums; font-weight: 600; opacity: .92; }
+    #jogo { position: fixed; left: 50%; transform: translateX(-50%); top: 14px; z-index: 12;
+      display: flex; gap: 8px; font-family: ui-sans-serif, system-ui, sans-serif; }
+    #jogo button { cursor: pointer; border: 1px solid rgba(150,180,230,.35); background: rgba(8,16,30,.72);
+      color: #cfe0ff; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px;
+      backdrop-filter: blur(4px); transition: all .15s ease; }
+    #jogo button:hover { border-color: rgba(150,180,230,.7); }
+    #jogo button.ativo { background: #2b6fd6; color: #fff; border-color: #5b8cff; }
+    #vcard { position: fixed; right: 18px; top: 16px; z-index: 11;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #bcd2ff;
+      font-size: 11px; line-height: 1.55; opacity: .9; user-select: none; pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0,0,0,.8); text-align: right; }
+    #vcard b { color: #eaf2ff; font-size: 12px; }
+    #legenda { position: fixed; left: 18px; bottom: 16px; z-index: 10;
+      font-family: ui-sans-serif, system-ui, sans-serif; color: #cfe0ff;
+      font-size: 11px; opacity: .85; user-select: none; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+    #barra { width: 220px; height: 10px; border-radius: 5px; margin: 4px 0 3px;
+      background: linear-gradient(90deg, #1a72f2 0%, #0a2c52 50%, #f2401e 100%); }
+    #legenda .ticks { display: flex; justify-content: space-between; width: 220px; opacity: .7; }
+    #ano-wrap { position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; z-index: 10;
+      width: min(52vw, 560px); font-family: ui-sans-serif, system-ui, sans-serif; color: #cfe0ff;
+      opacity: .92; user-select: none; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.8); text-align: center; }
+    #ano { font-size: 28px; font-weight: 700; letter-spacing: 1px; line-height: 1;
+      font-variant-numeric: tabular-nums; color: #eef4ff; }
+    #ano .mesnum { font-size: 14px; font-weight: 500; opacity: .7; margin-left: 6px; }
+    #trilho { position: relative; width: 100%; height: 7px; border-radius: 4px;
+      background: rgba(120,150,200,.22); margin: 12px 0 0; cursor: pointer; pointer-events: auto; }
+    #preenche { position: absolute; left: 0; top: 0; height: 100%; width: 0;
+      background: linear-gradient(90deg, #2b6fd6, #e0e8ff); border-radius: 4px; }
+    #marcaPico { position: absolute; top: -3px; width: 2px; height: 13px; background: #f2a01e; opacity: .85; }
+    #alca { position: absolute; top: -3px; width: 13px; height: 13px; border-radius: 50%;
+      background: #eef4ff; transform: translateX(-50%); box-shadow: 0 0 6px rgba(0,0,0,.7); pointer-events: none; }
+    #playpause { margin-top: 8px; cursor: pointer; pointer-events: auto;
+      border: 1px solid rgba(150,180,230,.4); background: rgba(8,16,30,.72); color: #cfe0ff;
+      font-size: 12px; padding: 4px 12px; border-radius: 7px; backdrop-filter: blur(4px); }
+    #playpause:hover { border-color: rgba(150,180,230,.8); }
+    #dica { position: fixed; right: 18px; bottom: 16px; z-index: 10;
+      font-family: ui-sans-serif, system-ui, sans-serif; color: #cfe0ff;
+      font-size: 12px; opacity: .6; text-shadow: 0 1px 4px rgba(0,0,0,.8); pointer-events: none; user-select: none; text-align: right; }
+    #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #6b7d99; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; z-index: 5; transition: opacity .6s ease; }
+    /* DESIGN FINAL (s.28): esconde os controles de exploracao (magnitude + telemetria de dev).
+       o teclado 1/2/3 segue funcionando; o globo/oceano nao muda. */
+    #jogo, #vcard { display: none !important; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://esm.sh/three@0.180.0",
+      "three/": "https://esm.sh/three@0.180.0/",
+      "globe.gl": "https://esm.sh/globe.gl@2.45.2?external=three"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="globo"></div>
+  <div id="jogo">
+    <button data-v="0">1 · contido</button>
+    <button data-v="1">2 · pleno</button>
+    <button data-v="2">3 · extremo</button>
+  </div>
+  <div id="hud">
+    <h1>El Niño no Pacífico</h1>
+    <p>011 · mar revolto pela anomalia de temperatura · NOAA OISST · <span class="mes" id="mes">—</span></p>
+  </div>
+  <div id="vcard">—</div>
+  <div id="legenda">
+    anomalia de SST (espuma e glow ∝ calor)
+    <div id="barra"></div>
+    <div class="ticks"><span>−3 °C frio</span><span>0</span><span>+3 °C quente</span></div>
+  </div>
+  <div id="ano-wrap">
+    <div id="ano">2020<span class="mesnum" id="mesnum">jan</span></div>
+    <div id="trilho"><div id="preenche"></div><div id="marcaPico"></div><div id="alca"></div></div>
+    <button id="playpause" title="play / pause">❚❚ pausar</button>
+  </div>
+  <div id="dica">arraste p/ girar · scroll p/ zoom · arraste a barra do tempo</div>
+  <div id="loading">carregando a série…</div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import Globe from 'globe.gl';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+    const el = document.getElementById('globo');
+
+    // dials por variante (magnitude/carater). foamDens = densidade da espuma; glow = forca do ambar.
+    const VARIANTES = [
+      { nome:'contido', reliefAmp:2.6, freqMul:0.72, drama:0.55, sss:0.50, foam:0.55, foamDens:0.70, glow:0.30, bloom:0.16 },
+      { nome:'pleno',   reliefAmp:5.2, freqMul:0.52, drama:0.85, sss:0.72, foam:0.70, foamDens:1.00, glow:0.46, bloom:0.22 },
+      { nome:'extremo', reliefAmp:9.0, freqMul:0.40, drama:1.10, sss:0.92, foam:0.85, foamDens:1.45, glow:0.64, bloom:0.30 },
+    ];
+
+    const manifest = await fetch('series/manifest.json').then(r => r.json());
+    const COUNT = manifest.count;
+    const FRAMES = manifest.frames;
+    const PEAK = manifest.peak_idx;
+
+    const loader = new THREE.TextureLoader();
+    loader.crossOrigin = 'anonymous';
+    function loadAnom(i) {
+      return new Promise((res) => {
+        const t = loader.load(`series/anom-${String(i).padStart(2,'0')}.png`, () => res(t));
+        t.colorSpace = THREE.NoColorSpace;
+        t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
+        t.wrapS = THREE.RepeatWrapping;
+      });
+    }
+    const loadEl = document.getElementById('loading');
+    let done = 0;
+    const SERIE = await Promise.all(
+      Array.from({length: COUNT}, (_, i) =>
+        loadAnom(i).then(t => { done++; loadEl.textContent = `carregando a série… ${done}/${COUNT}`; return t; }))
+    );
+
+    const baseTex = loader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+    baseTex.colorSpace = THREE.SRGBColorSpace;
+    baseTex.wrapS = THREE.RepeatWrapping;
+
+    // mascara de agua de ALTA resolucao -> contorno de costa fiel (so o limite terra/mar; oceano intacto).
+    const waterTex = loader.load('https://unpkg.com/three-globe/example/img/earth-water.png');
+    waterTex.colorSpace = THREE.NoColorSpace;
+    waterTex.wrapS = THREE.RepeatWrapping;
+    waterTex.minFilter = THREE.LinearFilter; waterTex.magFilter = THREE.LinearFilter;
+
+    const oceanMat = new THREE.ShaderMaterial({
+      uniforms: {
+        anomA:{ value: SERIE[0] }, anomB:{ value: SERIE[1] }, frac:{ value: 0.0 },
+        baseTex:{ value: baseTex }, waterTex:{ value: waterTex }, uLandBright:{ value: 0.62 },
+        escala:{ value: manifest.escala || 3.0 },
+        lightDir:{ value: new THREE.Vector3(1, 0.3, 0.6).normalize() },
+        uTime:{ value: 0.0 },
+        uRelief:{ value: 5.2 }, uFreq:{ value: 0.52 }, uDrama:{ value: 0.85 },
+        uSSS:{ value: 0.72 }, uFoam:{ value: 0.70 }, uFoamDens:{ value: 1.0 }, uGlow:{ value: 0.72 },
+      },
+      vertexShader: /* glsl */`
+        precision highp float;
+        uniform sampler2D anomA, anomB, waterTex;
+        uniform float frac, escala, uTime, uRelief, uFreq;
+        varying vec2 vUv; varying vec3 vWorldNormal; varying vec3 vWorldPos;
+        varying float vCrest; varying float vWarm;
+        const float PI2 = 6.28318530718;
+        vec4 anomLerp(vec2 uv) { return mix(texture2D(anomA, uv), texture2D(anomB, uv), frac); }
+        const float AMSUM = 1.94;
+        void gerstner(vec2 uv, float amp, out float h, out vec2 horiz) {
+          h = 0.0; horiz = vec2(0.0);
+          vec2 dir[4]; float k[4]; float am[4]; float q[4]; float spd[4];
+          dir[0]=normalize(vec2(1.0, 0.12));  k[0]=6.0;  am[0]=1.00; q[0]=0.6;  spd[0]=0.45;
+          dir[1]=normalize(vec2(0.8,-0.35));  k[1]=11.0; am[1]=0.50; q[1]=0.5;  spd[1]=0.62;
+          dir[2]=normalize(vec2(-0.4,0.25));  k[2]=17.0; am[2]=0.28; q[2]=0.4;  spd[2]=0.85;
+          dir[3]=normalize(vec2(0.25,0.9));   k[3]=24.0; am[3]=0.16; q[3]=0.35; spd[3]=1.10;
+          for (int i=0;i<4;i++){
+            float phase = (k[i]*uFreq)*dot(dir[i], uv)*PI2 - uTime*spd[i];
+            float a = amp*am[i];
+            h += a*sin(phase); horiz += q[i]*a*dir[i]*cos(phase);
+          }
+        }
+        void main() {
+          vUv = uv;
+          vec3 nrm = normalize(position);
+          vec3 up = abs(nrm.y) < 0.99 ? vec3(0.,1.,0.) : vec3(1.,0.,0.);
+          vec3 east  = normalize(cross(up, nrm));
+          vec3 north = normalize(cross(nrm, east));
+          vec4 d = anomLerp(uv);
+          float maskHi = smoothstep(0.35, 0.65, texture2D(waterTex, uv).r);
+          float mask = step(0.5, d.a) * maskHi;
+          float anom = (d.r - 0.5) * 2.0 * escala;
+          float warm = clamp(anom / escala, 0.0, 1.0);
+          float warmC = pow(warm, 1.6);              // CONTRASTE (Vitor s.28): a temperatura GOVERNA a onda
+          float amp  = (0.04 + 0.96 * warmC) * mask; // frio quase liso (glassy), quente cheio (revolto)
+          float h; vec2 horiz; gerstner(uv, amp, h, horiz);
+          float SH = uRelief, SXY = uRelief * 0.66;
+          vec3 disp = nrm*h*SH + (east*horiz.x + north*horiz.y)*SXY;
+          vec3 pos  = position + disp;
+          vWorldPos = (modelMatrix * vec4(pos, 1.0)).xyz;
+          float e = 0.004, hx, hy; vec2 tmp;
+          gerstner(uv+vec2(e,0.0), amp, hx, tmp);
+          gerstner(uv+vec2(0.0,e), amp, hy, tmp);
+          float dhdu = (hx-h)/e, dhdv = (hy-h)/e;
+          vec3 nW  = normalize(mat3(modelMatrix)*nrm);
+          vec3 eW  = normalize(mat3(modelMatrix)*east);
+          vec3 noW = normalize(mat3(modelMatrix)*north);
+          float g = SH*0.05;
+          vWorldNormal = normalize(nW - eW*dhdu*g - noW*dhdv*g);
+          vWarm  = warm;
+          vCrest = clamp(h/(amp*AMSUM + 1e-3), -1.0, 1.0);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+      `,
+      fragmentShader: /* glsl */`
+        precision highp float;
+        uniform sampler2D anomA, anomB, baseTex, waterTex;
+        uniform float frac, escala, uTime, uDrama, uSSS, uFoam, uFoamDens, uGlow, uLandBright;
+        uniform vec3 lightDir;
+        varying vec2 vUv; varying vec3 vWorldNormal; varying vec3 vWorldPos;
+        varying float vCrest; varying float vWarm;
+        const float PI2 = 6.28318530718;
+
+        // --- ruido (value noise + FBM) p/ a espuma organica multi-escala ---
+        float hash21(vec2 p){ p = fract(p*vec2(123.34, 345.45)); p += dot(p, p+34.345); return fract(p.x*p.y); }
+        float vnoise(vec2 p){
+          vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+          float a = hash21(i), b = hash21(i+vec2(1.,0.)), c = hash21(i+vec2(0.,1.)), d = hash21(i+vec2(1.,1.));
+          return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
+        }
+        float fbm(vec2 p){ float s=0.0, a=0.5; for(int i=0;i<4;i++){ s+=a*vnoise(p); p=p*2.03+vec2(11.3,7.7); a*=0.5; } return s; }
+
+        // ESPUMA "fervendo": FBM anisotropico (estrias) + FBM isotropico, rolados por flow (uTime).
+        // Retorna cobertura [0,1] -- e MOLDURA (textura); o GATE pela anomalia entra no main (CANAL).
+        float foamField(vec2 uv){
+          vec2 flow = vec2(0.9, 0.32) * uTime * 0.018;
+          float f1 = fbm(uv*vec2(190.0, 95.0) + flow*55.0);   // estrias (Langmuir-like)
+          float f2 = fbm(uv*130.0 - flow*40.0);                // grao medio
+          return clamp(f1*0.62 + f2*0.55, 0.0, 1.0);
+        }
+
+        // relevo fino ORGANICO via gradiente de FBM (mata o "listrado" das ondas alinhadas).
+        vec2 detailSlope(vec2 uv) {
+          vec2 fl = vec2(0.85, 0.30) * uTime * 0.02;
+          float e = 0.0016;
+          float n  = fbm(uv*150.0 + fl);
+          float nx = fbm((uv+vec2(e,0.0))*150.0 + fl);
+          float ny = fbm((uv+vec2(0.0,e))*150.0 + fl);
+          return (vec2(nx - n, ny - n) / e) * 0.006;
+        }
+        vec2 chopSlope(vec2 uv, out float h) {
+          vec2 d0 = vec2( 0.86, 0.51); float f0 = 22.0;
+          vec2 d1 = vec2(-0.62, 0.78); float f1 = 34.0;
+          vec2 d2 = vec2( 0.21,-0.98); float f2 = 48.0;
+          float p0 = dot(d0, uv) * f0 * PI2 - uTime*1.4;
+          float p1 = dot(d1, uv) * f1 * PI2 - uTime*1.9;
+          float p2 = dot(d2, uv) * f2 * PI2 - uTime*2.5;
+          h = 0.42 * sin(p0) + 0.30 * sin(p1) + 0.20 * sin(p2);
+          return 0.42 * d0 * cos(p0) + 0.30 * d1 * cos(p1) + 0.20 * d2 * cos(p2);
+        }
+
+        void main() {
+          vec4 d = mix(texture2D(anomA, vUv), texture2D(anomB, vUv), frac);
+          float ocean = smoothstep(0.35, 0.65, texture2D(waterTex, vUv).r);  // costa ALTA-RES (menos blocado)
+          float anom  = (d.r - 0.5) * 2.0 * escala;
+          float t     = clamp(anom / escala, -1.0, 1.0);
+          float warm  = clamp(t, 0.0, 1.0);
+          float warmC = pow(warm, 1.6);   // CONTRASTE (Vitor s.28): a temperatura GOVERNA onda + cor.
+          float warmGate = warmC;          // espuma e glow ∝ anomalia, fronteira nitida (frio -> ~0)
+
+          vec3 calm = vec3(0.03, 0.12, 0.24);
+          vec3 cold = vec3(0.07, 0.34, 0.78);   // frio mais sobrio (deixa o quente pulsar)
+          vec3 hot  = vec3(1.00, 0.16, 0.04);   // QUENTE bem mais VERMELHO (pedido do Vitor)
+          vec3 div  = (t < 0.0) ? mix(calm, cold, -t) : mix(calm, hot, t);
+          float intens = pow(clamp(abs(t), 0.0, 1.0), 0.75);   // curva de contraste DECLARADA (s.28)
+          vec3 oceanCol = mix(calm, div, intens);
+
+          vec3 land = texture2D(baseTex, vUv).rgb * uLandBright;   // continentes mais claros
+          vec3 albedo = mix(land, oceanCol, ocean);
+
+          vec3 N = normalize(vWorldNormal);
+          vec3 L = normalize(lightDir);
+          vec3 V = normalize(cameraPosition - vWorldPos);
+          vec3 radial = normalize(vWorldPos);
+          vec3 upT    = abs(radial.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+          vec3 eastT  = normalize(cross(upT, radial));
+          vec3 northT = normalize(cross(radial, eastT));
+
+          vec2 dg = detailSlope(vUv) * (0.30 + 0.95 * uDrama) * (0.25 + 0.75 * warmC);
+          float chopH; vec2 cg = chopSlope(vUv, chopH) * warmC * uDrama;
+          vec2 totSlope = (dg + cg) * ocean;
+          vec3 Nd = normalize(N - (eastT * totSlope.x + northT * totSlope.y));
+
+          vec3 Nlit = normalize(mix(N, Nd, 0.70));
+          float diff = max(dot(Nlit, L) * 0.65 + 0.35, 0.0);
+          vec3 color = albedo * (0.42 + 0.62 * diff);
+
+          vec3 Hh = normalize(L + V);
+          float spec = pow(max(dot(Nd, Hh), 0.0), 60.0) * ocean * step(0.0, dot(N, L));
+          color += vec3(0.8, 0.9, 1.0) * spec * 0.5;
+
+          float fres = pow(1.0 - max(dot(Nd, V), 0.0), 4.0);
+          color += vec3(0.22, 0.40, 0.62) * fres * ocean * (0.18 + 0.30 * uDrama);
+
+          // CANAL: translucidez retroiluminada (turquesa por dentro), so quente (vWarm).
+          float back = pow(max(dot(V, -L), 0.0), 3.0);
+          float thin = smoothstep(0.25, 0.95, vCrest);
+          color += vec3(0.10, 0.85, 0.72) * back * thin * ocean * vWarm * 0.38 * uSSS;
+
+          // === ESPUMA (CANAL gateado) ===
+          // crista do Gerstner + quebra do chop (como antes), agora x warmGate
+          float crestFoam = smoothstep(0.74, 0.98, vCrest) * ocean * warmGate;
+          color = mix(color, vec3(0.84, 0.89, 0.96), crestFoam * 0.18 * uFoam);
+          float chopFoam = smoothstep(0.55, 0.92, chopH) * ocean * warmGate;
+          color = mix(color, vec3(0.86, 0.91, 0.97), chopFoam * 0.22 * uFoam);
+          // NOVA: espuma "fervendo" multi-escala (FBM+flow), a textura do alvo. GATE -> so no quente.
+          float ff = foamField(vUv);
+          float streak = smoothstep(0.60, 0.93, ff) * ocean * warmGate * uFoamDens;
+          color = mix(color, vec3(0.82, 0.88, 0.95), streak * 0.42);
+
+          // === GLOW DO CALOR (CANAL, mascarado ao OCEANO) ===
+          // ambar emissivo ∝ warm; zero na terra (mata "luz de cidade"); frio fica escuro.
+          // o pico ultrapassa 1.0 -> o bloom seletivo (threshold alto) so floresce o mais quente.
+          vec3 amber = vec3(1.00, 0.38, 0.09);
+          float glow = pow(warm, 2.0) * ocean * uGlow * (1.0 + warm * 0.35);
+          color += amber * glow;
+
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+    });
+
+    const world = Globe({ rendererConfig: { preserveDrawingBuffer: true, antialias: true } })(el)
+      .backgroundColor('#04060d')
+      .showAtmosphere(true).atmosphereColor('#5b8cff').atmosphereAltitude(0.18)
+      .globeMaterial(oceanMat);
+
+    const renderer = world.renderer();
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.95;
+    const bloom = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      0.26, 0.40, 0.90   // threshold ALTO: so o glow do calor (que passa de 1) + glint florescem
+    );
+    world.postProcessingComposer().addPass(bloom);
+
+    world.pointOfView({ lat: -5, lng: -120, altitude: 1.6 }, 0);
+    const controls = world.controls();
+    controls.minDistance = 110; controls.maxDistance = 600;
+    controls.enableDamping = true; controls.dampingFactor = 0.08;
+    controls.autoRotate = true; controls.autoRotateSpeed = 0.22;
+    controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+    // LINHA DO EQUADOR (MOLDURA declarada: referencia geografica, NAO codifica dado). O El Nino
+    // vive na faixa equatorial -> a linha ancora a leitura. Anel no plano y=0 (latitude 0).
+    (function addEquador(){
+      const R = 101.0, segs = 256, pts = [];
+      for (let i = 0; i <= segs; i++){ const a = i/segs*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*R, 0.0, Math.sin(a)*R)); }
+      const g = new THREE.BufferGeometry().setFromPoints(pts);
+      const m = new THREE.LineBasicMaterial({ color: 0xe6eeff, transparent: true, opacity: 0.40 });
+      world.scene().add(new THREE.LineLoop(g, m));
+    })();
+
+    const vcard = document.getElementById('vcard');
+    const botoes = [...document.querySelectorAll('#jogo button')];
+    let vAtual = -1;
+    function setVariante(i) {
+      i = ((i % VARIANTES.length) + VARIANTES.length) % VARIANTES.length;
+      const v = VARIANTES[i];
+      oceanMat.uniforms.uRelief.value = v.reliefAmp; oceanMat.uniforms.uFreq.value = v.freqMul;
+      oceanMat.uniforms.uDrama.value = v.drama; oceanMat.uniforms.uSSS.value = v.sss;
+      oceanMat.uniforms.uFoam.value = v.foam; oceanMat.uniforms.uFoamDens.value = v.foamDens;
+      oceanMat.uniforms.uGlow.value = v.glow; bloom.strength = v.bloom;
+      botoes.forEach((b, k) => b.classList.toggle('ativo', k === i));
+      vcard.innerHTML = `<b>variante ${i+1} · ${v.nome}</b><br>` +
+        `onda ${v.reliefAmp.toFixed(1)} · espuma ${v.foamDens.toFixed(2)} · glow ${v.glow.toFixed(2)}`;
+      vAtual = i;
+    }
+    botoes.forEach(b => b.addEventListener('click', () => setVariante(+b.dataset.v)));
+    window.addEventListener('keydown', (ev) => {
+      if (ev.key === '1') setVariante(0); else if (ev.key === '2') setVariante(1); else if (ev.key === '3') setVariante(2);
+    });
+
+    const trilho = document.getElementById('trilho');
+    document.getElementById('marcaPico').style.left = (100 * PEAK / (COUNT - 1)) + '%';
+    const MESES_ABBR = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const anoEl = document.getElementById('ano'), mesnumEl = document.getElementById('mesnum'), mesEl = document.getElementById('mes');
+    function updateTempo(f) {
+      const ano = f.label.slice(0,4), mnum = parseInt(f.label.slice(5,7), 10);
+      anoEl.firstChild.nodeValue = ano; mesnumEl.textContent = MESES_ABBR[mnum-1];
+      mesEl.textContent = `${f.label}  ·  Niño3.4 ${f.nino34>=0?'+':''}${f.nino34.toFixed(2)} °C`;
+    }
+
+    const MESES_POR_SEG = 2.0;
+    const preencheEl = document.getElementById('preenche');
+    let tSerie = PEAK, last = null, curA = -1, playing = true;   // abre no auge do El Nino (2023-12)
+    (function tick(now) {
+      if (last === null) last = now;
+      const dt = Math.max(0, Math.min((now - last) / 1000, 0.1)); last = now;
+      oceanMat.uniforms.uTime.value += dt;
+      if (playing) {
+        tSerie = (tSerie + dt * MESES_POR_SEG) % COUNT;
+        const ia = Math.floor(tSerie), ib = (ia + 1) % COUNT, fr = tSerie - ia;
+        if (ia !== curA) {
+          oceanMat.uniforms.anomA.value = SERIE[ia]; oceanMat.uniforms.anomB.value = SERIE[ib];
+          curA = ia; updateTempo(FRAMES[ia]);
+        }
+        oceanMat.uniforms.frac.value = fr;
+        preencheEl.style.width = (100 * tSerie / (COUNT - 1)) + '%';
+        var _al = document.getElementById('alca'); if (_al) _al.style.left = preencheEl.style.width;
+      }
+      requestAnimationFrame(tick);
+    })(performance.now());
+
+    (function hideLoading() {
+      const l = document.getElementById('loading'); if (!l) return;
+      l.style.opacity = '0'; setTimeout(() => l.remove(), 700);
+    })();
+
+    function resize() { world.width(window.innerWidth).height(window.innerHeight); }
+    window.addEventListener('resize', resize); resize();
+
+    setVariante(2);   // default na opcao 3 (extremo), pedido do Vitor
+
+    // ---------- CONTROLE DO TEMPO: play/pause + scrubber (ir e voltar no tempo) ----------
+    const trilhoI = document.getElementById('trilho');
+    const alcaEl  = document.getElementById('alca');
+    const ppEl    = document.getElementById('playpause');
+    function aplicaFrame(ts) {
+      tSerie = ((ts % COUNT) + COUNT) % COUNT;
+      const ia = Math.floor(tSerie), ib = (ia + 1) % COUNT, fr = tSerie - ia;
+      oceanMat.uniforms.anomA.value = SERIE[ia];
+      oceanMat.uniforms.anomB.value = SERIE[ib];
+      oceanMat.uniforms.frac.value = fr; curA = ia;
+      updateTempo(FRAMES[ia]);
+      preencheEl.style.width = alcaEl.style.left = (100 * tSerie / (COUNT - 1)) + '%';
+    }
+    function seekEv(ev) {
+      const r = trilhoI.getBoundingClientRect();
+      let f = (ev.clientX - r.left) / r.width; f = Math.min(Math.max(f, 0), 1);
+      aplicaFrame(f * (COUNT - 1));
+    }
+    let scrub = false;
+    function setPP() { ppEl.textContent = playing ? '❚❚ pausar' : '► tocar'; }
+    trilhoI.addEventListener('pointerdown', e => { scrub = true; playing = false; setPP(); seekEv(e); try { trilhoI.setPointerCapture(e.pointerId); } catch (_) {} });
+    trilhoI.addEventListener('pointermove', e => { if (scrub) seekEv(e); });
+    window.addEventListener('pointerup', () => { scrub = false; });
+    ppEl.addEventListener('click', () => { playing = !playing; if (playing) last = null; setPP(); });
+    window.addEventListener('keydown', ev => {   // setas = passo a passo no tempo
+      if (ev.key === 'ArrowRight') { playing = false; setPP(); aplicaFrame(Math.floor(tSerie) + 1); }
+      else if (ev.key === 'ArrowLeft') { playing = false; setPP(); aplicaFrame(Math.floor(tSerie) - 1); }
+    });
+    setPP();
+
+    // ---------- DUO: sincronizacao de TEMPO e MOVIMENTO via postMessage (dentro de iframe) ----------
+    // a ESQUERDA comanda; a DIREITA segue. Quando segue, seus controles ficam travados (nao briga).
+    if (window.parent !== window) {
+      setInterval(() => {
+        window.parent.postMessage({ duoState: true, t: tSerie, playing: playing, pov: world.pointOfView() }, '*');
+      }, 80);
+      window.addEventListener('message', (e) => {
+        const m = e.data; if (!m || !m.duoCmd) return;
+        if (m.duoCmd === 'follow')        { playing = false; setPP(); }
+        else if (m.duoCmd === 'unfollow') { playing = true; last = null; setPP(); }
+        else if (m.duoCmd === 'frame')    { aplicaFrame(m.t); }
+        else if (m.duoCmd === 'camlock')  { controls.autoRotate = false; controls.enabled = false; }
+        else if (m.duoCmd === 'camfree')  { controls.enabled = true; }
+        else if (m.duoCmd === 'cam')      { world.pointOfView(m.pov, 0); }
+      });
+    }
+
+    window.__world = world; window.__mat = oceanMat;
+    window.__jogo = { setVariante, get variante(){ return vAtual; }, variantes: VARIANTES,
+      pause: () => { playing = false; }, play: () => { playing = true; },
+      jump: (i) => { i = ((i % COUNT) + COUNT) % COUNT;
+        oceanMat.uniforms.anomA.value = SERIE[i]; oceanMat.uniforms.anomB.value = SERIE[(i+1) % COUNT];
+        oceanMat.uniforms.frac.value = 0; updateTempo(FRAMES[i]); return FRAMES[i].label; } };
+  </script>
+</body>
+</html>

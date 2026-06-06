@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>011 · El Niño — dois globos lado a lado (anomalia | temperatura real)</title>
+  <!--
+    011 — DUO (s.28). Os dois estados da obra na mesma tela:
+      ESQUERDA = globo-mar-v1.html (ANOMALIA — o El Nino salta na COR)
+      DIREITA  = globo-mar-v2.html (TEMPERATURA REAL — cor=°C; agitacao=El Nino/anomalia)
+    Dois botoes de sincronia (o globo da ESQUERDA comanda, o da DIREITA segue, via postMessage):
+      - SINCRONIZAR TEMPO     -> a linha do tempo dos dois anda junta
+      - SINCRONIZAR MOVIMENTO -> girar/zoom dos dois junto (a camera/pointOfView)
+  -->
+  <style>
+    html, body { margin: 0; height: 100%; background: #04060d; overflow: hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; }
+    #wrap { display: flex; flex-direction: column; width: 100vw; height: 100vh; }
+    #bar { position: relative; display: flex; align-items: stretch; height: 34px; flex: 0 0 34px;
+      background: #070b12; border-bottom: 1px solid #161b24; }
+    #bar .lbl { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center;
+      gap: 8px; color: #eaf2ff; font-size: 12.5px; border-left: 1px solid #161b24; }
+    #bar .lbl:first-child { border-left: none; }
+    #bar .lbl b { font-size: 13px; letter-spacing: .3px; }
+    #bar .lbl .sub { color: #93a3b8; font-size: 11.5px; }
+    #sync { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); z-index: 9;
+      display: flex; gap: 6px; }
+    #sync label { display: flex; align-items: center; gap: 6px; color: #cfe0ff; font-size: 12px;
+      background: rgba(8,16,30,.9); border: 1px solid rgba(150,180,230,.4); border-radius: 8px;
+      padding: 3px 10px; cursor: pointer; user-select: none; white-space: nowrap; }
+    #sync label.on { background: #1f6f3f; border-color: #2ea05a; color: #fff; }
+    #sync input { accent-color: #2b6fd6; cursor: pointer; }
+    #globes { display: flex; flex: 1; min-height: 0; }
+    .half { position: relative; flex: 1; min-width: 0; border-left: 1px solid #161b24; }
+    .half:first-child { border-left: none; }
+    iframe { width: 100%; height: 100%; border: 0; display: block; background: #04060d; }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div id="bar">
+      <div class="lbl"><b>v1 · ANOMALIA</b> <span class="sub">desvio da média — o El Niño salta na cor</span></div>
+      <div class="lbl"><b>v2 · TEMPERATURA REAL</b> <span class="sub">cor = °C real · agitação = El Niño</span></div>
+      <div id="sync">
+        <label id="lblTempo"><input type="checkbox" id="ckTempo"> sincronizar tempo</label>
+        <label id="lblMov"><input type="checkbox" id="ckMov"> sincronizar movimento</label>
+      </div>
+    </div>
+    <div id="globes">
+      <div class="half"><iframe id="ifrA" src="globo-mar-v1.html" title="v1 · anomalia" loading="eager"></iframe></div>
+      <div class="half"><iframe id="ifrB" src="globo-mar-v2.html" title="v2 · temperatura real" loading="eager"></iframe></div>
+    </div>
+  </div>
+
+  <script>
+    const ifrA = document.getElementById('ifrA');   // ESQUERDA = comanda (lider)
+    const ifrB = document.getElementById('ifrB');   // DIREITA  = segue
+    const ckTempo = document.getElementById('ckTempo'), lblTempo = document.getElementById('lblTempo');
+    const ckMov   = document.getElementById('ckMov'),   lblMov   = document.getElementById('lblMov');
+    let syncTempo = false, syncMov = false;
+
+    // relay: a ESQUERDA (A) comanda; repassa o estado pra DIREITA (B). B segue (controles travados
+    // quando sincronizado, pra nao brigar). B alinha sozinho em ~80ms (A transmite continuamente).
+    window.addEventListener('message', (e) => {
+      if (e.source !== ifrA.contentWindow) return;
+      const m = e.data; if (!m || !m.duoState) return;
+      if (syncTempo) ifrB.contentWindow.postMessage({ duoCmd: 'frame', t: m.t }, '*');
+      if (syncMov && m.pov) ifrB.contentWindow.postMessage({ duoCmd: 'cam', pov: m.pov }, '*');
+    });
+
+    ckTempo.addEventListener('change', () => {
+      syncTempo = ckTempo.checked; lblTempo.classList.toggle('on', syncTempo);
+      ifrB.contentWindow.postMessage({ duoCmd: syncTempo ? 'follow' : 'unfollow' }, '*');
+    });
+    ckMov.addEventListener('change', () => {
+      syncMov = ckMov.checked; lblMov.classList.toggle('on', syncMov);
+      ifrB.contentWindow.postMessage({ duoCmd: syncMov ? 'camlock' : 'camfree' }, '*');
+    });
+  </script>
+</body>
+</html>
