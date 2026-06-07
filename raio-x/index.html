@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="pt-br"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Raio-X do Lab — Datart GenLab</title>
+<style>
+  @font-face{font-family:Archivo;src:url('fonts/Archivo-var.ttf');font-weight:300 900;font-display:swap}
+  @font-face{font-family:Spectral;src:url('fonts/Spectral-MediumItalic.ttf');font-style:italic;font-display:swap}
+  :root{
+    --ground:#15110C; --surface:#1D1813; --ink:#F1ECE1; --terra:#D2703F; --grat:#7C6C54;
+    --mut:#9a8e7a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--ground);color:var(--ink);
+    font-family:Archivo,system-ui,Segoe UI,sans-serif}
+  /* o graticule concavo da marca: grade fina + vinheta concava (fade na moldura) */
+  #graph{position:fixed;inset:0;
+    background:
+      radial-gradient(ellipse 75% 75% at 50% 45%, transparent 0%, #120e09 80%),
+      repeating-linear-gradient(0deg, rgba(124,108,84,.055) 0 1px, transparent 1px 46px),
+      repeating-linear-gradient(90deg, rgba(124,108,84,.055) 0 1px, transparent 1px 46px),
+      var(--ground)}
+  header{position:fixed;top:0;left:0;right:0;padding:12px 16px;z-index:6;pointer-events:none;
+    background:linear-gradient(#15110Cdd,#15110C00)}
+  .wm{font-size:16px;font-weight:800;letter-spacing:.01em}
+  .wm .gen{font-family:Spectral;font-style:italic;font-weight:500;color:var(--terra)}
+  .wm .rx{color:var(--mut);font-weight:400;letter-spacing:.18em;font-size:11px;text-transform:uppercase;margin-left:8px}
+  .sub{color:var(--mut);font-size:11.5px;margin-top:3px}
+  /* barra de filtros (legenda = filtro) */
+  #bar{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:9px 12px 11px;
+    background:linear-gradient(#15110C00,#15110Cf2 28%);display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;overflow-x:auto;scrollbar-width:none}
+  .row::-webkit-scrollbar{display:none}
+  .chip{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid #ffffff1a;
+    background:#ffffff0d;color:var(--ink);white-space:nowrap;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+  .chip.off{opacity:.32}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .ctrl{margin-left:auto;display:flex;gap:7px;align-items:center}
+  #q{background:#0c0a07;border:1px solid #ffffff1a;color:var(--ink);border-radius:8px;
+    padding:6px 10px;font-size:12.5px;width:150px;font-family:inherit}
+  .tog{font-size:11px;padding:5px 10px;border-radius:8px;border:1px solid #ffffff1a;background:#ffffff0d;
+    color:var(--ink);cursor:pointer;white-space:nowrap}
+  .tog.off{opacity:.4}
+  /* painel de detalhe */
+  #panel{position:fixed;z-index:8;background:#1b1610f2;backdrop-filter:blur(7px);
+    border:1px solid #ffffff14;color:var(--ink);transition:transform .2s ease;overflow:auto}
+  @media(min-width:720px){#panel{top:62px;right:14px;width:360px;max-height:calc(100vh - 150px);
+    border-radius:14px;transform:translateX(380px)} #panel.on{transform:none}}
+  @media(max-width:719px){#panel{left:0;right:0;bottom:0;max-height:64vh;border-radius:16px 16px 0 0;
+    transform:translateY(100%)} #panel.on{transform:none}}
+  #panel.on{box-shadow:0 10px 40px #0009}
+  .p-pad{padding:16px 17px 22px}
+  .p-x{position:absolute;top:11px;right:13px;color:var(--mut);font-size:20px;cursor:pointer;line-height:1}
+  .p-tipo{font-size:10px;text-transform:uppercase;letter-spacing:.09em;padding:2px 9px;border-radius:20px;display:inline-block}
+  .p-nome{font-size:20px;font-weight:800;margin:9px 0 3px;padding-right:20px}
+  .p-nome .gen{font-family:Spectral;font-style:italic;color:var(--terra)}
+  h4{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin:15px 0 5px}
+  .p-txt{font-size:13px;line-height:1.5;color:#e8ddc9}
+  .p-txt.terra{border-left:2px solid var(--terra);padding-left:10px}
+  .p-txt.imp{border-left:2px solid #6b3a2a;padding-left:10px;color:#d8b0a8}
+  .conn{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+  .conn span{font-size:11px;background:#ffffff0d;border:1px solid #ffffff14;border-radius:20px;
+    padding:2px 9px;cursor:pointer}
+  .small{font-size:11px;color:var(--mut)}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:14px}
+</style></head>
+<body>
+<div id="graph"></div>
+<header>
+  <div class="wm">Datart <span class="gen">Gen</span>Lab <span class="rx">raio-x</span></div>
+  <div class="sub" id="sub">o catálogo vivo — toque um nó pra abrir o corpo</div>
+</header>
+<div id="bar">
+  <div class="row" id="legend"></div>
+  <div class="row">
+    <div class="ctrl">
+      <input id="q" placeholder="buscar…" autocomplete="off">
+      <div class="tog" id="togEstr">estrutura</div>
+      <div class="tog" id="togLink">[[link]]</div>
+      <div class="tog" id="togEvoc">evocações</div>
+      <div class="tog" id="togFer">feridas</div>
+      <div class="tog" id="btnSoltar">soltar</div>
+      <div class="tog" id="btnCap" style="border-color:#D2703F;color:#D2703F">⬡ capturar</div>
+      <div class="tog off" id="togJogo">jogo</div>
+    </div>
+  </div>
+  <div class="row" id="jogorow" style="display:none">
+    <span class="small">jogo da imagem · eixo <b id="jogoaxis">drama</b> →</span>
+    <div class="chip" onclick="variante(0)">1 · sóbrio</div>
+    <div class="chip" onclick="variante(1)">2 · leve</div>
+    <div class="chip" onclick="variante(2)">3 · dramático</div>
+    <div class="chip" onclick="variante(3)">4 · extremo</div>
+    <span class="small" id="jogonow">— escolha 1–4 (ou tecle) —</span>
+  </div>
+</div>
+<div id="panel"><div class="p-pad"><span class="p-x" id="px">×</span><div id="pbody"></div></div></div>
+<div id="loading">carregando o raio-x…</div>
+<script src="lib/force-graph.min.js"></script>
+<script>
+const COR = {
+  lab:'#F1ECE1',
+  alma:'#D2703F', fundador:'#E0B34D', principio:'#E0B34D',
+  habilidade:'#7fe0bf', protocolo:'#b9a8f0', tecnica:'#9fc0f0',
+  operador:'#f0a8c8', departamento:'#8b94a7', nucleo:'#c2a878',
+  dado:'#7fbfe0', pesquisa:'#d8d87f', ferida:'#f0788c'
+};
+const COR_DIR = {'Arte':'#7fe0bf','Estrategia':'#b9a8f0','Auditoria':'#7fbfe0'};
+const ROTULO = {
+  lab:'laboratório',
+  alma:'alma', fundador:'fundadores', principio:'princípios', habilidade:'habilidades',
+  protocolo:'protocolos', tecnica:'técnicas', operador:'operadores (personalidades)',
+  departamento:'departamentos', diretoria:'diretorias', nucleo:'núcleos',
+  dado:'dados', pesquisa:'pesquisas', ferida:'feridas'
+};
+const ORDEM = ['lab','alma','fundador','operador','diretoria','nucleo','principio','habilidade','protocolo',
+  'tecnica','departamento','dado','pesquisa','ferida'];
+const corDe = n => n.tipo==='diretoria' ? (COR_DIR[n.nome]||'#b9a8f0') : (COR[n.tipo]||'#9a8e7a');
+
+// --- mapa radial (a lógica do Miro): clusters irradiando do hub central ---
+const A = 360;  // raio dos clusters
+function diretoriaDe(n){
+  if(n.tipo==='diretoria') return n.nome;
+  if(n.tipo==='nucleo') return n.diretoria;
+  if(n.tipo==='tecnica'){const nu=NODE['nuc:'+n.nucleo]; return nu&&nu.diretoria;}
+  if(n.escopo && n.escopo.indexOf('dominio-')===0) return n.escopo.split('dominio-')[1];
+  return null;
+}
+function ancora(n){
+  const t=n.tipo;
+  if(t==='lab'||t==='alma') return {x:0,y:0};                                   // o centro
+  if(t==='fundador') return {x:0,y:-A*0.34};
+  if(t==='operador') return {x:0,y:-A};                                          // gerências/personalidades no topo
+  if(t==='principio'||t==='habilidade'||t==='protocolo') return {x:-A,y:-A*0.1}; // regras à esquerda
+  if(t==='departamento') return {x:0,y:A*0.5};                                   // fundação sob o centro
+  if(t==='dado'||t==='pesquisa') return {x:A,y:A*0.15};                          // acervo à direita
+  if(t==='ferida') return {x:A*0.9,y:-A*0.72};                                   // saúde no canto
+  const d=diretoriaDe(n);                                                        // diretorias + filhos, embaixo
+  if(d==='Arte') return {x:-A*0.62,y:A};
+  if(d==='Estrategia') return {x:0,y:A*1.05};
+  if(d==='Auditoria') return {x:A*0.62,y:A};
+  return {x:0,y:A*0.4};
+}
+function forcaCluster(alpha){
+  if(!DATA) return;
+  DATA.nodes.forEach(n=>{ if(!n._a) return;
+    n.vx += (n._a.x - n.x) * 0.09 * alpha;
+    n.vy += (n._a.y - n.y) * 0.09 * alpha; });
+}
+forcaCluster.initialize=function(){};
+// posição inicial DETERMINÍSTICA por id (mesmo arranjo a cada abertura — "mantenha exatamente")
+function seed(id){ let h=2166136261; for(let i=0;i<id.length;i++){h^=id.charCodeAt(i); h=Math.imul(h,16777619);} h=h>>>0;
+  const ang=(h%628)/100, r=15+(h%55); return {dx:Math.cos(ang)*r, dy:Math.sin(ang)*r}; }
+
+let G, DATA, ADJ={}, NODE={}, sel=null, hl=new Set(), hlL=new Set();
+const vis = {}; ORDEM.forEach(t=>vis[t]=true);
+let showEvoc=true, showFer=true, showEstr=true, showLink=true, frozen=false, q='';
+// jogo da imagem (captura convergente): CFG dos eixos + presets por round
+let CFG={nodeScale:1.7, hubBoost:1.0, linkAlpha:1};
+const VARIANTES=[
+  {n:'1 · sóbrio',     cfg:{nodeScale:1.3, hubBoost:0.7, linkAlpha:0.55}},
+  {n:'2 · leve',       cfg:{nodeScale:1.6, hubBoost:1.0, linkAlpha:0.85}},
+  {n:'3 · dramático',  cfg:{nodeScale:2.0, hubBoost:1.5, linkAlpha:1.15}},
+  {n:'4 · extremo',    cfg:{nodeScale:2.6, hubBoost:2.2, linkAlpha:1.5}},
+];
+
+(function carregar(tent){
+fetch('grafo.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0; return r.json();}).then(data=>{
+  DATA=data; const _l=document.getElementById('loading'); if(_l)_l.remove();
+  // grau -> tamanho; adjacencia
+  const deg={};
+  data.links.forEach(l=>{const s=l.source.id||l.source,t=l.target.id||l.target;
+    deg[s]=(deg[s]||0)+1; deg[t]=(deg[t]||0)+1;
+    (ADJ[s]=ADJ[s]||new Set()).add(t); (ADJ[t]=ADJ[t]||new Set()).add(s);});
+  data.nodes.forEach(n=>{n.val=(deg[n.id]||0); NODE[n.id]=n;});
+  document.getElementById('sub').textContent =
+    data.nodes.length+' nós · '+data.links.length+' arestas — toque um nó pra abrir o corpo';
+  buildLegend();
+  // tenta carregar o arranjo capturado (se existir, reabre no desenho do Vitor); senao, layout radial
+  fetch('layout-capturado.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null).then(saved=>{
+    if(saved && saved.pos){
+      data.nodes.forEach(n=>{const p=saved.pos[n.id]; if(p){n.fx=p.x; n.fy=p.y;}});
+      if(saved.arestas){showEstr=saved.arestas.estrutura!==false; showLink=saved.arestas.link!==false;
+        showEvoc=saved.arestas.evocacao!==false; showFer=saved.arestas.ferida!==false; syncTogglesUI();}
+      frozen=true;
+    } else {
+      data.nodes.forEach(n=>{ n._a=ancora(n); const s=seed(n.id); n.x=n._a.x+s.dx; n.y=n._a.y+s.dy; }); // radial determinístico
+    }
+    G = ForceGraph()(document.getElementById('graph'))
+      .graphData(data).nodeId('id').backgroundColor('rgba(0,0,0,0)')
+      .width(innerWidth).height(innerHeight)
+      .nodeVal(n=>n.val)
+      .nodeVisibility(nodeVis).linkVisibility(linkVis)
+      .linkColor(linkCor).linkWidth(l=> l.tipo==='link'?1.4:0.6)
+      .linkLineDash(l=> l.tipo==='evocacao'?[2,3] : l.tipo==='ferida'?[4,3] : null)
+      .nodeCanvasObjectMode(()=>'replace')
+      .nodeCanvasObject(drawNode)
+      .onNodeClick(selectNode).onBackgroundClick(clearSel)
+      .onNodeDragEnd(n=>{n.fx=n.x; n.fy=n.y;})        // arrastar bola -> fixa onde soltar
+      .onEngineStop(()=>{ if(!frozen){ data.nodes.forEach(n=>{n.fx=n.x; n.fy=n.y;}); frozen=true; } })
+      .cooldownTicks(saved?0:220);
+    if(!saved){ G.d3Force('cluster', forcaCluster); G.d3Force('charge').strength(-55);
+      if(G.d3Force('link')) G.d3Force('link').distance(32).strength(0.25); }
+    setTimeout(()=>G.zoomToFit(600,70), saved?150:1500);
+  });
+}).catch(()=>{ if((tent||0)<10){ setTimeout(()=>carregar((tent||0)+1),400); }
+  else { const l=document.getElementById('loading'); if(l)l.textContent='falha ao carregar o grafo — reabra pelo abrir-raio-x.bat'; } });
+})(0);
+addEventListener('resize',()=>{ if(G){G.width(innerWidth).height(innerHeight);} });
+
+function drawNode(n,ctx,scale){
+  const r=Math.max(2.2, Math.pow(n.val+1, 0.5*CFG.hubBoost)*CFG.nodeScale);
+  const dim = sel && !hl.has(n.id);
+  ctx.globalAlpha = dim?0.13:1;
+  ctx.beginPath(); ctx.arc(n.x,n.y,r,0,6.2832); ctx.fillStyle=corDe(n); ctx.fill();
+  if(sel===n.id){ctx.lineWidth=2/scale;ctx.strokeStyle='#F1ECE1';ctx.stroke();}
+  if(!dim && (n.val>=6 || scale>2.3 || sel===n.id)){
+    const fs=Math.max(3.2, 11/scale);
+    ctx.font=fs+'px Archivo, sans-serif'; ctx.fillStyle='#F1ECE1';
+    ctx.textAlign='center'; ctx.textBaseline='top'; ctx.globalAlpha=dim?0.13:0.92;
+    ctx.fillText(n.nome, n.x, n.y+r+1.5);
+  }
+  ctx.globalAlpha=1;
+}
+const nodeVis = n => vis[n.tipo] && (n.tipo!=='ferida'||showFer) && (!q || n.nome.toLowerCase().includes(q));
+function linkVis(l){
+  if(l.tipo==='evocacao' && !showEvoc) return false;
+  if(l.tipo==='ferida' && !showFer) return false;
+  if(l.tipo==='estrutura' && !showEstr) return false;
+  if(l.tipo==='link' && !showLink) return false;
+  const s=NODE[l.source.id||l.source], t=NODE[l.target.id||l.target];
+  return s&&t&&nodeVis(s)&&nodeVis(t);
+}
+function linkCor(l){
+  const on = !sel || hlL.has((l.source.id||l.source)+'>'+(l.target.id||l.target));
+  const a = (on?1:0.18)*CFG.linkAlpha;
+  if(l.tipo==='link') return `rgba(210,112,63,${Math.min(1,.55*a)})`;
+  if(l.tipo==='evocacao') return `rgba(127,191,224,${Math.min(1,.30*a)})`;
+  if(l.tipo==='ferida') return `rgba(240,120,140,${Math.min(1,.5*a)})`;
+  return `rgba(124,108,84,${Math.min(1,.30*a)})`;
+}
+function selectNode(n){
+  sel=n.id; hl=new Set([n.id]); hlL=new Set();
+  (ADJ[n.id]||new Set()).forEach(m=>hl.add(m));
+  DATA.links.forEach(l=>{const s=l.source.id||l.source,t=l.target.id||l.target;
+    if(s===n.id||t===n.id) hlL.add(s+'>'+t);});
+  openPanel(n); G.nodeCanvasObject(drawNode);
+}
+function clearSel(){ sel=null;hl=new Set();hlL=new Set(); closePanel(); }
+
+function openPanel(n){
+  const c=n.corpo||{}, p=document.getElementById('pbody');
+  let h=`<span class="p-tipo" style="background:${corDe(n)}22;color:${corDe(n)}">${ROTULO[n.tipo]||n.tipo}</span>`;
+  h+=`<div class="p-nome">${esc(n.nome)}</div>`;
+  if(n.estado&&n.estado!=='active'&&n.estado!=='ativo') h+=`<span class="small">estado: ${esc(n.estado)}</span>`;
+  if(n.natureza) h+=`<span class="small"> · natureza: ${esc(n.natureza)}</span>`;
+  // corpo por tipo
+  if(c.invariante){h+=sec('invariante',c.invariante,'terra');
+    if(c.delta_mae&&c.delta_mae.nome)h+=sec('delta-mãe',c.delta_mae.nome+' — '+(c.delta_mae.precedencia_fixa||''));}
+  if(c.texto)h+=sec('fundador',c.texto,'terra');
+  if(c.rotulo)h+=sec('',c.rotulo);
+  if(c.delta)h+=sec('delta próprio',c.delta,'terra');
+  if(c.imposto)h+=sec('imposto próprio',c.imposto,'imp');
+  if(c.desc)h+=sec('descrição',c.desc);
+  if(c.nota)h+=sec('nota',c.nota);
+  if(c.delta_proprio)h+=sec('delta',c.delta_proprio,'terra');
+  if(c.recorrencias){h+=sec('recorrências', c.recorrencias+'× — locus de ferida do lab','imp');
+    if(c.notas)h+='<div class="small" style="margin-top:6px">'+c.notas.map(x=>'• '+esc((x.nota||'').slice(0,140))).join('<br>')+'</div>';}
+  if(c.axioma_pai)h+=sec('axioma-pai', Array.isArray(c.axioma_pai)?c.axioma_pai.join(' · '):c.axioma_pai);
+  if(c.implementacao)h+=sec('implementação',c.implementacao);
+  if(c.ref)h+=sec('estado da arte',c.ref);
+  if(c.caminho)h+=`<h4>fonte</h4><div class="small">${esc(c.caminho)}</div>`;
+  // conexoes
+  const viz=[...(ADJ[n.id]||[])];
+  if(viz.length){h+='<h4>conexões ('+viz.length+')</h4><div class="conn">'+
+    viz.slice(0,40).map(id=>`<span onclick="jump('${id}')">${esc((NODE[id]||{}).nome||id)}</span>`).join('')+'</div>';}
+  p.innerHTML=h; document.getElementById('panel').classList.add('on');
+}
+function jump(id){ const n=NODE[id]; if(n){selectNode(n); G.centerAt(n.x,n.y,500); G.zoom(Math.max(G.zoom(),2.5),500);} }
+function closePanel(){ document.getElementById('panel').classList.remove('on'); if(G)G.nodeCanvasObject(drawNode); }
+function sec(t,v,cls){ return (t?`<h4>${t}</h4>`:'')+`<div class="p-txt ${cls||''}">${esc(v)}</div>`; }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+function buildLegend(){
+  const present=[...new Set(DATA.nodes.map(n=>n.tipo))];
+  const L=document.getElementById('legend');
+  ORDEM.filter(t=>present.includes(t)).forEach(t=>{
+    const el=document.createElement('div'); el.className='chip';
+    el.innerHTML=`<span class="dot" style="background:${t==='diretoria'?'#b9a8f0':(COR[t]||'#999')}"></span>${ROTULO[t]||t}`;
+    el.onclick=()=>{vis[t]=!vis[t]; el.classList.toggle('off',!vis[t]); refresh();};
+    L.appendChild(el);
+  });
+}
+document.getElementById('q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();refresh();});
+document.getElementById('togEvoc').onclick=function(){showEvoc=!showEvoc;this.classList.toggle('off',!showEvoc);refresh();};
+document.getElementById('togFer').onclick=function(){showFer=!showFer;this.classList.toggle('off',!showFer);refresh();};
+document.getElementById('togEstr').onclick=function(){showEstr=!showEstr;this.classList.toggle('off',!showEstr);refresh();};
+document.getElementById('togLink').onclick=function(){showLink=!showLink;this.classList.toggle('off',!showLink);refresh();};
+document.getElementById('btnSoltar').onclick=soltar;
+document.getElementById('btnCap').onclick=capturar;
+document.getElementById('px').onclick=clearSel;
+function syncTogglesUI(){[['togEstr',showEstr],['togLink',showLink],['togEvoc',showEvoc],['togFer',showFer]]
+  .forEach(([id,v])=>{const e=document.getElementById(id); if(e)e.classList.toggle('off',!v);});}
+function soltar(){ if(!G)return; frozen=false;
+  DATA.nodes.forEach(n=>{delete n.fx; delete n.fy; n._a=ancora(n);});
+  G.d3Force('cluster',forcaCluster); G.d3Force('charge').strength(-55);
+  if(G.d3Force('link'))G.d3Force('link').distance(32).strength(0.25);
+  G.cooldownTicks(220); if(G.d3ReheatSimulation)G.d3ReheatSimulation();
+  msg('soltei — re-arranjando; congela sozinho ao assentar'); }
+function capturar(){ if(!DATA)return; const pos={};
+  DATA.nodes.forEach(n=>{if(n.x!=null)pos[n.id]={x:Math.round(n.x),y:Math.round(n.y)};});
+  const layout={ts:Date.now(), pos, arestas:{estrutura:showEstr,link:showLink,evocacao:showEvoc,ferida:showFer}, filtros:{...vis}};
+  fetch('/salvar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(layout)})
+    .then(r=>msg(r.ok?'✓ desenho capturado → layout-capturado.json':'falha ao salvar'))
+    .catch(()=>{ try{navigator.clipboard.writeText(JSON.stringify(layout)); msg('sem servidor (abra pelo .bat) — copiei pro clipboard');}catch(e){msg('falha; use abrir-raio-x.bat');} }); }
+function msg(t){ let m=document.getElementById('msg'); if(!m){m=document.createElement('div');m.id='msg';
+  m.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:20;background:#1b1610f2;border:1px solid #D2703F;color:#F1ECE1;padding:8px 14px;border-radius:10px;font-size:12.5px;max-width:80vw;text-align:center';
+  document.body.appendChild(m);} m.textContent=t; clearTimeout(m._t); m._t=setTimeout(()=>{m.remove();},3200); }
+function variante(i){ Object.assign(CFG, VARIANTES[i].cfg); const e=document.getElementById('jogonow'); if(e)e.textContent='vendo: '+VARIANTES[i].n; if(G)G.nodeCanvasObject(drawNode); }
+document.getElementById('togJogo').onclick=function(){const r=document.getElementById('jogorow');const on=r.style.display==='none';r.style.display=on?'flex':'none';this.classList.toggle('off',!on);};
+addEventListener('keydown',e=>{ if(e.key>='1'&&e.key<='4' && document.activeElement.id!=='q'){variante(+e.key-1);} });
+function refresh(){ if(G){G.nodeVisibility(nodeVis).linkVisibility(linkVis);} }
+</script>
+</body></html>

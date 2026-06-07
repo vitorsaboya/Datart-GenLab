@@ -1,0 +1,2050 @@
+{
+ "meta": {
+  "gerado": "2026-06-07T00:53:25",
+  "n_nodes": 69,
+  "n_links": 165,
+  "por_tipo": {
+   "alma": 1,
+   "fundador": 7,
+   "diretoria": 3,
+   "nucleo": 10,
+   "principio": 7,
+   "habilidade": 3,
+   "protocolo": 3,
+   "tecnica": 8,
+   "operador": 5,
+   "departamento": 3,
+   "dado": 4,
+   "pesquisa": 10,
+   "ferida": 4,
+   "lab": 1
+  },
+  "por_aresta": {
+   "estrutura": 87,
+   "link": 29,
+   "evocacao": 45,
+   "ferida": 4
+  }
+ },
+ "nodes": [
+  {
+   "id": "alma",
+   "nome": "A alma",
+   "tipo": "alma",
+   "grupo": "constituicao",
+   "corpo": {
+    "invariante": "reversibilidade auditável — a arte pode ser aberta de volta ao dado original para provar honestidade (teste-da-legenda, D33). A FORMA (audiovisual, globo navegável, etc.) é mutável; o invariante não.",
+    "regua": {
+     "nome": "arte vs imposto (fractal — vale em todo nível)",
+     "arte": "o que faz o ato valer; carrega o peso/direção do Vitor",
+     "imposto": [
+      "tempo",
+      "dinheiro",
+      "token"
+     ],
+     "imposto_aberto": true,
+     "motor": [
+      "eficiência",
+      "fechar delta",
+      "inovar"
+     ],
+     "peso_de_arte_vem_de": "humano dirige (o sentido é do Vitor)",
+     "fractal": "cada célula gira seu próprio delta, tem seu próprio imposto, e evolui sozinha — masterizando-se contra o estado da arte e calibrando seu imposto"
+    },
+    "delta_mae": {
+     "nome": "arte × receita",
+     "natureza": "o único delta que atravessa a fronteira lab↔mundo — converte trabalho de arte em sustento e sustento em liberdade para mais arte. Bidirecional e auto-reforçante: NÃO é uma fila, é um laço. Governa a alocação da atenção do Vitor entre todos os domínios, não só dentro de Estratégia.",
+     "precedencia_fixa": "prazer > qualidade > coerência > receita — a alocação dinâmica nunca viola esta ordem (trava de alma do manifesto).",
+     "regra_de_alocacao": "disputa de atenção por retorno marginal, gatilhada por substrato — dinâmica, não uma ordem fixa.",
+     "medicao": "subjetiva-a-refinar. Bússola grossa AGORA: por obra, registrar se gerou substrato de monetização (sim/não) e a que esforço. As unidades se desenvolvem na fase da evidência."
+    }
+   }
+  },
+  {
+   "id": "fund:F1",
+   "nome": "F1",
+   "rotulo": "a obra é o conjunto, não só o produto",
+   "tipo": "fundador",
+   "grupo": "constituicao",
+   "corpo": {
+    "texto": "a obra é o conjunto, não só o produto",
+    "deriva": [
+     "cuidar da arquitetura como matéria estética (Atualizar Lab e Faxina são arte, não imposto)"
+    ],
+    "confianca": "confirmado"
+   }
+  },
+  {
+   "id": "fund:F2",
+   "nome": "F2",
+   "rotulo": "sistema bom é leve",
+   "tipo": "fundador",
+   "grupo": "constituicao",
+   "corpo": {
+    "texto": "sistema bom é leve",
+    "deriva": [
+     "o 'leve' do Delta C-T-T",
+     "a meta-regra: poucos princípios fortes, não muitas regras frágeis"
+    ],
+    "confianca": "confirmado"
+   }
+  },
+  {
+   "id": "fund:F3",
+   "nome": "F3",
+   "rotulo": "manter é parte da arte, mas só uma parte",
+   "tipo": "fundador",
+   "grupo": "constituicao",
+   "corpo": {
+    "texto": "manter é parte da arte, mas só uma parte",
+    "deriva": [
+     "Arte-Trabalho (a régua arte vs imposto)"
+    ],
+    "confianca": "confirmado-literal"
+   }
+  },
+  {
+   "id": "fund:F4",
+   "nome": "F4",
+   "rotulo": "o consagrado tem validade, não eternidade",
+   "tipo": "fundador",
+   "grupo": "constituicao",
+   "corpo": {
+    "texto": "o consagrado tem validade, não eternidade",
+    "deriva": [
+     "Masterizar",
+     "o 'fiel/evoluir' do Delta C-T-T",
+     "Pesquisa 3N"
+    ],
+    "confianca": "confirmado"
+   }
+  },
+  {
+   "id": "fund:F5",
+   "nome": "F5",
+   "rotulo": "cognição distribuída é arquitetura",
+   "tipo": "fundador",
+   "grupo": "constituicao",
+   "corpo": {
+    "texto": "cognição distribuída é arquitetura",
+    "deriva": [
+     "os operadores: Code Quente, Code Frio, Auditor",
+     "os protocolos de passagem"
+    ],
+    "confianca": "confirmado-literal"
+   }
+  },
+  {
+   "id": "fund:F6",
+   "nome": "F6",
+   "rotulo": "humano dirige",
+   "tipo": "fundador",
+   "grupo": "constituicao",
+   "corpo": {
+    "texto": "humano dirige",
+    "deriva": [
+     "a inviolável de captura (o sinal é do Vitor, D-CAP-10)",
+     "Jogo Imagem"
+    ],
+    "confianca": "confirmado-literal"
+   }
+  },
+  {
+   "id": "fund:F7",
+   "nome": "F7",
+   "rotulo": "permanência é continuidade da intenção, não da forma",
+   "tipo": "fundador",
+   "grupo": "constituicao",
+   "corpo": {
+    "texto": "permanência é continuidade da intenção, não da forma",
+    "deriva": [
+     "Apenas Raiz",
+     "Nuvem First"
+    ],
+    "confianca": "interpretativo"
+   }
+  },
+  {
+   "id": "dir:Arte",
+   "nome": "Arte",
+   "tipo": "diretoria",
+   "grupo": "diretoria",
+   "estado": "ativo",
+   "corpo": {
+    "nota": "o domínio que produz obra hoje (obra ativa: 011-tempestade-oceano). Organiza-se por DUAS dimensões — núcleo (tema) + natureza (reutilização); ver taxonomia_dominio_arte. As 3 habilidades antigas (Data ETL, Jogo Imagem, Técnicas) foram absorvidas nos núcleos.",
+    "delta_proprio": "",
+    "implementacao": "cozinha/obras/ + cozinha/organismos/ + cozinha/jogo/ + cozinha/aquisicao/ — todas as células de escopo dominio-Arte."
+   }
+  },
+  {
+   "id": "dir:Auditoria",
+   "nome": "Auditoria",
+   "tipo": "diretoria",
+   "grupo": "diretoria",
+   "estado": "ativo",
+   "corpo": {
+    "nota": "olha frio o lab; gerou esta própria fase de governança.",
+    "delta_proprio": "",
+    "implementacao": "cozinha/auditoria/ — o operador Auditor mora aqui."
+   }
+  },
+  {
+   "id": "dir:Estrategia",
+   "nome": "Estrategia",
+   "tipo": "diretoria",
+   "grupo": "diretoria",
+   "estado": "ativo-a-construir",
+   "corpo": {
+    "nota": "Já tem CORPO no disco (reconciliado s.31): marca cravada, produto 011 na nuvem e o painel V4 no ar — os núcleos marca (s.30) e produtos (s.29) brotaram. Segue 'a-construir' por falta do gerente de Estrategia e de técnicas catalogadas nos núcleos. Por decisão do Vitor tem o MESMO peso que Arte (anda em paralelo, mesmo cuidado), mas a RECEITA é sempre a última da fila (prazer, qualidade, coerência, e só então receita — ver manifesto e edição 2).",
+    "delta_proprio": "arte × receita — alocação da atenção do Vitor entre desenvolver arte e desenvolver monetização, variante pelo retorno marginal dos dois. Enquanto a arte render mais que o esforço de monetizar, a atenção fica na arte; conforme a arte gera substrato que barateia a monetização, a receita sobe na disputa. Gatilho: substrato. Mesmo peso que Arte; receita nunca antes de prazer/qualidade/coerência.",
+    "implementacao": "cozinha/indice/nucleos.json (diretoria Estrategia: nucleos painel, produtos, marca, site, marketing). No disco: marca/marca-final/ (marca cravada, s.30) + produtos/ (repo GitHub Pages, 011 na nuvem, s.29) + vitrine/v4/ (o painel do arquiteto, s.24)."
+   }
+  },
+  {
+   "id": "nuc:dados",
+   "nome": "Dados",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "produtivo",
+   "diretoria": "Arte",
+   "corpo": {
+    "desc": "buscar, capturar e tratar o dado publico da internet — e em que regime ele opera",
+    "organismos": [
+     "aquisicao-dado",
+     "mapeamento-geoespacial"
+    ]
+   }
+  },
+  {
+   "id": "nuc:captura",
+   "nome": "Captura de intencao (o jogo)",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "doutrina",
+   "diretoria": "Arte",
+   "corpo": {
+    "desc": "entender a imagem-na-cabeca do Vitor antes do delta mirar — o jogo de captura por preferencia",
+    "organismos": [
+     "captura"
+    ]
+   }
+  },
+  {
+   "id": "nuc:estetica",
+   "nome": "Estetica / visualizacao",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "produtivo",
+   "diretoria": "Arte",
+   "corpo": {
+    "desc": "a luz, a cor e a forma que fazem o dado virar cinema",
+    "organismos": [
+     "look-render-luz",
+     "ondas-oceano",
+     "campo-particulas"
+    ]
+   }
+  },
+  {
+   "id": "nuc:custo-render",
+   "nome": "Custo & render",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "produtivo",
+   "diretoria": "Arte",
+   "corpo": {
+    "desc": "masterizar o custo (render + tokens) e a infra headless que vira o pixel em arquivo",
+    "organismos": [
+     "render-saida"
+    ]
+   }
+  },
+  {
+   "id": "nuc:fechamento",
+   "nome": "Fechamento / alma",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "doutrina",
+   "diretoria": "Arte",
+   "corpo": {
+    "desc": "como soltar a obra honesta — o metodo e a alma que atravessam todos os nucleos",
+    "organismos": [
+     "fechamento"
+    ]
+   }
+  },
+  {
+   "id": "nuc:painel",
+   "nome": "Painel / Interface",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "produtivo",
+   "diretoria": "Estrategia",
+   "corpo": {
+    "desc": "a linguagem entre o cerebro do Vitor e a cozinha — a interface que governa a evolucao do lab (nasce na V4)",
+    "organismos": []
+   }
+  },
+  {
+   "id": "nuc:site",
+   "nome": "Site",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "futuro",
+   "diretoria": "Estrategia",
+   "corpo": {
+    "desc": "(futuro) o produto site — ainda nao brotou",
+    "organismos": []
+   }
+  },
+  {
+   "id": "nuc:marketing",
+   "nome": "Marketing",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "futuro",
+   "diretoria": "Estrategia",
+   "corpo": {
+    "desc": "(futuro) marketing dos produtos — ainda nao brotou",
+    "organismos": []
+   }
+  },
+  {
+   "id": "nuc:produtos",
+   "nome": "Clube de produtos",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "produtivo",
+   "diretoria": "Estrategia",
+   "corpo": {
+    "desc": "a linha de produtos — BROTOU na s.29: a 011 virou produto na nuvem (padrao galeria=repo -> GitHub Pages, $0, clicavel). Espelha a fonte da obra; nao amarra a maquina (Nuvem-First/F7)",
+    "organismos": []
+   }
+  },
+  {
+   "id": "nuc:marca",
+   "nome": "Marca / Identidade",
+   "tipo": "nucleo",
+   "grupo": "nucleo",
+   "ntipo": "produtivo",
+   "diretoria": "Estrategia",
+   "corpo": {
+    "desc": "a identidade visual do lab — BROTOU na s.30 num processo de estudio: wordmark Datart GenLab + avatar Dg sobre graticule (territorio T3, atelier noturno). Arquivos em marca/marca-final/ (regen por render_marca.py); spec em marca/marca-final/marca.md. O Code conduz, o gosto e do Vitor (F6/captura)",
+    "organismos": []
+   }
+  },
+  {
+   "id": "cel:Delta C-T-T",
+   "nome": "Delta C-T-T",
+   "tipo": "principio",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "fechar a distância entre o caminho atual e o mais leve/barato/rápido/fiel para o mesmo fim — re-questionando o consagrado.",
+    "imposto": "tokens e tempo gastos na própria deliberação; o risco de otimizar forma e perder fidelidade (o 4º eixo).",
+    "axioma_pai": [
+     "F2",
+     "F4"
+    ],
+    "implementacao": "resumo-mae-build-037.md §1 + D35 + CLAUDE.md (raiz, a régua de ouro)",
+    "ref": "a régua de ouro viva (CLAUDE.md de raiz, re-injetada após compactação).",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:Fechar Deltas",
+   "nome": "Fechar Deltas",
+   "tipo": "principio",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "não deixar dívida aberta: todo delta identificado vira tarefa que fecha, não band-aid acumulado.",
+    "imposto": "o custo de fechar agora vs adiar; o risco de fechar cedo demais um delta que ainda estava em exploração.",
+    "axioma_pai": [
+     "F2"
+    ],
+    "implementacao": "resumo-mae-build-037.md D12 + D16",
+    "ref": null,
+    "calibragem": null
+   }
+  },
+  {
+   "id": "cel:Solo Firme",
+   "nome": "Solo Firme",
+   "tipo": "principio",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "antes de agir sem o conhecimento, SOBREVOAR o que já existe — recall + ler o corpo no disco, e pesquisar a fronteira (Pesquisa 3N) se o disco não tem; e quando o lab JÁ TEM a regra/habilidade/protocolo, USAR — improvisar um caminho novo com a regra no disco é a falha pre-voo-raso.",
+    "imposto": "o tempo do sobrevoo quando o disco não tinha nada (raro); o risco oposto é o caro — agir da superfície (pre-voo-raso) gera re-trabalho. Limite: sobrevoo proporcional à incerteza, não 'ler tudo por via das dúvidas' (D39).",
+    "axioma_pai": [
+     "F2",
+     "F4"
+    ],
+    "implementacao": "resumo-mae-build-037.md D36/D39/D42/D-CAP-9 + cozinha/sessao/essencial.md (Pré-voo profundo) + CLAUDE.md (raiz, sobrevive à compactação); KPI = ferida pre-voo-raso em cozinha/feridas/",
+    "ref": null,
+    "calibragem": "2026-06-05"
+   }
+  },
+  {
+   "id": "cel:Apenas Raiz",
+   "nome": "Apenas Raiz",
+   "tipo": "principio",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "manter toda a obra dentro de uma raiz versionável/portável — permanência da intenção independe da máquina.",
+    "imposto": "atrito quando algo legítimo precisa morar fora da raiz (ex.: segredo .modal.toml); o hook custa um passo a cada escrita.",
+    "axioma_pai": [
+     "F7"
+    ],
+    "implementacao": "resumo-mae-build-037.md D27 + D41 + .claude/hooks/guard-fora-da-raiz.ps1 (enforço mecânico)",
+    "ref": null,
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:Nuvem First",
+   "nome": "Nuvem First",
+   "tipo": "principio",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "render/computação pesada nasce pensada para a nuvem; a máquina pessoal não é o teto.",
+    "imposto": "dinheiro real (still ~$0,0025; vídeo ~$0,30-0,69) — imposto aberto, sempre avisar antes; latência de subir o job.",
+    "axioma_pai": [
+     "F7"
+    ],
+    "implementacao": "resumo-mae-build-037.md D23 + cozinha/runtime/ + cozinha/custo-nuvem.md",
+    "ref": "cozinha/custo-nuvem.md (a tabela de custo viva).",
+    "calibragem": null
+   }
+  },
+  {
+   "id": "cel:Arte-Trabalho",
+   "nome": "Arte-Trabalho",
+   "tipo": "principio",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "separar limpo o que carrega peso de arte (honrar) do que é só fricção (minimizar) — em TODO ato do lab.",
+    "imposto": "o tempo gasto decidindo se algo é arte ou imposto. Gatilho de parar de julgar e agir: quando a deliberação custa mais que o erro que ela evitaria. Âncora: o locus boot-recapitulacao no placar de feridas (4 registros) — o imposto de julgamento mais caro do lab foi reconstruir contexto, não classificar arte/imposto errado.",
+    "axioma_pai": [
+     "F3"
+    ],
+    "implementacao": "resumo-mae-build-037.md §2 + cozinha/sessao/essencial.md",
+    "ref": null,
+    "calibragem": null
+   }
+  },
+  {
+   "id": "cel:Pesquisa 3N",
+   "nome": "Pesquisa 3N",
+   "tipo": "habilidade",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "perseguir o estado da arte com pesquisa arquivada e reusável — não re-pesquisar o já convergido (pré-voo D36).",
+    "imposto": "tokens/tempo da pesquisa; risco de re-rodar o já decidido (o pré-voo existe pra evitar).",
+    "axioma_pai": [
+     "F4"
+    ],
+    "implementacao": "resumo-mae-build-037.md D38 + cozinha/pesquisa/arquivar.py + cozinha/relatorios/*pesquisa* (arquivadas no recall)",
+    "ref": "os relatórios de pesquisa arquivados em cozinha/relatorios/.",
+    "calibragem": "2026-06-02"
+   }
+  },
+  {
+   "id": "cel:Entrega Clique",
+   "nome": "Entrega Clique",
+   "tipo": "habilidade",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "TODA entrega ao Vitor chega ABERTA — obra, painel, rascunho de design, qualquer superfície que ele precise ver ou votar. O Code abre no Chrome (file:// ou .bat); o Vitor nunca cola URL nem faz setup. Zero fricção entre ele e o que precisa ver.",
+    "imposto": "manter os atalhos/harness vivos conforme as obras mudam; tempo de manutenção do empacotamento. Falha-mãe registrada (2026-06-04): a regra existia mas a evocação não a acendeu na hora da entrega — por isso o reflexo subiu pro CLAUDE.md de raiz (sempre-carregado), não fica só na célula evocável.",
+    "axioma_pai": [
+     "F6",
+     "F1"
+    ],
+    "implementacao": "resumo-mae-build-037.md D31 + CLAUDE.md (raiz, reflexo sempre-carregado) + vitrine/abrir-painel-geral.bat + vitrine/011-el-nino/abrir-globo.bat + cozinha/jogo/harness.py",
+    "ref": null,
+    "calibragem": "2026-06-04"
+   }
+  },
+  {
+   "id": "cel:Masterizar",
+   "nome": "Masterizar",
+   "tipo": "habilidade",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "cada célula se afia contra o estado da arte e calibra seu próprio imposto — masterização contínua, não um ato único.",
+    "imposto": "o tempo de masterizar além do retorno medível. Limite: a curva de retorno achatando, MEDIDA e não sentida (ancorado em 'medir não estimar', D-RS-5, e 'afinar não maximizar', D-LR-7). Insistir além disso é perfeccionismo = imposto.",
+    "axioma_pai": [
+     "F4"
+    ],
+    "implementacao": "DISTRIBUÍDO: cozinha/feridas/ (KPI — placar.py, registrar.py, feridas.jsonl; D10/D18) + cozinha/custo-nuvem.md + os setups validados nos organismos.",
+    "ref": "o KPI das feridas (cozinha/feridas/) + a tabela de custo.",
+    "calibragem": null
+   }
+  },
+  {
+   "id": "cel:Atualizar Lab",
+   "nome": "Atualizar Lab",
+   "tipo": "protocolo",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "manter a arquitetura viva e coerente — esculpir o organismo como matéria estética (é arte, não imposto).",
+    "imposto": "o risco de virar atualização-por-atualização; tempo gasto refatorando o que já servia.",
+    "axioma_pai": [
+     "F1"
+    ],
+    "implementacao": "resumo-mae-build-037.md D8/D29 + cozinha/sessao/LEIA.md (protocolo 1)",
+    "ref": null,
+    "calibragem": null
+   }
+  },
+  {
+   "id": "cel:Faxina",
+   "nome": "Faxina",
+   "tipo": "protocolo",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "podar o morto/redundante para o sistema ficar leve — manter é parte da arte.",
+    "imposto": "risco de podar o que ainda servia (ex.: lição — _teste_verde.py reconstrói índice só com 8 organismos; re-rodar indexar.py depois); tempo da poda.",
+    "axioma_pai": [
+     "F1"
+    ],
+    "implementacao": "resumo-mae-build-037.md D10/D24 + cozinha/poda/podar.py",
+    "ref": null,
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:Passagem Quente",
+   "nome": "Passagem Quente",
+   "tipo": "protocolo",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "religar as sinapses certas entre sessões sem reconstruir estado do zero — eliminar o imposto da reconstrução (D36).",
+    "imposto": "tokens do briefing de reativação; risco do mapa quente divergir do disco (D37: disco ganha).",
+    "axioma_pai": [
+     "F5"
+    ],
+    "implementacao": "resumo-mae-build-037.md D42 + cozinha/sessao/ (ativacao-atual.md, essencial.md, LEIA.md)",
+    "ref": "a evocação por grafo automática (D44).",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:Dado-Arte",
+   "nome": "Dado-Arte",
+   "tipo": "principio",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "garantir que cada elemento visual seja CANAL ou MOLDURA, nunca RUÍDO — a imagem volta ao dado (teste-da-legenda).",
+    "imposto": "o gate de fidelidade custa esforço estético; tensão entre drama e honestidade. O sinal/gosto é do Vitor (D-CAP-10) — o Code é testemunha, não juiz.",
+    "axioma_pai": "invariante",
+    "implementacao": "resumo-mae-build-037.md D33 + cozinha/obras/011-tempestade-oceano/legenda-viva.md",
+    "ref": "a legenda-viva da obra ativa (= lei do shader).",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:aquisicao-dado",
+   "nome": "aquisicao-dado",
+   "tipo": "tecnica",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "dados",
+   "natureza": "universal",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "trazer dado público real, tratado e registrado com cartão/proveniência, pronto pra virar arte (absorvido da antiga habilidade Data ETL).",
+    "imposto": "tempo de aquisição/tratamento; custo de banda (ex.: evitar baixar OISST 280MB — ERDDAP, D-AQ-6); risco de instalar dependência pesada (xarray) à toa.",
+    "axioma_pai": [
+     "F7",
+     "F6"
+    ],
+    "implementacao": "cozinha/aquisicao/ (registrar.py, LEIA.md) + cozinha/organismos/aquisicao-dado.md (D-AQ-6) + skill data-sets + cozinha/dados/",
+    "ref": "ERDDAP via sonda (D-AQ-6); a skill data-sets.",
+    "calibragem": "2026-06-02"
+   }
+  },
+  {
+   "id": "cel:mapeamento-geoespacial",
+   "nome": "mapeamento-geoespacial",
+   "tipo": "tecnica",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "dados",
+   "natureza": "condicional",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "projetar lat/lon sem as convenções brigarem — o dado tem que ler verdadeiro; north-up de propósito (REF-009).",
+    "imposto": "tempo de fixar fonte/orientação; risco de convenção silenciosa que desloca o dado. Condicional: arquivado e reusado quando uma obra geoespacial repete.",
+    "axioma_pai": [
+     "invariante"
+    ],
+    "implementacao": "cozinha/organismos/mapeamento-geoespacial.md (REF-009)",
+    "ref": "REF-009.",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:captura",
+   "nome": "captura",
+   "tipo": "tecnica",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "captura",
+   "natureza": "alma",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "o UPSTREAM inteiro — entender a imagem-na-cabeça do Vitor ANTES do delta mirar (D19): o delta mira no escuro se o alvo está mal-formado. Referência entra como binário de 1ª classe etiquetado por papel (D-CAP-1), e a palavra do Vitor aponta SOBRE o pixel (D-CAP-2), nunca convertida-pra-texto-e-descartada. O jogo de voto é UM modo (D-CAP-7), não o todo (lente, não prateleira).",
+    "imposto": "a falha-mãe = a imagem-alvo que EVAPORA — na 011, 3 imagens degradaram imagem→texto e os binários se perderam (D-CAP-6: 'o sinal mais valioso do lab foi o pior tratado', F4); curar = salvar o binário no momento, não descrever melhor. + os invioláveis: o Code não vota/sintetiza pelo Vitor (D-CAP-10) nem re-roda captura já convergida por princípio (D-CAP-9).",
+    "axioma_pai": [
+     "F6"
+    ],
+    "implementacao": "cozinha/jogo/ (gerar.py, harness.py, LEIA.md) + cozinha/organismos/captura.md (D-CAP-7/8/9/10)",
+    "ref": "o harness de captura por voto.",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:look-render-luz",
+   "nome": "look-render-luz",
+   "tipo": "tecnica",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "estetica",
+   "natureza": "condicional",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "o acabamento (luz/cor/pós) serve o sinal e não o engole — a cor sai do DADO/regime, não de estética avulsa (divergente por anomalia, metal-líquido por velocidade, fire-ramp por intensidade, D-LR-4); dado→estética é função divergente AFINADA, não maximizada (D-LR-7).",
+    "imposto": "a lição-bandeira do .md = pesquisar em SILO técnico quando o vocabulário do problema é forte, deixando de fora os fundamentos transversais (luz/cor/composição/atmosfera) — REF-014/D-LR-1, a 'lição mais importante do lab' no feedback do Vitor; + aditivo (bloom/espuma) que finge sinal (RUÍDO). Condicional: arquivado e reusado quando o tipo de obra repete.",
+    "axioma_pai": [
+     "invariante"
+    ],
+    "implementacao": "cozinha/organismos/look-render-luz.md",
+    "ref": "D-LR-6/7/8 + a legenda-viva da obra ativa.",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:ondas-oceano",
+   "nome": "ondas-oceano",
+   "tipo": "tecnica",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "estetica",
+   "natureza": "condicional",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "simular mar com ALTURA/cristas de verdade, não fluido no plano (pivot SPH 2D → Gerstner/heightfield, D-ON-1; a fundação certa é FFT de espectro oceanográfico/Tessendorf, não Gerstner-na-mão, D-ON-6). Forma e movimento da água são DADO, não enfeite — a legenda-viva é lei (CANAL/MOLDURA declarada).",
+    "imposto": "a falha-mãe técnica = 4 renders queimados (011 v6-v9) pelo bug DUPLO — uniform-array do moderngl que falha SILENCIOSAMENTE + sky pass deixando o depth buffer sujo (D-ON-5); + risco de relevo/movimento arbitrário que finge sinal (RUÍDO). Condicional: técnica de obra-oceano, arquivada e reusada quando o tipo repete.",
+    "axioma_pai": [
+     "invariante"
+    ],
+    "implementacao": "cozinha/organismos/ondas-oceano.md",
+    "ref": "a legenda-viva da obra 011 (= lei do shader).",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:campo-particulas",
+   "nome": "campo-particulas",
+   "tipo": "tecnica",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "estetica",
+   "natureza": "condicional",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "a partícula revela um campo REAL, nunca RUÍDO que finge sinal — curl noise revela o campo invisível (D-CP-1), GPGPU ping-pong escala pra milhões (D-CP-2); a advecção por dado/ruído é declarada como MOLDURA.",
+    "imposto": "a falha-mãe ARQUITETURAL = centro-plano: em volume denso, AdditiveBlending satura o centro ESTRUTURALMENTE — não é parâmetro de retorno decrescente, é a arquitetura do blending (D-CP-3). Condicional: arquivado e reusado quando o tipo de obra repete.",
+    "axioma_pai": [
+     "invariante"
+    ],
+    "implementacao": "cozinha/organismos/campo-particulas.md",
+    "ref": null,
+    "calibragem": null
+   }
+  },
+  {
+   "id": "cel:render-saida",
+   "nome": "render-saida",
+   "tipo": "tecnica",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "custo-render",
+   "natureza": "universal",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "virar o pixel em arquivo nuvem-by-design (Modal) e masterizar o custo (render + tokens) da infra headless; nada amarra a obra a esta máquina.",
+    "imposto": "dinheiro real de render (avisar antes); cuidado com o uniform-array silencioso do moderngl e o flip PIL/textura (REF-010).",
+    "axioma_pai": [
+     "F7"
+    ],
+    "implementacao": "cozinha/organismos/render-saida.md (REF-010) + cozinha/custo-nuvem.md",
+    "ref": "Modal nuvem-by-design (REF-010); a tabela de custo (cozinha/custo-nuvem.md).",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:fechamento",
+   "nome": "fechamento",
+   "tipo": "tecnica",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "fechamento",
+   "natureza": "alma",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "o método de fechar uma obra de forma honesta (distinto de 'Fechar Deltas' nível-lab; este é produção de obra) — REF-012, marcar o que evaporou.",
+    "imposto": "fechar a obra deixando direcionamento dormente sem gancho recuperável (anti-padrão D-FE-3). Critério de fechar = REF-012 (saturação + transferência + imperfeição reconhecida), validado 6/6. O imposto não é a hora de fechar; é a transferência prometida que vira nota morta.",
+    "axioma_pai": [
+     "invariante"
+    ],
+    "implementacao": "cozinha/organismos/fechamento.md (REF-012)",
+    "ref": "REF-012.",
+    "calibragem": null
+   }
+  },
+  {
+   "id": "cel:Code Quente",
+   "nome": "Code Quente",
+   "tipo": "operador",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "executar com fidelidade ao que está na cabeça do Vitor, fechando deltas no disco.",
+    "imposto": "tokens/tempo do Code; reconstrução de estado entre sessões (imposto a eliminar, D36).",
+    "axioma_pai": [
+     "F5"
+    ],
+    "implementacao": "resumo-mae-build-037.md D2/D43 — o operador no disco (constrói, único com escrita, só dentro da raiz)",
+    "ref": null,
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:Code Frio",
+   "nome": "Code Frio",
+   "tipo": "operador",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "raciocinar e preparar tarefas/handoffs sem operar o disco — cognição distribuída.",
+    "imposto": "o custo da passagem (handoff) entre frio e quente; risco de divergir do disco real.",
+    "axioma_pai": [
+     "F5"
+    ],
+    "implementacao": "resumo-mae-build-037.md D2/D43 — a IA reflexiva que prepara/raciocina sem o disco quente",
+    "ref": null,
+    "calibragem": null
+   }
+  },
+  {
+   "id": "cel:Auditor",
+   "nome": "Auditor",
+   "tipo": "operador",
+   "grupo": "celula",
+   "escopo": "dominio-Auditoria",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "olhar frio o lab e apontar o que diverge da intenção — sem mexer no disco (esta própria fase nasceu da 1ª auditoria fria).",
+    "imposto": "tempo de preparar o pacote de auditoria; risco de auditoria que não vira ação.",
+    "axioma_pai": [
+     "F5"
+    ],
+    "implementacao": "resumo-mae-build-037.md D2/D43 + cozinha/auditoria/ (gerar.py, carta-do-auditor.md, saida/) — audita, não opera",
+    "ref": "cozinha/auditoria/saida/ (os pacotes de auditoria).",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:Gerente Geral",
+   "nome": "Gerente Geral",
+   "tipo": "operador",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "fechar o delta do LAB consigo mesmo: coerência intenção↔implementação + a saúde dos deltas dos núcleos + o delta-mãe arte×receita. Recebe o Vitor a cada abertura e garante que o lab abra CONSCIENTE de quem é (a trava de consciência); roteia pela complexidade (recepção = CONVITE, nunca catraca — fora do menu flui); é o intermediário quente que acumula o cardápio de 'onde olhar' pro auditor frio.",
+    "imposto": "a trava de consciência é HONESTA — a parte mecanizável (a consciência mínima chegar ao contexto e sobreviver à compactação) já vive no CLAUDE.md de raiz; o internalizar é REFLEXO, não muro (não fingir garantia por força bruta — lastro: prompts são probabilísticos). Riscos: a recepção virar catraca (captura o Vitor em vez de libertar); votar/sintetizar pelo Vitor (é testemunha, D-CAP-10); inflar a consciência além do teto (context rot, U-invertido); auto-consolidar o cardápio sem o gate (memória que consolida sem validação corrompe — risco-mestre da pesquisa de arquitetura).",
+    "axioma_pai": [
+     "F5",
+     "F1"
+    ],
+    "implementacao": "resumo-mae-build-039.md D47 + cozinha/gerencia/LEIA.md (a doutrina, espelhando a casa do Auditor) + CLAUDE.md (raiz, a consciência mínima que sobrevive à compactação, D44). POSTURA que o Code veste a cada sessão, montada nos canais NATIVOS — não agente sempre-ligado nem infra paralela.",
+    "ref": "cozinha/gerencia/LEIA.md + a auditoria gerencial da s.26 (o 1º exercício da postura, relatorios/2026-06-05-auditoria-gerencial-sessao-26.md) + o lastro de fronteira (relatorios/2026-06-01-pesquisa-arquitetura-do-lab.md).",
+    "calibragem": "2026-06-05"
+   }
+  },
+  {
+   "id": "cel:Gerente de Artes",
+   "nome": "Gerente de Artes",
+   "tipo": "operador",
+   "grupo": "celula",
+   "escopo": "dominio-Arte",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "fechar o delta do DOMÍNIO ARTE consigo mesmo: os processos são auditáveis (reversibilidade/legenda-viva, D33)? os organismos-lei são respeitados? o trabalho fecha por deltas (REF-012) ou as descobertas dormem (D-FE-3)? Audita pelas 3 lentes (auditável / padrões / fecha-por-deltas) e produz cardápio rastreável com gancho; cataloga cada aprendizado no NÍVEL CERTO (delta-da-obra na obra; lei-do-lab no organismo — GA-3).",
+    "imposto": "testemunha, não juiz (D-CAP-10): não vota gosto/direção nem refaz a arte por conta própria. Risco-mãe pego no próprio batismo (GA-3): promover um alvo MOMENTÂNEO/fluido da obra a regra do lab = erro de categoria (endurece o que devia respirar) — o Vitor corrigiu a onda-surreal-da-011, catalogada na obra, não no organismo. Não re-rodar captura convergida (D-CAP-9).",
+    "axioma_pai": [
+     "F5",
+     "F1"
+    ],
+    "implementacao": "resumo-mae-build-039.md D47 (a figura dos gerentes) + cozinha/gerencia/arte.md (a doutrina). O 1º gerente de NÚCLEO — o batismo do GG (s.27). POSTURA que o Code veste ao trabalhar no domínio Arte; nasceu FAZENDO a 1ª auditoria do departamento, não como figura vazia.",
+    "ref": "cozinha/gerencia/arte.md + o batismo (relatorios/2026-06-05-batismo-gerente-de-artes.md) + os organismos do domínio Arte.",
+    "calibragem": "2026-06-05"
+   }
+  },
+  {
+   "id": "cel:Vitrine",
+   "nome": "Vitrine",
+   "tipo": "departamento",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "a superfície que o Vitor-arquiteto lê e navega — o lab se mostra a si mesmo.",
+    "imposto": "manter a vitrine fresca (panorama regenera sempre); risco de virar fachada desatualizada.",
+    "axioma_pai": [
+     "F1"
+    ],
+    "implementacao": "resumo-mae-build-037.md D22 + vitrine/ (panorama.html, manual-evocacao.md, 011-el-nino/)",
+    "ref": "vitrine/panorama.html (gerado por panorama.py, sempre fresco).",
+    "calibragem": "2026-06-03"
+   }
+  },
+  {
+   "id": "cel:Cozinha",
+   "nome": "Cozinha",
+   "tipo": "departamento",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "onde a obra é feita — o atelier vivo, dentro da raiz.",
+    "imposto": "entropia: acúmulo de morto (a Faxina combate); tamanho do disco.",
+    "axioma_pai": [
+     "F1"
+    ],
+    "implementacao": "resumo-mae-build-037.md D22/D41 + cozinha/ (o disco de trabalho inteiro)",
+    "ref": null,
+    "calibragem": null
+   }
+  },
+  {
+   "id": "cel:Banco de Dados",
+   "nome": "Banco de Dados",
+   "tipo": "departamento",
+   "grupo": "celula",
+   "escopo": "nivel-lab",
+   "nucleo": "",
+   "natureza": "",
+   "estado": "ativo",
+   "corpo": {
+    "delta": "a memória estruturada do lab: dados, KPIs, referências, organismos, relatórios/pesquisa — a base que o recall acende.",
+    "imposto": "manter cartões/proveniência; risco de dado órfão sem cartão; o índice (máquina) precisa reindexar quando muda.",
+    "axioma_pai": [
+     "F1"
+    ],
+    "implementacao": "5 pastas: cozinha/dados/ + cozinha/feridas/ + cozinha/obras/<obra>/referencias/ + cozinha/organismos/ + (cozinha/relatorios/ + cozinha/pesquisa/)",
+    "ref": null,
+    "calibragem": null
+   }
+  },
+  {
+   "id": "dado:dado-inpe-queimadas",
+   "nome": "dado-inpe-queimadas",
+   "tipo": "dado",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "INPE Programa Queimadas — focos de calor no Brasil; tabular/vetorial; regime narrativa (o Brasil queima em padrao)",
+    "caminho": "cozinha/dados/inpe-queimadas/CARTAO.md"
+   }
+  },
+  {
+   "id": "dado:dado-noaa-ndbc-atlantic",
+   "nome": "dado-noaa-ndbc-atlantic",
+   "tipo": "dado",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "NOAA NDBC — boias do Atlantico (SST e estado de mar); esparso (IDW); veia do litoral/Atlantico",
+    "caminho": "cozinha/dados/noaa-ndbc-atlantic/CARTAO.md"
+   }
+  },
+  {
+   "id": "dado:dado-noaa-oisst-global",
+   "nome": "dado-noaa-oisst-global",
+   "tipo": "dado",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "NOAA OISST v2.1 — SST mensal global 1°, oceano; gridded; regime comportamento; base da obra 011 (El Nino)",
+    "caminho": "cozinha/dados/noaa-oisst-global/CARTAO.md"
+   }
+  },
+  {
+   "id": "dado:dado-noaa-tao-pacific",
+   "nome": "dado-noaa-tao-pacific",
+   "tipo": "dado",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "NOAA PMEL TAO/TRITON — SST de boias no Pacifico equatorial; esparso (IDW); a espinha do El Nino in situ",
+    "caminho": "cozinha/dados/noaa-tao-pacific/CARTAO.md"
+   }
+  },
+  {
+   "id": "pesq:Pesquisa — Arquitetura do Lab Agêntico Auto-Mantido",
+   "nome": "Pesquisa — Arquitetura do Lab Agêntico Auto-Mantido",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "",
+    "caminho": "cozinha\\relatorios\\2026-06-01-pesquisa-arquitetura-do-lab.md"
+   }
+  },
+  {
+   "id": "pesq:Pesquisa — setup de render Blender headless na nuvem (2026-06-01)",
+   "nome": "Pesquisa — setup de render Blender headless na nuvem (2026-06-01)",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "",
+    "caminho": "cozinha\\relatorios\\2026-06-01-pesquisa-render-nuvem.md"
+   }
+  },
+  {
+   "id": "pesq:Pesquisa — Captura de intenção visual por loop de preferência",
+   "nome": "Pesquisa — Captura de intenção visual por loop de preferência",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "",
+    "caminho": "cozinha\\relatorios\\2026-06-02-pesquisa-captura-intencao-visual.md"
+   }
+  },
+  {
+   "id": "pesq:pesquisa-globo-interativo-webgl",
+   "nome": "pesquisa-globo-interativo-webgl",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "stack e tecnicas pra globo de dados navegavel no browser — Three.js+Globe.GL, transfer function e oceano no shader, SSS-fake, LOD/zoom, ACES, riscos vs Cycles (D38)",
+    "caminho": "cozinha\\relatorios\\2026-06-02-pesquisa-globo-interativo-webgl.md"
+   }
+  },
+  {
+   "id": "pesq:pesquisa-imposto-residual-claude-code",
+   "nome": "pesquisa-imposto-residual-claude-code",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "recursos NATIVOS do Claude Code que atacam o imposto residual do lab — Auto Memory (=D39 nativo), hooks SessionEnd/Stop (=gerador da passagem-de-sessao do D42), teto de 10k do additionalContext, sobrevivencia a compactacao (matcher compact), subagentes p/ isolar contexto, prompt cache 1h na assinatura, /effort (substitui think/ultrathink), permissoes deny->ask->allow, status line/rewind/worktrees. Pesquisa D38 niveis 1+2, web-only, doc oficial.",
+    "caminho": "cozinha\\relatorios\\2026-06-02-pesquisa-imposto-residual-claude-code.md"
+   }
+  },
+  {
+   "id": "pesq:pesquisa-integracao-mar-fft-globo",
+   "nome": "pesquisa-integracao-mar-fft-globo",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "nível 2 (D38) — COMO integrar mar FFT + espuma gateada por dado + glow honesto no globo navegável da 011, e a que custo; o caminho de stack (WebGL2 ficar vs WebGPU) e o Cycles de export. 4 agentes Sonnet, 2026-06-05 (s.28).",
+    "caminho": "cozinha\\relatorios\\2026-06-05-pesquisa-integracao-mar-fft-globo.md"
+   }
+  },
+  {
+   "id": "pesq:pesquisa-marca-datart",
+   "nome": "pesquisa-marca-datart",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "nivel 1 — referencias de identidade/marca de artistas de datart, cruzadas com o delta arte x receita, pra fundar a ID visual do lab",
+    "caminho": "cozinha\\relatorios\\2026-06-06-pesquisa-marca-datart.md"
+   }
+  },
+  {
+   "id": "pesq:pesquisa-marca-simbolo",
+   "nome": "pesquisa-marca-simbolo",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "nivel 1 — o CRAFT do simbolo/monograma pra marca do lab (lettermark-vira-conceito, cartografia, marca generativa); oxigenio alem do Dg-no-escuro",
+    "caminho": "cozinha\\relatorios\\2026-06-06-pesquisa-marca-simbolo.md"
+   }
+  },
+  {
+   "id": "pesq:pesquisa-painel-mapa-grafo",
+   "nome": "pesquisa-painel-mapa-grafo",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "nivel 1 — a melhor forma de apresentar o painel geral como MAPA-GRAFO navegavel 3D e fiel do lab inteiro (celulas + arestas [[link]] + evocacao); estado da arte cruzado com a espinha que o cerebro ja tinha (arquitetura-do-lab)",
+    "caminho": "cozinha\\relatorios\\2026-06-06-pesquisa-painel-mapa-grafo.md"
+   }
+  },
+  {
+   "id": "pesq:pesquisa-painel-ponto-otimo",
+   "nome": "pesquisa-painel-ponto-otimo",
+   "tipo": "pesquisa",
+   "grupo": "acervo",
+   "corpo": {
+    "desc": "nível 2 (D38) — o PONTO ÓTIMO do raio-X do lab pela régua arte-vs-imposto: 3D é arte ou espetáculo nesta escala? qual o motor mais leve-e-fiel? COMO e a que custo. Interroga adversarialmente a própria proposta-raio-x.",
+    "caminho": "cozinha\\relatorios\\2026-06-06-pesquisa-painel-ponto-otimo.md"
+   }
+  },
+  {
+   "id": "ferida:amarra-a-maquina",
+   "nome": "amarra-a-maquina",
+   "tipo": "ferida",
+   "grupo": "saude",
+   "val": 2,
+   "corpo": {
+    "recorrencias": 2,
+    "notas": [
+     {
+      "ts": "2026-06-01T22:43:14",
+      "tipo": "instalacao-na-maquina",
+      "nota": "sessao 14: ffmpeg via winget + caminho absoluto no encode do clip v3; curado same-session (desinstalado, encode=commit-na-nuvem); trava D27 agora bloqueia"
+     },
+     {
+      "ts": "2026-06-01T23:23:52",
+      "tipo": "render-gpu-local",
+      "nota": "render Eevee rodado na placa local (escada transfer-v1); refutado pelo Vitor s.16 - render e nuvem (D23)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ferida:boot-recapitulacao",
+   "nome": "boot-recapitulacao",
+   "tipo": "ferida",
+   "grupo": "saude",
+   "val": 4,
+   "corpo": {
+    "recorrencias": 4,
+    "notas": [
+     {
+      "ts": "2026-06-02T02:52:20",
+      "tipo": "re-trabalho",
+      "nota": "s.18: sessao quase inteira resgatando estado da s.17 + re-rodou jogo ja respondido (forma-globo, ja decidido por principio). Cura construida: bloco ESTADO injetado primeiro no boot + pre-voo obrigatorio (D36/D-CAP-9)."
+     },
+     {
+      "ts": "2026-06-02T11:21:52",
+      "tipo": "re-trabalho",
+      "nota": "s.19: 2a recorrencia. Segui a mae 033 cegamente (ESTADO dizia render, trabalho vivo era jogo-IA); sintetizei no lugar do voto do Vitor; disparei pesquisa nova com a resposta no disco. A cura da s.18 (bloco ESTADO + pre-voo) NAO disparou: ESTADO desatualizado + pre-voo nao virou reflexo."
+     },
+     {
+      "ts": "2026-06-02T13:24:51",
+      "tipo": "boot-estoura-contexto",
+      "nota": "s.20: o boot injetava a MAE INTEIRA (61KB) -> excede o contexto -> harness salva num arquivo FORA da raiz -> o Code tenta le-lo -> trava D27 dispara (atrito evitavel). Cura: boot = NUCLEO MINIMO (ultimo-momento + ESTADO + indice + ponteiro); mae completa via Read da raiz sob demanda. 61KB->6.7KB. Tipo novo (nao e re-trabalho)."
+     },
+     {
+      "ts": "2026-06-02T18:11:09",
+      "tipo": "boot-estoura-contexto",
+      "nota": "s.21: engordei o boot 6.7->15KB injetando essencial+ativacao INLINE, ignorando o aviso da ferida que estava NO PROPRIO arquivo (raiz: pre-voo-raso). Reabriu o estouro -> trava no 'oi lab'. Cura: boot por PONTEIRO (Code faz Read na raiz, sem trava) + GUARD de tamanho (corta indice/trunca ESTADO se exceder)."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ferida:pre-voo-raso",
+   "nome": "pre-voo-raso",
+   "tipo": "ferida",
+   "grupo": "saude",
+   "val": 5,
+   "corpo": {
+    "recorrencias": 5,
+    "notas": [
+     {
+      "ts": "2026-06-02T17:58:46",
+      "tipo": "re-trabalho",
+      "nota": "s.21: agir/afirmar da superficie antes de esgotar o disco - 3 manifestacoes (propor baixar 280MB+xarray quebrando nuvem-first; ler Temp fora do lab; afirmar 'a skill nao existe'). Code sabia o estado mas nao aprofundou. Cura estrutural: D42 (essencial-sempre + gate de pre-voo)."
+     },
+     {
+      "ts": "2026-06-05T00:10:00",
+      "tipo": "re-trabalho",
+      "nota": "s.26: 2a recorrencia de pre-voo-raso (1 antes da regra-de-tres). Duas manifestacoes, mesma raiz (agir da superficie sem usar o que o disco ja tem): (1) FRONTEIRA - varri C:/Program Files+AppData procurando python e tentei LER o log de background em %TEMP% (fora da raiz); guard escalou/Vitor barrou - reincidencia da ferida da s.21. (2) ENTREGA - improvisei file:// (quebrou no espaco do caminho) + empilhei abas em vez de usar a habilidade existente (servir localhost + Chrome, abrir-globo.bat). Curas: regra FRONTEIRA DA RAIZ + ENTREGA ABERTA endurecidas no CLAUDE.md (sempre-carregado) + essencial.md; servidor verificado por EFEITO (HTTP); log redirecionado pra dentro da raiz. 2x = vigiar; 3a = rearquitetura (alavanca recomendada p/ arbitragem do Vitor: guard DENY em %TEMP%/AppData + gate de pre-voo mecanico)."
+     },
+     {
+      "ts": "2026-06-05T04:00:00",
+      "tipo": "alcance-externo-improvisado",
+      "nota": "s.27: o padrao pre-voo-raso aflorou de novo - probe HTTP inline pro pollinations (externo, improvisado) em vez de usar gerar.py/checar; Vitor BARROU antes de executar (nada enviado, custo ~0). FLICKER pego pelo muro, distinto das s.21/s.26 (re-trabalho real com dano). Cura na sessao: mais sobrevoos da alma/governanca a pedido do Vitor + reflexo NOVO 'verificar gratis/aberto ANTES de assumir' (pollinations-paywall e FLUX-gated queimaram tempo por suposicao nao-checada). ATENCAO: 3a aparicao do LOCUS pre-voo-raso - arbitrar com o auditor se pede rearquitetura, ou se o muro+reflexo bastam (o muro pegou MAIS CEDO desta vez, sinal de melhora)."
+     },
+     {
+      "ts": "2026-06-06T12:43:48",
+      "tipo": "alcance-externo-improvisado",
+      "nota": "s.29: procurei python.exe em Program Files (fora da raiz) -- barrado pelo Vitor; o runtime ja existia em cozinha/runtime"
+     },
+     {
+      "ts": "2026-06-06T12:43:48",
+      "tipo": "alcance-externo-improvisado",
+      "nota": "s.29: tentei Start-Process chrome em github.com/new (site externo) -- barrado pelo Vitor; ponte pro mundo e do humano"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ferida:guard-fronteira",
+   "nome": "guard-fronteira",
+   "tipo": "ferida",
+   "grupo": "saude",
+   "val": 1,
+   "corpo": {
+    "recorrencias": 1,
+    "notas": [
+     {
+      "ts": "2026-06-04T21:58:04",
+      "tipo": "falso-positivo-trava",
+      "nota": "s.25: a trava guard-fora-da-raiz.ps1 dava ASK FALSO no padrao 'cd \\\"pasta funda\\\" && \\\"../../../runtime/...\\\"' (serve do globo, harness do jogo). Causa: resolvia TODO caminho relativo a partir da RAIZ, ignorando o cd pra subpasta funda -> os '..' escapavam acima da raiz e ele achava que era fora. Disparou varias vezes na sessao (imposto de tempo do Vitor, D36). Cura aplicada (autorizada explicitamente): Get-CdBase (le o cd inicial e usa-o como base dos relativos SE dentro da raiz) + Is-Outside ganhou parametro base. Proteca real intacta - bateria 8/8: fuga relativa 5x.., absoluta fora, write-fora -> ASK; instalador -> DENY; padroes corretos A/B/C/H -> LIVRE. GANCHO (D32): se mexer no guarda, re-rodar a bateria de 8 casos (A-H) descrita no compilado s.25."
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab",
+   "nome": "Datart GenLab",
+   "tipo": "lab",
+   "grupo": "hub",
+   "corpo": {
+    "desc": "o laboratorio como entidade — o centro do mapa, de onde irradiam a alma, as gerencias (operadores), as diretorias e a fundacao (departamentos)."
+   }
+  }
+ ],
+ "links": [
+  {
+   "source": "fund:F1",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "fund:F2",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "fund:F3",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "fund:F4",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "fund:F5",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "fund:F6",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "fund:F7",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "nuc:dados",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "nuc:captura",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "nuc:estetica",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "nuc:custo-render",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "nuc:fechamento",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Estrategia",
+   "target": "nuc:painel",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Estrategia",
+   "target": "nuc:site",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Estrategia",
+   "target": "nuc:marketing",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Estrategia",
+   "target": "nuc:produtos",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Estrategia",
+   "target": "nuc:marca",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Delta C-T-T",
+   "target": "fund:F2",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Delta C-T-T",
+   "target": "fund:F4",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Fechar Deltas",
+   "target": "fund:F2",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Solo Firme",
+   "target": "fund:F2",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Solo Firme",
+   "target": "fund:F4",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Apenas Raiz",
+   "target": "fund:F7",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Nuvem First",
+   "target": "fund:F7",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Arte-Trabalho",
+   "target": "fund:F3",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Pesquisa 3N",
+   "target": "fund:F4",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Entrega Clique",
+   "target": "fund:F6",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Entrega Clique",
+   "target": "fund:F1",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Masterizar",
+   "target": "fund:F4",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Atualizar Lab",
+   "target": "fund:F1",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Faxina",
+   "target": "fund:F1",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Passagem Quente",
+   "target": "fund:F5",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Dado-Arte",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:Dado-Arte",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:aquisicao-dado",
+   "target": "fund:F7",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:aquisicao-dado",
+   "target": "fund:F6",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:dados",
+   "target": "cel:aquisicao-dado",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:aquisicao-dado",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:mapeamento-geoespacial",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:dados",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:captura",
+   "target": "fund:F6",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:captura",
+   "target": "cel:captura",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:captura",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:look-render-luz",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:estetica",
+   "target": "cel:look-render-luz",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:look-render-luz",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:ondas-oceano",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:estetica",
+   "target": "cel:ondas-oceano",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:ondas-oceano",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:campo-particulas",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:estetica",
+   "target": "cel:campo-particulas",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:campo-particulas",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:render-saida",
+   "target": "fund:F7",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:custo-render",
+   "target": "cel:render-saida",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:render-saida",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:fechamento",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:fechamento",
+   "target": "cel:fechamento",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:fechamento",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Code Quente",
+   "target": "fund:F5",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Code Frio",
+   "target": "fund:F5",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Auditor",
+   "target": "fund:F5",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Auditoria",
+   "target": "cel:Auditor",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Gerente Geral",
+   "target": "fund:F5",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Gerente Geral",
+   "target": "fund:F1",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Gerente de Artes",
+   "target": "fund:F5",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Gerente de Artes",
+   "target": "fund:F1",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "dir:Arte",
+   "target": "cel:Gerente de Artes",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Vitrine",
+   "target": "fund:F1",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Cozinha",
+   "target": "fund:F1",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:Banco de Dados",
+   "target": "fund:F1",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:dados",
+   "target": "dado:dado-inpe-queimadas",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:dados",
+   "target": "dado:dado-noaa-ndbc-atlantic",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:dados",
+   "target": "dado:dado-noaa-oisst-global",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "nuc:dados",
+   "target": "dado:dado-noaa-tao-pacific",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "cel:aquisicao-dado",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:aquisicao-dado",
+   "target": "cel:captura",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:aquisicao-dado",
+   "target": "cel:fechamento",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:campo-particulas",
+   "target": "cel:ondas-oceano",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:campo-particulas",
+   "target": "cel:render-saida",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:campo-particulas",
+   "target": "cel:look-render-luz",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:captura",
+   "target": "cel:fechamento",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:captura",
+   "target": "cel:aquisicao-dado",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:captura",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:captura",
+   "target": "cel:ondas-oceano",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:captura",
+   "target": "cel:campo-particulas",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:captura",
+   "target": "cel:look-render-luz",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:captura",
+   "target": "cel:render-saida",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:fechamento",
+   "target": "cel:captura",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:look-render-luz",
+   "target": "cel:render-saida",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:look-render-luz",
+   "target": "cel:aquisicao-dado",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:look-render-luz",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:mapeamento-geoespacial",
+   "target": "cel:aquisicao-dado",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:mapeamento-geoespacial",
+   "target": "cel:render-saida",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:mapeamento-geoespacial",
+   "target": "cel:ondas-oceano",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:mapeamento-geoespacial",
+   "target": "cel:look-render-luz",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:ondas-oceano",
+   "target": "cel:campo-particulas",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:ondas-oceano",
+   "target": "cel:render-saida",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:ondas-oceano",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:render-saida",
+   "target": "cel:look-render-luz",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:render-saida",
+   "target": "cel:ondas-oceano",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:render-saida",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:render-saida",
+   "target": "cel:campo-particulas",
+   "tipo": "link"
+  },
+  {
+   "source": "pesq:Pesquisa — Captura de intenção visual por loop de preferência",
+   "target": "cel:captura",
+   "tipo": "link"
+  },
+  {
+   "source": "cel:aquisicao-dado",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "evocacao",
+   "peso": 0.595
+  },
+  {
+   "source": "cel:aquisicao-dado",
+   "target": "cel:fechamento",
+   "tipo": "evocacao",
+   "peso": 0.535
+  },
+  {
+   "source": "cel:aquisicao-dado",
+   "target": "cel:ondas-oceano",
+   "tipo": "evocacao",
+   "peso": 0.52
+  },
+  {
+   "source": "cel:campo-particulas",
+   "target": "cel:ondas-oceano",
+   "tipo": "evocacao",
+   "peso": 0.672
+  },
+  {
+   "source": "cel:campo-particulas",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "evocacao",
+   "peso": 0.487
+  },
+  {
+   "source": "cel:campo-particulas",
+   "target": "cel:aquisicao-dado",
+   "tipo": "evocacao",
+   "peso": 0.451
+  },
+  {
+   "source": "cel:captura",
+   "target": "pesq:Pesquisa — Captura de intenção visual por loop de preferência",
+   "tipo": "evocacao",
+   "peso": 0.567
+  },
+  {
+   "source": "cel:captura",
+   "target": "cel:ondas-oceano",
+   "tipo": "evocacao",
+   "peso": 0.476
+  },
+  {
+   "source": "cel:captura",
+   "target": "cel:aquisicao-dado",
+   "tipo": "evocacao",
+   "peso": 0.469
+  },
+  {
+   "source": "cel:fechamento",
+   "target": "cel:mapeamento-geoespacial",
+   "tipo": "evocacao",
+   "peso": 0.482
+  },
+  {
+   "source": "cel:fechamento",
+   "target": "pesq:pesquisa-painel-ponto-otimo",
+   "tipo": "evocacao",
+   "peso": 0.452
+  },
+  {
+   "source": "cel:look-render-luz",
+   "target": "cel:render-saida",
+   "tipo": "evocacao",
+   "peso": 0.604
+  },
+  {
+   "source": "cel:look-render-luz",
+   "target": "cel:aquisicao-dado",
+   "tipo": "evocacao",
+   "peso": 0.463
+  },
+  {
+   "source": "cel:mapeamento-geoespacial",
+   "target": "cel:ondas-oceano",
+   "tipo": "evocacao",
+   "peso": 0.466
+  },
+  {
+   "source": "cel:mapeamento-geoespacial",
+   "target": "pesq:pesquisa-painel-mapa-grafo",
+   "tipo": "evocacao",
+   "peso": 0.463
+  },
+  {
+   "source": "cel:ondas-oceano",
+   "target": "pesq:pesquisa-marca-simbolo",
+   "tipo": "evocacao",
+   "peso": 0.452
+  },
+  {
+   "source": "cel:render-saida",
+   "target": "pesq:Pesquisa — setup de render Blender headless na nuvem (2026-06-01)",
+   "tipo": "evocacao",
+   "peso": 0.547
+  },
+  {
+   "source": "cel:render-saida",
+   "target": "pesq:pesquisa-integracao-mar-fft-globo",
+   "tipo": "evocacao",
+   "peso": 0.45
+  },
+  {
+   "source": "pesq:Pesquisa — Arquitetura do Lab Agêntico Auto-Mantido",
+   "target": "pesq:Pesquisa — setup de render Blender headless na nuvem (2026-06-01)",
+   "tipo": "evocacao",
+   "peso": 0.572
+  },
+  {
+   "source": "pesq:Pesquisa — Arquitetura do Lab Agêntico Auto-Mantido",
+   "target": "pesq:pesquisa-marca-simbolo",
+   "tipo": "evocacao",
+   "peso": 0.558
+  },
+  {
+   "source": "pesq:Pesquisa — Arquitetura do Lab Agêntico Auto-Mantido",
+   "target": "pesq:pesquisa-painel-ponto-otimo",
+   "tipo": "evocacao",
+   "peso": 0.536
+  },
+  {
+   "source": "pesq:Pesquisa — setup de render Blender headless na nuvem (2026-06-01)",
+   "target": "pesq:pesquisa-globo-interativo-webgl",
+   "tipo": "evocacao",
+   "peso": 0.546
+  },
+  {
+   "source": "pesq:Pesquisa — setup de render Blender headless na nuvem (2026-06-01)",
+   "target": "pesq:pesquisa-marca-simbolo",
+   "tipo": "evocacao",
+   "peso": 0.538
+  },
+  {
+   "source": "pesq:Pesquisa — setup de render Blender headless na nuvem (2026-06-01)",
+   "target": "pesq:pesquisa-integracao-mar-fft-globo",
+   "tipo": "evocacao",
+   "peso": 0.519
+  },
+  {
+   "source": "pesq:Pesquisa — Captura de intenção visual por loop de preferência",
+   "target": "pesq:pesquisa-painel-ponto-otimo",
+   "tipo": "evocacao",
+   "peso": 0.529
+  },
+  {
+   "source": "pesq:Pesquisa — Captura de intenção visual por loop de preferência",
+   "target": "pesq:pesquisa-marca-simbolo",
+   "tipo": "evocacao",
+   "peso": 0.526
+  },
+  {
+   "source": "pesq:Pesquisa — Captura de intenção visual por loop de preferência",
+   "target": "pesq:Pesquisa — setup de render Blender headless na nuvem (2026-06-01)",
+   "tipo": "evocacao",
+   "peso": 0.508
+  },
+  {
+   "source": "pesq:pesquisa-globo-interativo-webgl",
+   "target": "pesq:pesquisa-integracao-mar-fft-globo",
+   "tipo": "evocacao",
+   "peso": 0.692
+  },
+  {
+   "source": "pesq:pesquisa-globo-interativo-webgl",
+   "target": "pesq:pesquisa-painel-ponto-otimo",
+   "tipo": "evocacao",
+   "peso": 0.467
+  },
+  {
+   "source": "pesq:pesquisa-globo-interativo-webgl",
+   "target": "pesq:Pesquisa — Arquitetura do Lab Agêntico Auto-Mantido",
+   "tipo": "evocacao",
+   "peso": 0.463
+  },
+  {
+   "source": "pesq:pesquisa-imposto-residual-claude-code",
+   "target": "pesq:Pesquisa — Arquitetura do Lab Agêntico Auto-Mantido",
+   "tipo": "evocacao",
+   "peso": 0.5
+  },
+  {
+   "source": "pesq:pesquisa-imposto-residual-claude-code",
+   "target": "pesq:Pesquisa — Captura de intenção visual por loop de preferência",
+   "tipo": "evocacao",
+   "peso": 0.454
+  },
+  {
+   "source": "pesq:pesquisa-integracao-mar-fft-globo",
+   "target": "pesq:pesquisa-painel-ponto-otimo",
+   "tipo": "evocacao",
+   "peso": 0.533
+  },
+  {
+   "source": "pesq:pesquisa-integracao-mar-fft-globo",
+   "target": "pesq:pesquisa-marca-simbolo",
+   "tipo": "evocacao",
+   "peso": 0.516
+  },
+  {
+   "source": "pesq:pesquisa-integracao-mar-fft-globo",
+   "target": "pesq:pesquisa-painel-mapa-grafo",
+   "tipo": "evocacao",
+   "peso": 0.504
+  },
+  {
+   "source": "pesq:pesquisa-marca-datart",
+   "target": "pesq:pesquisa-marca-simbolo",
+   "tipo": "evocacao",
+   "peso": 0.656
+  },
+  {
+   "source": "pesq:pesquisa-marca-datart",
+   "target": "pesq:pesquisa-painel-mapa-grafo",
+   "tipo": "evocacao",
+   "peso": 0.541
+  },
+  {
+   "source": "pesq:pesquisa-marca-datart",
+   "target": "pesq:pesquisa-painel-ponto-otimo",
+   "tipo": "evocacao",
+   "peso": 0.539
+  },
+  {
+   "source": "pesq:pesquisa-marca-simbolo",
+   "target": "pesq:pesquisa-painel-ponto-otimo",
+   "tipo": "evocacao",
+   "peso": 0.644
+  },
+  {
+   "source": "pesq:pesquisa-marca-simbolo",
+   "target": "pesq:pesquisa-painel-mapa-grafo",
+   "tipo": "evocacao",
+   "peso": 0.635
+  },
+  {
+   "source": "pesq:pesquisa-marca-simbolo",
+   "target": "cel:aquisicao-dado",
+   "tipo": "evocacao",
+   "peso": 0.504
+  },
+  {
+   "source": "pesq:pesquisa-painel-mapa-grafo",
+   "target": "pesq:pesquisa-painel-ponto-otimo",
+   "tipo": "evocacao",
+   "peso": 0.626
+  },
+  {
+   "source": "pesq:pesquisa-painel-mapa-grafo",
+   "target": "pesq:Pesquisa — Arquitetura do Lab Agêntico Auto-Mantido",
+   "tipo": "evocacao",
+   "peso": 0.515
+  },
+  {
+   "source": "pesq:pesquisa-painel-ponto-otimo",
+   "target": "cel:aquisicao-dado",
+   "tipo": "evocacao",
+   "peso": 0.504
+  },
+  {
+   "source": "pesq:pesquisa-painel-ponto-otimo",
+   "target": "pesq:Pesquisa — setup de render Blender headless na nuvem (2026-06-01)",
+   "tipo": "evocacao",
+   "peso": 0.486
+  },
+  {
+   "source": "ferida:amarra-a-maquina",
+   "target": "alma",
+   "tipo": "ferida"
+  },
+  {
+   "source": "ferida:boot-recapitulacao",
+   "target": "alma",
+   "tipo": "ferida"
+  },
+  {
+   "source": "ferida:pre-voo-raso",
+   "target": "alma",
+   "tipo": "ferida"
+  },
+  {
+   "source": "ferida:guard-fronteira",
+   "target": "alma",
+   "tipo": "ferida"
+  },
+  {
+   "source": "lab",
+   "target": "alma",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "dir:Arte",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "dir:Auditoria",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "dir:Estrategia",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "cel:Code Quente",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "cel:Code Frio",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "cel:Auditor",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "cel:Gerente Geral",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "cel:Gerente de Artes",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "cel:Vitrine",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "cel:Cozinha",
+   "tipo": "estrutura"
+  },
+  {
+   "source": "lab",
+   "target": "cel:Banco de Dados",
+   "tipo": "estrutura"
+  }
+ ]
+}
