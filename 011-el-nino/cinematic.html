@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>011 · El Niño — abertura</title>
+  <!--
+    011 · PRODUTO PÚBLICO — CINEMATIC DE ABERTURA (protótipo v1, s.44).
+    PRINCÍPIO-MÃE (voto Vitor): tudo aqui é SIMULAÇÃO DA OBRA REAL — os globos são os motores
+    reais da obra (globo-mar-v2 = temperatura real, globo-mar-v1 = anomalia), dirigidos por
+    postMessage (o MESMO protocolo do duo: duoCmd cam/frame/play/pause/freeze). ZERO edição nos
+    motores. O cinematic é só DIRETOR + letterbox; no fim a letterbox se retrai e os controles
+    REAIS da obra surgem (o handoff = a moldura da obra nascendo). Voz = camada final (ainda não).
+    Mobile-first: retrato empilha (temp em cima, anomalia desce por cima); paisagem = lado a lado.
+  -->
+  <style>
+    :root { --bg:#04060d; }
+    html, body { margin:0; height:100%; background:var(--bg); overflow:hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; color:#eaf2ff; }
+    #stage { position:fixed; inset:0; display:flex; flex-direction:column; opacity:0; transition:opacity 1s ease; }
+    #stage.in { opacity:1; }
+    .half { position:relative; flex-grow:0; flex-basis:0; min-width:0; min-height:0; overflow:hidden;
+      transition: flex-grow .9s cubic-bezier(.5,0,.2,1); }
+    #halfTemp { flex-grow:1; }                 /* temp-real ocupa sozinha no cold-open */
+    #stage.duo #halfAnom { flex-grow:1; }       /* dobra: anomalia entra (por cima/ao lado) */
+    iframe { width:100%; height:100%; border:0; display:block; background:transparent; }
+    /* foco: realça o globo que a narração cita (B4) */
+    .half::after { content:""; position:absolute; inset:0; pointer-events:none; box-shadow: inset 0 0 0 0 rgba(120,170,255,0);
+      transition: box-shadow .5s ease; }
+    .half.focus::after { box-shadow: inset 0 0 0 2px rgba(150,190,255,.55), inset 0 0 60px rgba(80,130,230,.18); }
+
+    /* RETRATO empilha; PAISAGEM lado a lado. O eixo da dobra é a ÚNICA coisa que muda. */
+    @media (orientation: landscape) { #stage { flex-direction:row; } }
+
+    /* guarda: bloqueia interação com os globos enquanto o cinematic dirige (some no handoff) */
+    #guard { position:fixed; inset:0; z-index:5; background:transparent; }
+    #stage.interactive ~ #guard, #guard.off { display:none; }
+
+    /* LETTERBOX cinematográfica (MOLDURA declarada): emoldura E cobre a UI nativa dos motores
+       durante os beats. No handoff (B6) ela se retrai e a UI real da obra aparece. */
+    .band { position:fixed; left:0; right:0; z-index:8; pointer-events:none;
+      background: linear-gradient(var(--d), rgba(2,4,9,1) 0%, rgba(2,4,9,.96) 55%, rgba(2,4,9,0) 100%);
+      transition: transform 1s cubic-bezier(.5,0,.2,1); }
+    #bandTop { top:0; height: max(15vh, 96px); --d: to bottom; }
+    #bandBot { bottom:0; height: max(19vh, 120px); --d: to top; }
+    #stage.handoff ~ #bandTop { transform: translateY(-101%); }
+    #stage.handoff ~ #bandBot { transform: translateY(101%); }
+
+    /* marca discreta */
+    #mark { position:fixed; top:14px; left:16px; z-index:9; font-size:11px; letter-spacing:.4px;
+      opacity:.0; transition:opacity .8s ease; text-shadow:0 1px 4px rgba(0,0,0,.8); pointer-events:none; }
+    #mark.show { opacity:.55; }
+
+    /* GANCHO (B2) */
+    #gancho { position:fixed; inset:0; z-index:12; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; gap:18px; text-align:center; padding:24px; opacity:0; pointer-events:none;
+      transition:opacity .8s ease; }
+    #gancho.show { opacity:1; pointer-events:auto; }
+    #gancho h1 { margin:0; font-size: clamp(22px, 4.4vw, 40px); font-weight:700; letter-spacing:.3px;
+      text-shadow:0 2px 18px rgba(0,0,0,.85); max-width:14em; line-height:1.18; }
+    #gancho p { margin:0; font-size: clamp(13px, 2.1vw, 17px); opacity:.82; max-width:24em;
+      text-shadow:0 1px 8px rgba(0,0,0,.85); }
+    #entrar { margin-top:8px; cursor:pointer; border:1px solid rgba(150,180,230,.6);
+      background: rgba(20,40,80,.5); color:#fff; font-size: clamp(15px,2.4vw,18px); font-weight:600;
+      padding:12px 34px; border-radius:999px; backdrop-filter: blur(6px); transition: all .18s ease;
+      -webkit-tap-highlight-color: transparent; }
+    #entrar:hover { background:#2b6fd6; border-color:#5b8cff; transform: translateY(-1px); }
+
+    /* CAPTIONS (B4/B5) — placeholder da voz (texto do Vitor) */
+    #caption { position:fixed; left:50%; bottom: max(4.5vh, 30px); transform: translateX(-50%);
+      z-index:11; width: min(86vw, 760px); text-align:center; font-size: clamp(15px, 2.4vw, 21px);
+      line-height:1.4; font-weight:500; opacity:0; transition: opacity .5s ease; pointer-events:none;
+      text-shadow: 0 2px 14px rgba(0,0,0,.92), 0 0 2px rgba(0,0,0,.9); }
+    #caption.show { opacity:1; }
+    #caption .big { font-size: clamp(26px, 6vw, 54px); font-weight:800; letter-spacing:.5px; }
+
+    /* CONTROLES do handoff (B7): sincronia + rever (a obra real já traz as barras de tempo) */
+    #ctl { position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:13; display:flex; gap:8px;
+      opacity:0; pointer-events:none; transition:opacity .7s ease; flex-wrap:wrap; justify-content:center; }
+    #ctl.show { opacity:1; pointer-events:auto; }
+    #ctl label, #ctl button { display:flex; align-items:center; gap:6px; color:#cfe0ff; font-size:12.5px;
+      background: rgba(8,16,30,.82); border:1px solid rgba(150,180,230,.4); border-radius:8px; padding:6px 12px;
+      cursor:pointer; user-select:none; white-space:nowrap; -webkit-tap-highlight-color:transparent; }
+    #ctl label.on { background:#1f6f3f; border-color:#2ea05a; color:#fff; }
+    #ctl input { accent-color:#2b6fd6; cursor:pointer; }
+
+    @keyframes shake {
+      0%,100%{ transform:translate(0,0); } 15%{ transform:translate(-3px,2px); }
+      30%{ transform:translate(4px,-2px); } 45%{ transform:translate(-3px,-2px); }
+      60%{ transform:translate(3px,2px); } 75%{ transform:translate(-2px,1px); } }
+    #stage.shake { animation: shake .55s ease; }
+
+    #boot { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
+      color:#6b7d99; font-size:13px; background:var(--bg); transition:opacity .6s ease; }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <div class="half" id="halfTemp"><iframe id="ifrTemp" title="temperatura real" loading="eager"></iframe></div>
+    <div class="half" id="halfAnom"><iframe id="ifrAnom" title="anomalia" loading="eager"></iframe></div>
+  </div>
+  <div id="guard"></div>
+  <div class="band" id="bandTop"></div>
+  <div class="band" id="bandBot"></div>
+
+  <div id="mark">011 · um retrato dos oceanos</div>
+
+  <div id="gancho">
+    <h1>Estamos próximos de um novo El Niño?</h1>
+    <p>Esta obra explora os padrões de temperatura dos oceanos da Terra.</p>
+    <button id="entrar">ENTRAR</button>
+  </div>
+
+  <div id="caption"></div>
+
+  <div id="ctl">
+    <label id="lblTempo"><input type="checkbox" id="ckTempo"> sincronizar tempo</label>
+    <label id="lblMov"><input type="checkbox" id="ckMov"> sincronizar movimento</label>
+    <button id="rever">↻ rever</button>
+  </div>
+
+  <div id="boot">carregando a obra…</div>
+
+  <script>
+  // ===================== motores reais (reuso, sem editar) =====================
+  // PUBLICADO: os motores moram NESTA pasta (copias fieis dos da cozinha, hash conferido).
+  const MOTOR = './';
+  const ifrTemp = document.getElementById('ifrTemp');   // globo-mar-v2 = TEMPERATURA REAL (primário)
+  const ifrAnom = document.getElementById('ifrAnom');   // globo-mar-v1 = ANOMALIA (entra na dobra)
+  ifrTemp.src = MOTOR + 'globo-mar-v2.html';
+  ifrAnom.src = MOTOR + 'globo-mar-v1.html';
+  const wTemp = () => ifrTemp.contentWindow;
+  const wAnom = () => ifrAnom.contentWindow;
+  function send(wfn, msg){ try { wfn().postMessage(msg, '*'); } catch(_){} }
+
+  const PEAK = 47;          // 2023-12 (auge do El Niño; manifest.peak_idx)
+  const LAST = 75;          // 2026-04 (último frame real da série)
+  const POV0 = { lat:-5, lng:-120 };   // Pacífico equatorial centrado (abertura nativa da obra)
+
+  // ===================== estado do diretor =====================
+  const stage = document.getElementById('stage');
+  const halfTemp = document.getElementById('halfTemp'), halfAnom = document.getElementById('halfAnom');
+  const caption = document.getElementById('caption');
+  let camAlt = 3.4, camLng = POV0.lng;        // dolly + rotação dirigidos pelo cinematic
+  let rotate = true, driveCam = true, frameDrive = PEAK;
+  let active = [wTemp];                         // iframes que recebem o comando da câmera/tempo
+  let readyTemp = false, readyAnom = false;
+  let beat = 'preload';
+
+  // loop de direção: a cada quadro empurra câmera/tempo pros motores reais
+  let lastNow = null;
+  function loop(now){
+    requestAnimationFrame(loop);
+    const dt = lastNow === null ? 0 : Math.min((now - lastNow)/1000, 0.05); lastNow = now;
+    if (rotate) camLng -= dt * 3.2;            // rotação lenta dirigida (substitui o autoRotate nativo)
+    if (driveCam){
+      const pov = { lat: POV0.lat, lng: camLng, altitude: camAlt };
+      active.forEach(w => send(w, { duoCmd:'cam', pov }));
+    }
+    if (frameDrive !== null) active.forEach(w => send(w, { duoCmd:'frame', t: frameDrive }));
+  }
+  requestAnimationFrame(loop);
+
+  // ===================== utilidades de tempo (browser, não-determinístico OK) =====================
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const easeOut = k => 1 - Math.pow(1-k, 3);
+  function tween(setter, from, to, dur, ease){
+    return new Promise(res => { let s=null;
+      function st(now){ if(s===null)s=now; const k=Math.min((now-s)/dur,1);
+        setter(from + (to-from)*(ease?ease(k):k)); if(k<1) requestAnimationFrame(st); else res(); }
+      requestAnimationFrame(st); });
+  }
+  function cap(html, big){ caption.innerHTML = big ? `<span class="big">${html}</span>` : html; caption.classList.add('show'); }
+  function capOff(){ caption.classList.remove('show'); }
+  function focus(which){ halfTemp.classList.toggle('focus', which==='temp'); halfAnom.classList.toggle('focus', which==='anom'); }
+
+  // ===================== handshake: motor pronto = 1º duoCam que ele posta =====================
+  window.addEventListener('message', (e) => {
+    const who = e.source === wTemp() ? 'temp' : (e.source === wAnom() ? 'anom' : null);
+    if (!who) return;
+    if (who==='temp' && !readyTemp){ readyTemp = true; send(wTemp, { duoCmd:'pause' }); send(wTemp, { duoCmd:'frame', t:PEAK }); onTempReady(); }
+    if (who==='anom' && !readyAnom){ readyAnom = true; send(wAnom, { duoCmd:'pause' }); send(wAnom, { duoCmd:'frame', t:PEAK }); }
+    relay(e, who);
+  });
+
+  let started = false;
+  function onTempReady(){
+    if (started) return; started = true;
+    const boot = document.getElementById('boot'); boot.style.opacity='0'; setTimeout(()=>boot.remove(), 650);
+    stage.classList.add('in');
+    document.getElementById('mark').classList.add('show');
+    director();
+  }
+
+  // ===================== a narração (texto do Vitor, 2ª pessoa) — captions placeholder da voz =====================
+  const CORPO = [
+    { t:'both', ms:4200, txt:'Você está vendo o último grande El Niño — <b>dezembro de 2023</b>.' },
+    { t:'temp', ms:6200, txt:'Num deles, as cores são a <b>temperatura real</b> do oceano — do frio, em azul e verde, ao quente, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.' },
+    { t:'anom', ms:6200, txt:'No outro, só o que <b>fugiu do normal</b>: quanto mais vermelho, mais a água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.' },
+    { t:'both', ms:6400, txt:'Normalmente, os ventos <b>alísios</b> empurram a água quente para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.' },
+    { t:'both', ms:5600, txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.' },
+    { t:'both', ms:6000, txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>; <b>secas</b> na <b>Amazônia e no Nordeste</b>.' },
+    { t:'temp', ms:5200, txt:'E quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas é o tamanho do evento.' },
+  ];
+
+  // ===================== a sequência (os beats) =====================
+  const entrarBtn = document.getElementById('entrar');
+  let entrarResolve; const entrarClicked = new Promise(r => entrarResolve = r);
+  entrarBtn.addEventListener('click', () => entrarResolve(), { once:true });
+
+  async function director(){
+    // B1 — cold open: só a temperatura real, dollyando de longe, girando devagar (no auge de 2023)
+    beat='cold'; active=[wTemp]; driveCam=true; rotate=true; frameDrive=PEAK; camAlt=3.4;
+    await tween(v => camAlt=v, 3.4, 1.6, 3600, easeOut);
+
+    // B2 — gancho: espera o clique (o gesto que destrava o áudio)
+    beat='gancho'; document.getElementById('gancho').classList.add('show');
+    await entrarClicked;
+    document.getElementById('gancho').classList.remove('show');
+    try { const ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(_){}
+
+    // B3 — dobra: a anomalia entra (por cima no retrato / ao lado na paisagem); os dois travam no evento
+    beat='duo'; active=[wTemp, wAnom]; frameDrive=PEAK;
+    send(wAnom, { duoCmd:'pause' }); send(wAnom, { duoCmd:'frame', t:PEAK });
+    stage.classList.add('duo');
+    await sleep(1000);
+
+    // B4 — a narração ensina, dando foco ao globo citado
+    for (const line of CORPO){ focus(line.t); cap(line.txt); await sleep(line.ms); }
+    focus(null);
+
+    // B5 — o fecho: sincroniza tudo, oscila sobre 2023 e avança até hoje (dado real). "Será?"
+    cap('Volte comigo a 2023 — e agora avance, mês a mês, até hoje.'); await sleep(2600);
+    await tween(v => frameDrive=v, PEAK, 44, 900);
+    await tween(v => frameDrive=v, 44, PEAK, 900);
+    cap('Veja os últimos meses: o oceano se acendendo outra vez.');
+    await tween(v => frameDrive=v, PEAK, LAST, 5200, easeOut);
+    await sleep(400); cap('Será?', true); await sleep(2800);
+
+    // B6 — a tremida; a letterbox se retrai e a moldura REAL da obra surge (controles nativos)
+    capOff(); stage.classList.add('shake'); setTimeout(()=>stage.classList.remove('shake'), 600);
+    stage.classList.add('handoff');
+    await sleep(1100);
+
+    // B7 — interativo: o tempo é seu. Solta a câmera; os controles reais assumem. Sincronia + rever.
+    beat='interactive'; driveCam=false; frameDrive=null; rotate=false;
+    stage.classList.add('interactive'); document.getElementById('guard').classList.add('off');
+    cap('Agora o tempo é seu. Sincronize os dois globos, vá e volte no tempo — e veja por você mesmo.');
+    document.getElementById('ctl').classList.add('show');
+    await sleep(5200); capOff();
+  }
+
+  // ===================== sincronia no handoff (reuso do relay do duo) =====================
+  let syncMov=false, syncTempo=false;
+  function relay(e, who){
+    if (beat !== 'interactive') return;
+    const m = e.data; if (!m) return;
+    const dst = who==='temp' ? wAnom : wTemp;
+    if (m.duoCam){ if (syncMov && m.active && m.pov) send(dst, { duoCmd:'cam', pov:m.pov }); }
+    else if (m.duoTime){ if (!syncTempo) return;
+      if (m.frame   !== undefined) send(dst, { duoCmd:'frame', t:m.frame });
+      if (m.playing !== undefined) send(dst, { duoCmd: m.playing ? 'play' : 'pause' }); }
+  }
+  const ckMov=document.getElementById('ckMov'), lblMov=document.getElementById('lblMov');
+  const ckTempo=document.getElementById('ckTempo'), lblTempo=document.getElementById('lblTempo');
+  ckMov.addEventListener('change', ()=>{ syncMov=ckMov.checked; lblMov.classList.toggle('on',syncMov);
+    if(syncMov){ send(wTemp,{duoCmd:'freeze'}); send(wAnom,{duoCmd:'freeze'}); } });
+  ckTempo.addEventListener('change', ()=>{ syncTempo=ckTempo.checked; lblTempo.classList.toggle('on',syncTempo); });
+  document.getElementById('rever').addEventListener('click', ()=> location.reload());
+
+  // hook de verificação por efeito (preview headless)
+  window.__cine = { get beat(){ return beat; }, get ready(){ return { temp:readyTemp, anom:readyAnom }; },
+    get frame(){ return frameDrive; }, get alt(){ return camAlt; },
+    skipTo: (b)=>{ /* atalho de teste: dispara o clique do gancho */ if(b==='entrar') entrarResolve(); } };
+  </script>
+</body>
+</html>
