@@ -2,61 +2,18 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<title>012 · smoke Cesium — globo navegavel GE-fiel (base)</title>
-<link href="https://unpkg.com/cesium@1.136/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>012 · A Ponte de Poeira — Datart GenLab</title>
+<meta http-equiv="refresh" content="0; url=cesium/poeira.html">
 <style>
-  html,body,#cesiumContainer{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#000}
-  .cesium-widget-credits,.cesium-viewer-bottom{display:none!important}
+  html,body{height:100%;margin:0;background:#02040a;color:#9fb1cc;
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
+    display:flex;align-items:center;justify-content:center;text-align:center}
+  a{color:#7fb3ff}
 </style>
 </head>
 <body>
-<div id="cesiumContainer"></div>
-<script src="https://unpkg.com/cesium@1.136/Build/Cesium/Cesium.js"></script>
-<script>
-  // SMOKE-TEST base (rota A, pesquisa 2026-06-08): Cesium como motor de navegacao GE + imagery $0 NASA GIBS.
-  // Nuvem-First: nada amarra a maquina (CDN + GIBS web). SEM Cesium Ion (sem conta/licenca/$).
-  window.CESIUM_BASE_URL = 'https://unpkg.com/cesium@1.136/Build/Cesium/';
-  Cesium.Ion.defaultAccessToken = undefined;
-
-  // imagery $0: NASA GIBS Blue Marble Shaded Relief + Bathymetry (estatico, sem chave, sem rate-limit doc).
-  // MOLDURA/palco. Relevo 3D cortado (decisao Vitor s.39) -> globo liso (elipsoide), so a textura.
-  const gibs = new Cesium.UrlTemplateImageryProvider({
-    url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg',
-    tilingScheme: new Cesium.WebMercatorTilingScheme(),
-    maximumLevel: 8,
-    credit: 'NASA GIBS / Blue Marble'
-  });
-
-  let viewer;
-  try {
-    viewer = new Cesium.Viewer('cesiumContainer', {
-      baseLayer: new Cesium.ImageryLayer(gibs),
-      baseLayerPicker: false, geocoder: false, homeButton: false, sceneModePicker: false,
-      navigationHelpButton: false, animation: false, timeline: false, fullscreenButton: false,
-      infoBox: false, selectionIndicator: false,
-      requestRenderMode: true, maximumRenderTimeChange: Infinity,  // GPU so renderiza quando algo muda -> mata a ventoinha (arte-imposto/Nuvem-First)
-      skyAtmosphere: new Cesium.SkyAtmosphere(),     // o haze de borda (imagem 1 do Vitor)
-      contextOptions: { webgl: { powerPreference: 'low-power', preserveDrawingBuffer: true } }  // modesto + readPixels (verificacao GPU-free)
-    });
-    viewer.scene.globe.enableLighting = true;        // terminador / luz rasante (imagem 2)
-    viewer.scene.skyAtmosphere.show = true;
-    viewer.scene.globe.showGroundAtmosphere = true;
-    // navegacao: nao furar o globo nem perder o pivo ao tiltar perto do horizonte
-    var ssc = viewer.scene.screenSpaceCameraController;
-    ssc.enableCollisionDetection = true;
-    ssc.minimumZoomDistance = 800;                   // ~800 m: nao colar no chao (onde o tilt perde a referencia)
-
-    // enquadramento inicial = as imagens do Vitor: Atlantico, Africa a leste + Am.Sul a oeste
-    viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-25.0, 5.0, 2.2e7) });
-
-    // sentinela GPU-free p/ verificacao por console/readPixels (sem depender da placa do Vitor)
-    window.__smoke = { ready: true, version: Cesium.VERSION, tilesPending: -1, err: null };
-    viewer.scene.globe.tileLoadProgressEvent.addEventListener((n) => { window.__smoke.tilesPending = n; });
-    console.log('[smoke] OK Cesium ' + Cesium.VERSION + ' | globo GIBS + atmosfera + lighting');
-  } catch (e) {
-    window.__smoke = { ready: false, err: String(e) };
-    console.error('[smoke] FALHOU: ' + e);
-  }
-</script>
+  <p>Abrindo <b>A Ponte de Poeira</b>… se não abrir, <a href="cesium/poeira.html">toque aqui</a>.</p>
+  <script>location.replace('cesium/poeira.html');</script>
 </body>
 </html>

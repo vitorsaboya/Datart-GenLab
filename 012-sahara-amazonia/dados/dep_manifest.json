@@ -1,0 +1,231 @@
+{
+  "shape": [
+    95,
+    169
+  ],
+  "bbox": {
+    "lat0": -12.0,
+    "lat1": 35.0,
+    "lon0": -75.0,
+    "lon1": 30.0
+  },
+  "dep_acum_max": 0.08915542811155319,
+  "dep_taxa_max": 1.1360342888622199e-08,
+  "dep_acum_max_cru": 0.10279665887355804,
+  "dep_taxa_max_cru": 4.094503225360313e-08,
+  "n_frames": 23,
+  "frames": [
+    {
+      "i": 0,
+      "data": "2006-12-01",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_00.f32",
+      "taxa_file": "dep_taxa_00.f32",
+      "acum_max_frame": 0.007169473450630903,
+      "taxa_max_frame": 1.1854288217705289e-08
+    },
+    {
+      "i": 1,
+      "data": "2006-12-08",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_01.f32",
+      "taxa_file": "dep_taxa_01.f32",
+      "acum_max_frame": 0.016473161056637764,
+      "taxa_max_frame": 2.7131473956387708e-08
+    },
+    {
+      "i": 2,
+      "data": "2006-12-15",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_02.f32",
+      "taxa_file": "dep_taxa_02.f32",
+      "acum_max_frame": 0.01671784743666649,
+      "taxa_max_frame": 1.0520717630413401e-08
+    },
+    {
+      "i": 3,
+      "data": "2006-12-22",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_03.f32",
+      "taxa_file": "dep_taxa_03.f32",
+      "acum_max_frame": 0.019762976095080376,
+      "taxa_max_frame": 7.655696521169375e-09
+    },
+    {
+      "i": 4,
+      "data": "2006-12-29",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_04.f32",
+      "taxa_file": "dep_taxa_04.f32",
+      "acum_max_frame": 0.030729513615369797,
+      "taxa_max_frame": 1.862020226894856e-08
+    },
+    {
+      "i": 5,
+      "data": "2007-01-05",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_05.f32",
+      "taxa_file": "dep_taxa_05.f32",
+      "acum_max_frame": 0.04339306801557541,
+      "taxa_max_frame": 3.236538859141547e-08
+    },
+    {
+      "i": 6,
+      "data": "2007-01-12",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_06.f32",
+      "taxa_file": "dep_taxa_06.f32",
+      "acum_max_frame": 0.051248710602521896,
+      "taxa_max_frame": 1.3447081670392436e-08
+    },
+    {
+      "i": 7,
+      "data": "2007-01-19",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_07.f32",
+      "taxa_file": "dep_taxa_07.f32",
+      "acum_max_frame": 0.057896677404642105,
+      "taxa_max_frame": 1.0992009968902039e-08
+    },
+    {
+      "i": 8,
+      "data": "2007-01-26",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_08.f32",
+      "taxa_file": "dep_taxa_08.f32",
+      "acum_max_frame": 0.060937631875276566,
+      "taxa_max_frame": 5.562884375365229e-09
+    },
+    {
+      "i": 9,
+      "data": "2007-02-02",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_09.f32",
+      "taxa_file": "dep_taxa_09.f32",
+      "acum_max_frame": 0.06194272264838219,
+      "taxa_max_frame": 1.2348104760917522e-08
+    },
+    {
+      "i": 10,
+      "data": "2007-02-09",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_10.f32",
+      "taxa_file": "dep_taxa_10.f32",
+      "acum_max_frame": 0.06481753289699554,
+      "taxa_max_frame": 1.2413495120711104e-08
+    },
+    {
+      "i": 11,
+      "data": "2007-02-15",
+      "dt_s": 518400.0,
+      "acum_file": "dep_acum_11.f32",
+      "taxa_file": "dep_taxa_11.f32",
+      "acum_max_frame": 0.06885231286287308,
+      "taxa_max_frame": 8.324067657383694e-09
+    },
+    {
+      "i": 12,
+      "data": "2007-02-16",
+      "dt_s": 86400.0,
+      "acum_file": "dep_acum_12.f32",
+      "taxa_file": "dep_taxa_12.f32",
+      "acum_max_frame": 0.06934373825788498,
+      "taxa_max_frame": 7.705614812891781e-09
+    },
+    {
+      "i": 13,
+      "data": "2007-02-23",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_13.f32",
+      "taxa_file": "dep_taxa_13.f32",
+      "acum_max_frame": 0.07294359058141708,
+      "taxa_max_frame": 4.094503225360313e-08
+    },
+    {
+      "i": 14,
+      "data": "2007-03-02",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_14.f32",
+      "taxa_file": "dep_taxa_14.f32",
+      "acum_max_frame": 0.08118923008441925,
+      "taxa_max_frame": 1.3648773666830039e-08
+    },
+    {
+      "i": 15,
+      "data": "2007-03-09",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_15.f32",
+      "taxa_file": "dep_taxa_15.f32",
+      "acum_max_frame": 0.08225585520267487,
+      "taxa_max_frame": 2.336126314617104e-08
+    },
+    {
+      "i": 16,
+      "data": "2007-03-16",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_16.f32",
+      "taxa_file": "dep_taxa_16.f32",
+      "acum_max_frame": 0.09039429575204849,
+      "taxa_max_frame": 1.3479773741664758e-08
+    },
+    {
+      "i": 17,
+      "data": "2007-03-23",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_17.f32",
+      "taxa_file": "dep_taxa_17.f32",
+      "acum_max_frame": 0.09085003286600113,
+      "taxa_max_frame": 2.0432032954431634e-08
+    },
+    {
+      "i": 18,
+      "data": "2007-03-30",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_18.f32",
+      "taxa_file": "dep_taxa_18.f32",
+      "acum_max_frame": 0.092661052942276,
+      "taxa_max_frame": 1.4648230184377553e-08
+    },
+    {
+      "i": 19,
+      "data": "2007-04-06",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_19.f32",
+      "taxa_file": "dep_taxa_19.f32",
+      "acum_max_frame": 0.09352964907884598,
+      "taxa_max_frame": 1.8308716320802887e-08
+    },
+    {
+      "i": 20,
+      "data": "2007-04-13",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_20.f32",
+      "taxa_file": "dep_taxa_20.f32",
+      "acum_max_frame": 0.09873329102993011,
+      "taxa_max_frame": 1.338925503802102e-08
+    },
+    {
+      "i": 21,
+      "data": "2007-04-20",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_21.f32",
+      "taxa_file": "dep_taxa_21.f32",
+      "acum_max_frame": 0.1003364771604538,
+      "taxa_max_frame": 1.0536632899516007e-08
+    },
+    {
+      "i": 22,
+      "data": "2007-04-27",
+      "dt_s": 604800.0,
+      "acum_file": "dep_acum_22.f32",
+      "taxa_file": "dep_taxa_22.f32",
+      "acum_max_frame": 0.10279665887355804,
+      "taxa_max_frame": 1.1069806404861993e-08
+    }
+  ],
+  "unidade": {
+    "acum": "kg/m2 (integral do fluxo, so cresce)",
+    "taxa": "kg/m2/s (fluxo do instante)"
+  },
+  "nota": "escala propria do chao (D33, s.41): acum=base que fertiliza, taxa=pulso da chegada; max fixos (99.9pct) anti-RUIDO temporal; float32 (taxa ~1e-10 underflowa em f16); datas alinhadas aos frames do volume (manifest.json)"
+}

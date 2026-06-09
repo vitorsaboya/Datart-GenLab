@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>012 · A Ponte de Poeira — globo Cesium + volume de poeira (overlay three.js)</title>
+<!--
+  012 — FUSÃO v1 (s.40): a camada de poeira (volume MERRA-2 raymarched) sobre o globo NAVEGÁVEL Cesium.
+    ROTA A (pesquisa 2026-06-08 / D-MAP-6): 2 canvas DOM empilhados — Cesium embaixo (navegação GE-fiel,
+    imagery $0 GIBS, atmosfera, lighting, requestRenderMode), three.js POR CIMA (pointer-events:none) só
+    com o VOLUME. Sincronia de câmera por frame no scene.postRender do Cesium.
+    A MATE = port da do webgl/globo.html (= raymarch_look.py, FONTE ÚNICA validada): Beer-Lambert
+    front-to-back + Henyey-Greenstein (g=0.80) + light-march pro sol + casca esférica. NÃO reescrita.
+    LEI (legenda-viva, D33): cor=concentração (rampa ocre, MÁX GLOBAL FIXO) · opacidade=Beer-Lambert ·
+    altitude=PL/H real (poeira voa baixo ~660 m — modelar no alto = RUÍDO) · movimento=série temporal.
+    Look base = D (r3) + GATE-POR-ZOOM (de longe brilha / de perto o volume se revela).
+
+  DIFERENÇAS vs globo.html (o que a fusão muda):
+    - O raio NÃO vem do OrbitControls/InvVP, vem dos VETORES da câmera Cesium (right/up/fwd) — estável em
+      float32 (a InvVP em ECEF de ~6.4e6 m perderia precisão; right/up/fwd são adimensionais).
+    - sampleVol em ECEF do Cesium: lon=atan2(P.y,P.x), lat=asin(P.z/r). Geografia AUTOMÁTICA (sem o
+      atan2(-z,x) de correção do globo.html — aquele era a convenção do three.js puro).
+    - Escala em RAIOS: camPos/R_T (~1.0, preciso); a esfera do raymarch R=1 = a superfície do Cesium.
+    - O overlay desenha SÓ a poeira (alpha reto). O globo é o Cesium, embaixo. Sem bg no shader.
+    - OCLUSÃO v1: a integração para na superfície esférica (R=1) — como o globo é LISO (s.39, sem relevo),
+      a esfera do raymarch casa com o elipsoide Cesium e oclui a poeira do outro lado SEM depth-buffer
+      composto. (O risco depth-buffer da pesquisa só morderia com relevo 3D, que foi cortado.)
+    - SOL v1 = direção FIXA frontal ao Atlântico (MOLDURA declarada). Refinar pro sol REAL do instante
+      depois (legenda-viva: posição solar = a real do horário). Anotado no _estado-edicao.
+-->
+<link href="https://unpkg.com/cesium@1.136/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<style>
+  html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#000}
+  #cesiumContainer{position:fixed;inset:0;width:100%;height:100%}
+  /* o overlay three.js fica POR CIMA do Cesium e NÃO captura input (Cesium navega) */
+  #overlay{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+  .cesium-widget-credits,.cesium-viewer-bottom{display:none!important}
+  #hud{position:fixed;left:18px;top:14px;z-index:10;pointer-events:none;user-select:none;
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#eef2fb;
+    text-shadow:0 1px 4px rgba(0,0,0,.85)}
+  #hud h1{margin:0 0 2px;font-size:16px;font-weight:600;letter-spacing:.3px}
+  #hud p{margin:0;font-size:12px;opacity:.72}
+  #legenda{position:fixed;left:18px;bottom:14px;z-index:10;pointer-events:none;user-select:none;
+    font-family:ui-sans-serif,system-ui,sans-serif;color:#d9e1f2;font-size:11px;opacity:.9;
+    text-shadow:0 1px 4px rgba(0,0,0,.85)}
+  #barra{width:220px;height:10px;border-radius:5px;margin:4px 0 3px;
+    background:linear-gradient(90deg,#0a0e1a 0%,#e8d696 14%,#ce964e 42%,#96592a 72%,#522e12 100%)}
+  #barra-dep{width:220px;height:10px;border-radius:5px;margin:4px 0 3px;
+    background:linear-gradient(90deg,#216b82 0%,#2fbe75 38%,#8fdd4f 70%,#e8cf61 100%)}
+  #legenda .ticks{display:flex;justify-content:space-between;width:220px;opacity:.7}
+  #tempo-wrap{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:10;
+    width:min(54vw,580px);text-align:center;user-select:none;
+    font-family:ui-sans-serif,system-ui,sans-serif;color:#d9e1f2;text-shadow:0 1px 4px rgba(0,0,0,.85)}
+  #data{font-size:23px;font-weight:700;letter-spacing:.5px;line-height:1;
+    font-variant-numeric:tabular-nums;color:#eef4ff}
+  #trilho{position:relative;width:100%;height:7px;border-radius:4px;
+    background:rgba(120,150,200,.22);margin:11px 0 0;cursor:pointer;pointer-events:auto}
+  #preenche{position:absolute;left:0;top:0;height:100%;width:0;
+    background:linear-gradient(90deg,#b5762e,#eed7a8);border-radius:4px}
+  #alca{position:absolute;top:-3px;width:13px;height:13px;border-radius:50%;
+    background:#eef4ff;transform:translateX(-50%);box-shadow:0 0 6px rgba(0,0,0,.7);pointer-events:none}
+  #playpause{margin-top:8px;cursor:pointer;border:1px solid rgba(150,180,230,.4);pointer-events:auto;
+    background:rgba(8,16,30,.72);color:#cfe0ff;font-size:12px;padding:4px 12px;border-radius:7px}
+  #dica{position:fixed;right:18px;bottom:14px;z-index:10;pointer-events:none;user-select:none;
+    font-family:ui-sans-serif,system-ui,sans-serif;color:#cfe0ff;font-size:12px;opacity:.55;
+    text-shadow:0 1px 4px rgba(0,0,0,.85);text-align:right}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;
+    color:#9fb1cc;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;
+    background:#02040a;transition:opacity .6s ease}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://esm.sh/three@0.180.0",
+  "three/addons/": "https://esm.sh/three@0.180.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+<canvas id="overlay"></canvas>
+
+<div id="hud">
+  <h1>A Ponte de Poeira</h1>
+  <p>012 · poeira do Saara → Amazônia · MERRA-2 · <span id="data-hud">—</span></p>
+</div>
+<div id="legenda">
+  <b>ar:</b> cor = concentração de poeira (máx global fixo) · altura = altitude real (voa baixo)
+  <div id="barra"></div>
+  <div class="ticks"><span>ar limpo</span><span>pluma</span><span>núcleo</span></div>
+  <div style="margin-top:7px"><b>chão:</b> deposição que fertiliza · cor = acúmulo · brilho = chegada</div>
+  <div id="barra-dep"></div>
+  <div class="ticks"><span>pouco</span><span>médio</span><span>muito P</span></div>
+</div>
+<div id="tempo-wrap">
+  <div id="data">—</div>
+  <div id="trilho"><div id="preenche"></div><div id="alca"></div></div>
+  <button id="playpause">❚❚ pausar</button>
+</div>
+<div id="dica">arraste p/ girar · scroll p/ aproximar · botão direito/Ctrl p/ inclinar</div>
+<div id="loading">carregando a travessia…</div>
+
+<script src="https://unpkg.com/cesium@1.136/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import * as THREE from 'three';
+
+const R_T = 6378137.0;   // raio WGS84 equatorial (m) — a esfera do raymarch R=1 = esta; camPos/R_T -> raios
+
+// ===================== 1) CESIUM (motor de navegação — = smoke.html validado s.39) =====================
+window.CESIUM_BASE_URL = 'https://unpkg.com/cesium@1.136/Build/Cesium/';
+Cesium.Ion.defaultAccessToken = undefined;   // sem conta/licença/$ (Nuvem-First, $0)
+
+// imagery $0: NASA GIBS Blue Marble Shaded Relief + Bathymetry (MOLDURA/palco; sem chave, sem rate-limit doc)
+const gibs = new Cesium.UrlTemplateImageryProvider({
+  url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg',
+  tilingScheme: new Cesium.WebMercatorTilingScheme(),
+  maximumLevel: 8, credit: 'NASA GIBS / Blue Marble'
+});
+
+const viewer = new Cesium.Viewer('cesiumContainer', {
+  baseLayer: new Cesium.ImageryLayer(gibs),
+  baseLayerPicker: false, geocoder: false, homeButton: false, sceneModePicker: false,
+  navigationHelpButton: false, animation: false, timeline: false, fullscreenButton: false,
+  infoBox: false, selectionIndicator: false,
+  requestRenderMode: true, maximumRenderTimeChange: Infinity,   // GPU só renderiza sob mudança (arte-imposto/mobile)
+  skyAtmosphere: new Cesium.SkyAtmosphere(),
+  contextOptions: { webgl: { powerPreference: 'low-power', preserveDrawingBuffer: true } }
+});
+viewer.scene.globe.enableLighting = true;          // terminador / luz rasante
+viewer.scene.skyAtmosphere.show = true;
+viewer.scene.globe.showGroundAtmosphere = true;
+const ssc = viewer.scene.screenSpaceCameraController;
+ssc.enableCollisionDetection = true;
+ssc.minimumZoomDistance = 800;                     // ~800 m: não colar no chão (onde o tilt perde a referência)
+// enquadramento inicial = Atlântico (África a leste + Am.Sul a oeste) — a cena da obra
+viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-25.0, 8.0, 1.7e7) });
+
+// ===================== 2) DADO (= globo.html: Data3DTexture half-float, 23 frames da travessia) =========
+const M = await fetch('../dados/manifest.json').then(r => r.json());
+const [ALT, LAT, LON] = M.shape;                   // [32, 95, 169]
+const B = M.bbox, CFG = M.look_cfg;
+
+function makeVol(buf){
+  const tex = new THREE.Data3DTexture(new Uint16Array(buf), LON, LAT, ALT);  // width=lon,height=lat,depth=alt
+  tex.format = THREE.RedFormat; tex.type = THREE.HalfFloatType;
+  tex.minFilter = tex.magFilter = THREE.LinearFilter;
+  tex.wrapS = tex.wrapT = tex.wrapR = THREE.ClampToEdgeWrapping;
+  tex.needsUpdate = true; return tex;
+}
+const loadVol = (f) => fetch('../dados/' + f).then(r => r.arrayBuffer()).then(makeVol);
+const loadEl = document.getElementById('loading');
+let done = 0;
+const VOLS = await Promise.all(M.frames.map(fr =>
+  loadVol(fr.file).then(t => { done++; loadEl.textContent = `carregando a travessia… ${done}/${M.frames.length}`; return t; })));
+
+// ---- VENTO (advecção semi-Lagrangiana, s.42): 1 campo U/V por keyframe (textura RG) + Δt real por intervalo ----
+// O movimento entre frames deixa de ser SWAP DURO e vira FLUXO: a poeira é advectada pelo vento MERRA-2 real
+// (CANAL, legenda-viva s.38). Endpoints (tween 0/1) = o frame real EXATO -> reversível. NÃO soma noise (RUÍDO).
+const VM = await fetch('../dados/vento_manifest.json').then(r => r.json());
+function makeWind(buf){
+  const tex = new THREE.Data3DTexture(new Uint16Array(buf), LON, LAT, ALT);   // RG = (U,V) m/s interleaved
+  tex.format = THREE.RGFormat; tex.type = THREE.HalfFloatType;
+  tex.minFilter = tex.magFilter = THREE.LinearFilter;
+  tex.wrapS = tex.wrapT = tex.wrapR = THREE.ClampToEdgeWrapping;
+  tex.needsUpdate = true; return tex;
+}
+const WINDS = await Promise.all(VM.frames.map(fr => fetch('../dados/' + fr.file).then(r => r.arrayBuffer()).then(makeWind)));
+const DT_NEXT = VM.frames.map(fr => fr.dt_next_s);   // Δt (s) até o próximo keyframe, por frame
+
+// ---- CAMADA DE DEPOSIÇÃO (a chegada: a poeira que POUSA e fertiliza) — DECIDIDO s.41 (legenda-viva) ----
+// 2 canais reversíveis: ACÚMULO (base, integral do fluxo, só cresce) + TAXA (pulso do frame). Escala PRÓPRIA
+// do chão (declarada): cada campo já vem NORMALIZADO [0,1] pelo seu máx fixo (D33) → half-float não underflowa
+// (a taxa crua ~1e-10 underflowaria; por isso o arquivo é float32 e a normalização é aqui). Mesma bbox do volume.
+const DM = await fetch('../dados/dep_manifest.json').then(r => r.json());
+const DNL = DM.shape[0], DNW = DM.shape[1];     // [lat, lon]
+function makeDepTex(buf, maxv){
+  const src = new Float32Array(buf), half = new Uint16Array(src.length);
+  for(let k=0;k<src.length;k++) half[k] = THREE.DataUtils.toHalfFloat(Math.min(Math.max(src[k]/maxv,0),1));
+  const tex = new THREE.DataTexture(half, DNW, DNL, THREE.RedFormat, THREE.HalfFloatType);
+  tex.minFilter = tex.magFilter = THREE.LinearFilter;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.needsUpdate = true; return tex;
+}
+const loadDep = (f, mx) => fetch('../dados/' + f).then(r => r.arrayBuffer()).then(b => makeDepTex(b, mx));
+const DEP_ACUM = await Promise.all(DM.frames.map(fr => loadDep(fr.acum_file, DM.dep_acum_max)));
+const DEP_TAXA = await Promise.all(DM.frames.map(fr => loadDep(fr.taxa_file, DM.dep_taxa_max)));
+
+// ===================== 3) OVERLAY three.js (raymarch fullscreen — só a poeira, alpha reto) ===============
+const overlay = document.getElementById('overlay');
+const renderer = new THREE.WebGLRenderer({ canvas: overlay, antialias: false, alpha: true, premultipliedAlpha: false, preserveDrawingBuffer: true });
+renderer.setClearColor(0x000000, 0);               // fundo transparente: o Cesium aparece por baixo
+const HI = Math.min(window.devicePixelRatio || 1, 2), LO = 0.6;
+renderer.setPixelRatio(HI);
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+// SOL v1 (MOLDURA declarada): direção fixa frontal ao Atlântico, em ECEF. Refinar pro sol real do instante.
+const sunLatLon = (lat, lon) => { const la = THREE.MathUtils.degToRad(lat), lo = THREE.MathUtils.degToRad(lon);
+  return new THREE.Vector3(Math.cos(la)*Math.cos(lo), Math.cos(la)*Math.sin(lo), Math.sin(la)).normalize(); };
+const SUN = sunLatLon(16, -34);
+const HC = CFG.exagero * 15000.0 / R_T;             // espessura da casca em raios (exagero vertical do look)
+const MAXC = M.global_max;                          // máx GLOBAL fixo (D33, anti-RUÍDO temporal)
+
+const uniforms = {
+  uVol0: { value: VOLS[0] }, uVol1: { value: VOLS[1 % VOLS.length] },
+  uWind0: { value: WINDS[0] }, uWind1: { value: WINDS[1 % WINDS.length] },
+  uTween: { value: 0.0 }, uDt: { value: DT_NEXT[0] }, uAdvOn: { value: 1.0 },
+  uCamPos: { value: new THREE.Vector3() }, uRight: { value: new THREE.Vector3() },
+  uUp: { value: new THREE.Vector3() }, uFwd: { value: new THREE.Vector3() },
+  uTanFov: { value: 0.3 }, uAspect: { value: 1.0 },
+  uSun: { value: SUN }, uHc: { value: HC }, uMaxc: { value: MAXC },
+  uExtinct: { value: CFG.extinct }, uOnset: { value: CFG.onset }, uG: { value: CFG.g },
+  uLat0: { value: B.lat0 }, uLat1: { value: B.lat1 }, uLon0: { value: B.lon0 }, uLon1: { value: B.lon1 },
+  uSunCol: { value: new THREE.Vector3().fromArray(CFG.sun_col) },
+  uSunGain: { value: CFG.sun_gain }, uSunBase: { value: CFG.sun_base },
+  uAmbient: { value: new THREE.Vector3().fromArray(CFG.ambient) },
+  uSteps: { value: 96 }, uLight: { value: 6 }, uFar: { value: 0.0 }, uFrame: { value: 0.0 },
+  // camada de deposição (chão): texturas já normalizadas [0,1]; toggles de intensidade
+  uDepAcum: { value: DEP_ACUM[0] }, uDepTaxa: { value: DEP_TAXA[0] },
+  uDepOn: { value: 1.0 }, uDepGain: { value: 1.0 }, uPulseGain: { value: 1.0 },
+};
+
+const mat = new THREE.RawShaderMaterial({
+  glslVersion: THREE.GLSL3, transparent: true, depthTest: false, depthWrite: false,
+  blending: THREE.NormalBlending, uniforms,
+  vertexShader: /* glsl */`
+    in vec3 position; out vec2 vNdc;
+    void main(){ vNdc = position.xy; gl_Position = vec4(position.xy, 0.0, 1.0); }
+  `,
+  fragmentShader: /* glsl */`
+    precision highp float; precision highp sampler3D;
+    in vec2 vNdc; out vec4 frag;
+    uniform sampler3D uVol0, uVol1, uWind0, uWind1;
+    uniform sampler2D uDepAcum, uDepTaxa;
+    uniform vec3 uCamPos, uRight, uUp, uFwd, uSun, uSunCol, uAmbient;
+    uniform float uTanFov, uAspect, uHc, uMaxc, uExtinct, uOnset, uG;
+    uniform float uLat0, uLat1, uLon0, uLon1, uSunGain, uSunBase, uSteps, uLight, uFar, uFrame;
+    uniform float uDepOn, uDepGain, uPulseGain;
+    uniform float uTween, uDt, uAdvOn;
+    const float R = 1.0;
+    const float DEG = 57.29577951308232;
+    const float REARTH = 6371000.0;   // raio médio (m) p/ converter vento (m/s) -> deslocamento angular do lookup
+    // rampa ocre divergente da legenda-viva (= STOPS do raymarch_look.py)
+    const vec3 C0 = vec3(0.40,0.34,0.26), C1 = vec3(0.92,0.84,0.59), C2 = vec3(0.81,0.59,0.31),
+               C3 = vec3(0.59,0.35,0.16), C4 = vec3(0.32,0.18,0.08);
+    vec3 ramp(float n){
+      if(n < 0.05) return mix(C0,C1, n/0.05);
+      if(n < 0.30) return mix(C1,C2,(n-0.05)/0.25);
+      if(n < 0.60) return mix(C2,C3,(n-0.30)/0.30);
+      return mix(C3,C4,(n-0.60)/0.40);
+    }
+    // rampa de FERTILIZAÇÃO (chão, deposição) — PERCEPTUAL teal→verde→lima→dourado (s.41, voto Vitor: verde
+    // fluor lavava a África e a América sumia). Pesquisa (matplotlib/NASA): luminosidade crescente é o que faz
+    // aparecer sobre fundos distintos (deserto ocre E floresta verde) SEM estourar; topo dourado = poeira (NASA),
+    // não branco-lavado. CANAL: matiz E luminância crescem monotônicas com o acúmulo. Sem HDR (não "fluoresce").
+    const vec3 F0 = vec3(0.13,0.42,0.52), F1 = vec3(0.18,0.74,0.46),
+               F2 = vec3(0.56,0.90,0.30), F3 = vec3(0.95,0.84,0.38);
+    vec3 fert(float n){
+      if(n < 0.33) return mix(F0,F1, n/0.33);
+      if(n < 0.66) return mix(F1,F2,(n-0.33)/0.33);
+      return mix(F2,F3,(n-0.66)/0.34);
+    }
+    float hg(float ct, float g){ return (1.0-g*g)/(12.566370614*pow(1.0+g*g-2.0*g*ct, 1.5)); }
+    vec2 sphereT(vec3 O, vec3 D, float rad){
+      float b = 2.0*dot(O,D); float c = dot(O,O)-rad*rad; float disc = b*b-4.0*c;
+      if(disc < 0.0) return vec2(1e9, -1e9);
+      float sq = sqrt(disc); return vec2((-b-sq)*0.5, (-b+sq)*0.5);
+    }
+    // P em RAIOS (ECEF/R_T). Convenção ECEF do Cesium: X=(0°,0°), Y=(0°,90°E), Z=polo norte.
+    vec3 toUVW(vec3 P, out float lat){
+      float r = length(P); float altn = (r-R)/uHc;
+      lat = DEG*asin(clamp(P.z/max(r,1e-6), -1.0, 1.0));
+      float lon = DEG*atan(P.y, P.x);
+      float u = (lon-uLon0)/(uLon1-uLon0);
+      float v = (lat-uLat0)/(uLat1-uLat0);
+      if(altn < 0.0 || altn > 1.0 || u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) return vec3(0.0, 0.0, -1.0);
+      return vec3(u, v, altn);
+    }
+    // ADVECÇÃO SEMI-LAGRANGIANA (CANAL, legenda-viva s.38): densidade em P no instante tween entre 2 keyframes.
+    // backward-trace do frame0 por tween·dt + forward-trace do frame1 por (1−tween)·dt; mix por tween.
+    // endpoints tween=0/1 = o frame REAL EXATO (reversível). Vento real -> NÃO é noise (armadilha 3 evitada).
+    // uAdvOn=0 cai pro cross-fade linear (MOLDURA — dissolve, não flui; só p/ comparação).
+    float densAdv(vec3 P){
+      float lat; vec3 uvw = toUVW(P, lat);
+      if(uvw.z < 0.0) return 0.0;
+      if(uAdvOn < 0.5) return mix(texture(uVol0, uvw).r, texture(uVol1, uvw).r, uTween);
+      float coslat = max(cos(radians(lat)), 0.2);
+      float lonSpan = uLon1-uLon0, latSpan = uLat1-uLat0;
+      vec2 w0 = texture(uWind0, uvw).rg;   // (U,V) m/s no ponto, frame0
+      vec2 w1 = texture(uWind1, uvw).rg;   // frame1
+      float t0 = uTween*uDt, t1 = (1.0-uTween)*uDt;
+      vec2 d0uv = vec2( (w0.x*t0/(REARTH*coslat))*DEG/lonSpan, (w0.y*t0/REARTH)*DEG/latSpan );
+      vec2 d1uv = vec2( (w1.x*t1/(REARTH*coslat))*DEG/lonSpan, (w1.y*t1/REARTH)*DEG/latSpan );
+      float dd0 = texture(uVol0, vec3(uvw.xy - d0uv, uvw.z)).r;   // de onde a parcela veio (frame0)
+      float dd1 = texture(uVol1, vec3(uvw.xy + d1uv, uvw.z)).r;   // p/ onde vai (frame1)
+      return mix(dd0, dd1, uTween);
+    }
+    float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx)*0.1031); p3 += dot(p3, p3.yzx+33.33); return fract((p3.x+p3.y)*p3.z); }
+
+    void main(){
+      // raio reconstruído pelos VETORES da câmera Cesium (estável em float32; sem InvVP em ECEF gigante)
+      vec3 O = uCamPos;
+      vec3 D = normalize(uFwd + vNdc.x*uAspect*uTanFov*uRight + vNdc.y*uTanFov*uUp);
+      vec2 tco = sphereT(O, D, R + uHc);   // casca externa da poeira
+      vec2 tsu = sphereT(O, D, R);         // superfície do globo
+      bool hitSurf = (tsu.y > tsu.x) && (tsu.x > 0.0);
+      bool hitShell = (tco.y > tco.x);
+      vec3 colAcc = vec3(0.0); float Tr = 1.0;
+      if(hitShell){
+        float tNear = max(tco.x, 0.0);
+        // OCLUSÃO: a integração para na superfície frontal -> a poeira do outro lado do globo é cortada
+        float tFar = hitSurf ? min(tco.y, tsu.x) : tco.y;
+        if(tFar > tNear){
+          float steps = uSteps;
+          float dt = (tFar - tNear)/steps;
+          float jit = hash12(gl_FragCoord.xy + uFrame*7.13);   // blue-noise-ish (MOLDURA: amostragem)
+          float t = tNear + jit*dt;
+          float phase = hg(dot(D, uSun), uG);
+          float lstep = uHc/uLight;
+          for(int i=0;i<256;i++){
+            if(float(i) >= steps) break;
+            vec3 P = O + t*D;
+            float dens = densAdv(P);
+            float nrm = clamp(dens/uMaxc, 0.0, 1.0);
+            float sig = nrm < uOnset ? 0.0 : dens*uExtinct;    // zera sob onset -> mata poeira-fantasma trilinear
+            // light-march pro sol (self-shadow = CANAL, emerge da densidade real)
+            float acc = 0.0; vec3 Pl = P;
+            for(int l=0;l<16;l++){
+              if(float(l) >= uLight) break;
+              Pl += uSun*lstep; acc += densAdv(Pl)*uExtinct*lstep;
+            }
+            float shadow = exp(-acc);
+            // GATE-POR-ZOOM (r3, reforçado s.41): de longe a poeira BRILHA mais (luminosidade chama o olho,
+            // compensa o achatamento honesto da magnitude baixa — MOLDURA de navegação, NÃO mente a densidade).
+            float gain = uSunGain * (1.0 + 1.8*uFar);
+            float farLift = 0.40 * uFar;                  // piso de brilho no longe (navegação; some ao aproximar)
+            vec3 lit = uAmbient + uSunCol*(shadow*phase*gain + uSunBase + farLift);
+            float a = 1.0 - exp(-sig*dt);
+            colAcc += (Tr*a) * (ramp(nrm)*lit);
+            Tr *= exp(-sig*dt);
+            t += dt;
+            if(Tr < 0.004) break;
+          }
+        }
+      }
+      // ---- CAMADA DE DEPOSIÇÃO na superfície frontal (escala própria do chão; base=acúmulo, pulso=taxa) ----
+      vec3 depRGB = vec3(0.0); float depA = 0.0;
+      if(uDepOn > 0.5 && hitSurf){
+        vec3 Ps = O + tsu.x*D;                                  // ponto onde o raio bate o chão (R=1, frontal)
+        float rs = length(Ps);
+        float latS = DEG*asin(clamp(Ps.z/max(rs,1e-6), -1.0, 1.0));
+        float lonS = DEG*atan(Ps.y, Ps.x);
+        float us = (lonS-uLon0)/(uLon1-uLon0);
+        float vs = (latS-uLat0)/(uLat1-uLat0);
+        if(us>=0.0 && us<=1.0 && vs>=0.0 && vs<=1.0){
+          float ac = clamp(texture(uDepAcum, vec2(us,vs)).r, 0.0, 1.0);   // acúmulo norm (a base que fertiliza)
+          float tx = clamp(texture(uDepTaxa, vec2(us,vs)).r, 0.0, 1.0);   // taxa norm (o pulso da chegada)
+          // CURVA NÃO-LINEAR global (gamma<1, DECLARADA na legenda): dá resolução visual à faixa baixa — a
+          // CHEGADA na Amazônia (~16x menor que a fonte) APARECE — e satura suave no topo (o Saara não lava).
+          // Reversível: monotônica e a MESMA em todo lugar (NÃO é escala regional por continente, que mentiria).
+          float acv = pow(ac, 0.42);
+          depA = clamp(smoothstep(0.0, 0.55, acv) * uDepGain, 0.0, 0.70); // teto 0.70: o globo respira (não lava)
+          vec3 cBase = fert(acv);                                         // cor = acúmulo via a curva (CANAL)
+          vec3 pulse = vec3(0.45,0.95,0.78) * (tx * uPulseGain * 0.7);    // clarão sutil verde-água na chegada (CANAL)
+          depRGB = cBase + pulse;
+        }
+      }
+      // ---- composição "over" em cor reta: poeira aérea (topo) SOBRE deposição (chão) SOBRE Cesium ----
+      float aP = 1.0 - Tr;                          // cobertura da poeira aérea (Beer-Lambert)
+      vec3  cP = colAcc / max(aP, 1e-4);            // cor reta da poeira
+      float alpha = aP + depA*(1.0 - aP);           // alpha composto do overlay (resto = Cesium puro)
+      if(alpha < 0.003) discard;                    // sem poeira E sem deposição: deixa o Cesium puro
+      vec3 col = (cP*aP + depRGB*depA*(1.0 - aP)) / max(alpha, 1e-4);
+      // tonemap ACES + gamma (= raymarch_look.py)
+      float a2=2.51, b2=0.03, cc=2.43, d2=0.59, e2=0.14;
+      col = clamp(col*(a2*col+b2)/(col*(cc*col+d2)+e2), 0.0, 1.0);
+      col = pow(col, vec3(1.0/2.2));
+      frag = vec4(col, alpha);
+    }
+  `,
+});
+
+const scene = new THREE.Scene();
+const tri = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+tri.frustumCulled = false; scene.add(tri);
+const ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+// ===================== 4) SINCRONIA DE CÂMERA (Cesium -> uniforms) + render no postRender ===============
+const _c = new Cesium.Cartesian3();
+let fcount = 0;
+function syncCam(){
+  const cam = viewer.camera;
+  Cesium.Cartesian3.divideByScalar(cam.positionWC, R_T, _c);   // ECEF (m) -> raios (~1.0+, preciso)
+  uniforms.uCamPos.value.set(_c.x, _c.y, _c.z);
+  uniforms.uFwd.value.set(cam.directionWC.x, cam.directionWC.y, cam.directionWC.z);
+  uniforms.uRight.value.set(cam.rightWC.x, cam.rightWC.y, cam.rightWC.z);
+  uniforms.uUp.value.set(cam.upWC.x, cam.upWC.y, cam.upWC.z);
+  uniforms.uTanFov.value = Math.tan(viewer.camera.frustum.fovy / 2);
+  uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+  // gate-por-zoom pela distância ao centro (em raios): perto ~1.05, longe ~3+
+  const dist = Cesium.Cartesian3.magnitude(cam.positionWC) / R_T;
+  uniforms.uFar.value = THREE.MathUtils.clamp((dist - 1.05) / (2.6 - 1.05), 0.0, 1.0);
+  uniforms.uFrame.value = (fcount++ % 64);
+}
+// definição adaptativa: leve enquanto navega/toca, nítido parado (mobile + hardware modesto)
+let moving = false;
+viewer.camera.moveStart.addEventListener(() => { moving = true; applyQ(); });
+viewer.camera.moveEnd.addEventListener(() => { moving = false; applyQ(); });
+function applyQ(){
+  const m = moving || playing;
+  renderer.setPixelRatio(m ? LO : HI);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  uniforms.uSteps.value = m ? 56 : 96; uniforms.uLight.value = m ? 4 : 6;
+}
+// o overlay é desenhado DEPOIS do Cesium, com a câmera já atual deste frame
+viewer.scene.postRender.addEventListener(() => { syncCam(); renderer.render(scene, ortho); });
+
+// TRAVA DE TILT NO HORIZONTE (s.41, pedido do Vitor): o bug do tilt = ao inclinar perto do horizonte a
+// direção central deixa de tocar o globo e o pivô some. Cura leve = travar o pitch no ângulo de depressão
+// do horizonte (dip = acos(R/(R+h))): a câmera pode olhar ATÉ o horizonte, nunca acima dele (pro céu).
+viewer.scene.preRender.addEventListener(() => {
+  const cam = viewer.camera;
+  const h = Math.max(cam.positionCartographic.height, 1.0);
+  const dip = Math.acos(R_T / (R_T + h));                 // depressão do horizonte na altitude atual
+  const pitchMax = -dip - Cesium.Math.toRadians(0.3);     // margem 0.3° abaixo do horizonte (não tocar a tangente)
+  if (cam.pitch > pitchMax) {
+    cam.setView({ orientation: { heading: cam.heading, pitch: pitchMax, roll: cam.roll } });
+  }
+});
+
+// sentinela GPU-free p/ verificação por console (sem depender da placa do Vitor)
+window.__fusao = { ready: true, cesium: Cesium.VERSION, frames: VOLS.length, maxc: MAXC, hc: HC,
+  dep_frames: DEP_ACUM.length, dep_acum_max: DM.dep_acum_max, dep_taxa_max: DM.dep_taxa_max,
+  wind_frames: WINDS.length, adv: true };
+// hook de verificação: força UM render estático do overlay (contorna o estrangulamento de rAF em aba de
+// fundo do preview headless — armadilha s.39) e devolve a cobertura de poeira lida por gl.readPixels.
+window.__ctl = {
+  viewer,
+  setFrame(i){ aplica(i); },   // i pode ser fracionário (tween) -> testa a advecção entre keyframes
+  adv(on){ uniforms.uAdvOn.value = on ? 1.0 : 0.0; viewer.scene.requestRender(); },
+  dep(on){ uniforms.uDepOn.value = on ? 1.0 : 0.0; viewer.scene.requestRender(); },
+  // hooks de verificação GPU-free (contornam a viewport degenerada do preview headless): força um tamanho
+  // real, enquadra a cena e re-renderiza o overlay sincronizado, pra ler a cobertura por readPixels.
+  fit(w, h){ renderer.setPixelRatio(1); renderer.setSize(w, h, false);
+    const cc = document.getElementById('cesiumContainer'); cc.style.width = w+'px'; cc.style.height = h+'px';
+    viewer.resize(); viewer.scene.render(); syncCam(); uniforms.uAspect.value = w/h; renderer.render(scene, ortho); },
+  view(lon, lat, alt){ viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(lon, lat, alt) }); },
+  // força a câmera Cesium a atualizar e renderiza o overlay 1x, sincronizado
+  shot(){ viewer.scene.render(); syncCam(); renderer.render(scene, ortho); },
+  // projeta lat/lon p/ pixel do framebuffer do overlay e devolve o alpha lá (trava de geografia)
+  alphaEm(lon, lat){
+    const win = Cesium.SceneTransforms.worldToWindowCoordinates(
+      viewer.scene, Cesium.Cartesian3.fromDegrees(lon, lat));
+    if(!win) return { lon, lat, vis:false };
+    const gl = renderer.getContext(); const w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+    const fx = Math.round(win.x / window.innerWidth * w);
+    const fy = Math.round((1 - win.y / window.innerHeight) * h);   // gl é bottom-up
+    if(fx<0||fx>=w||fy<0||fy>=h) return { lon, lat, vis:false, fora_tela:true };
+    const px = new Uint8Array(4); gl.readPixels(fx, fy, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    return { lon, lat, tela:[+(win.x).toFixed(0),+(win.y).toFixed(0)], alpha:px[3], rgb:[px[0],px[1],px[2]] };
+  },
+  // lê a cobertura direto do framebuffer WebGL do overlay (independe de drawImage/composição)
+  cobertura(){
+    const gl = renderer.getContext(); const w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+    const px = new Uint8Array(w*h*4); gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,px);
+    let cov=0,rs=0,gs=0,bs=0,amax=0; for(let i=0;i<px.length;i+=4){ const a=px[i+3];
+      if(a>10){ cov++; rs+=px[i]; gs+=px[i+1]; bs+=px[i+2]; if(a>amax)amax=a; } }
+    const n=Math.max(cov,1);
+    return { w, h, pixels:cov, pct:+(100*cov/(w*h)).toFixed(2), rgb:[Math.round(rs/n),Math.round(gs/n),Math.round(bs/n)], amax };
+  },
+};
+
+// ===================== 5) TEMPO (travessia 23 frames — = globo.html) =====================================
+const dataEl = document.getElementById('data'), dataHud = document.getElementById('data-hud');
+const preenche = document.getElementById('preenche'), alca = document.getElementById('alca');
+const trilho = document.getElementById('trilho'), pp = document.getElementById('playpause');
+const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const N = M.frames.length;
+const rotulo = (data) => { const [y,m,d] = data.split('-'); return `${d} ${MES[+m-1]} ${y}`; };
+let tS = 0, curIdx = -1, scrub = false, last = null, playing = true;
+function aplica(ts){
+  tS = ((ts % N) + N) % N;
+  const i = Math.floor(tS), frac = tS - i, j = (i + 1) % N;
+  // ADVECÇÃO: o par de keyframes (i, i+1) + a fração + o Δt do intervalo -> o shader interpola pelo vento real
+  uniforms.uVol0.value = VOLS[i];  uniforms.uVol1.value = VOLS[j];
+  uniforms.uWind0.value = WINDS[i]; uniforms.uWind1.value = WINDS[j];
+  uniforms.uTween.value = frac;     uniforms.uDt.value = DT_NEXT[i];
+  if (i !== curIdx){   // deposição (chão) troca por frame inteiro (acúmulo cresce devagar; advecção é do ar)
+    uniforms.uDepAcum.value = DEP_ACUM[i]; uniforms.uDepTaxa.value = DEP_TAXA[i]; curIdx = i;
+    const r = rotulo(M.frames[i].data); dataEl.textContent = r; dataHud.textContent = r; }
+  preenche.style.width = alca.style.left = (100*tS/(N-1)) + '%';
+}
+const setPP = () => { pp.textContent = playing ? '❚❚ pausar' : '► tocar'; };
+function seek(ev){ const r = trilho.getBoundingClientRect();
+  let f = (ev.clientX-r.left)/r.width; f = Math.min(Math.max(f,0),1); aplica(f*(N-1)); }
+trilho.addEventListener('pointerdown', e => { scrub = true; playing = false; setPP(); applyQ(); seek(e); try{ trilho.setPointerCapture(e.pointerId);}catch(_){} viewer.scene.requestRender(); });
+trilho.addEventListener('pointermove', e => { if(scrub){ seek(e); viewer.scene.requestRender(); } });
+window.addEventListener('pointerup', () => { scrub = false; });
+pp.addEventListener('click', () => { playing = !playing; if(playing) last = null; setPP(); applyQ(); });
+aplica(0); setPP();
+
+const VEL = 1.4;   // frames por segundo da travessia
+(function tick(now){
+  if (last === null) last = now;
+  const dt = Math.max(0, Math.min((now-last)/1000, 0.1)); last = now;
+  if (playing && !scrub){ aplica(tS + dt*VEL); viewer.scene.requestRender(); }  // anima -> pede render (postRender redesenha o overlay)
+  requestAnimationFrame(tick);
+})(performance.now());
+
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+  viewer.scene.requestRender();
+});
+// a camada de deposição é NATIVA: renderiza sempre junto com a poeira (uDepOn=1 fixo). Sem toggle.
+
+(function hide(){ loadEl.style.opacity = '0'; setTimeout(() => loadEl.remove(), 700); })();
+applyQ();
+</script>
+</body>
+</html>
