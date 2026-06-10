@@ -87,8 +87,12 @@
       transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1), filter 1.2s ease, letter-spacing 1.2s ease; }
     #gancho h1 { margin:0; font-size: clamp(22px, 4.4vw, 40px); font-weight:700; letter-spacing:.55em;
       text-shadow:0 2px 22px rgba(0,0,0,.9); max-width:14em; line-height:1.18; }
+    /* scrim suave atrás do gancho — o texto branco lia mal sobre o branco escaldante do globo (nota Vitor s.46) */
+    #gancho::before { content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; opacity:0;
+      background: radial-gradient(ellipse 74% 54% at 50% 42%, rgba(0,2,8,.58), transparent 72%); transition:opacity 1s ease; }
+    #gancho.show::before { opacity:1; }
     #gancho p { margin:0; font-size: clamp(13px, 2.1vw, 17px); max-width:24em;
-      text-shadow:0 1px 10px rgba(0,0,0,.9); }
+      text-shadow:0 0 3px #000, 0 1px 12px rgba(0,0,0,.96), 0 0 28px rgba(0,0,0,.7); }
     #entrar { margin-top:8px; cursor:pointer; border:1px solid rgba(150,180,230,.6);
       background: rgba(20,40,80,.42); color:#fff; font-size: clamp(15px,2.4vw,18px); font-weight:600;
       padding:12px 34px; border-radius:999px; backdrop-filter: blur(6px);
@@ -118,7 +122,7 @@
       color: rgba(238,245,255,.92);
       opacity:0; transform: translate(-50%, 10px); filter: blur(7px); pointer-events:none;
       transition: opacity .22s ease-in, transform .22s ease-in, filter .22s ease-in;
-      text-shadow: 0 2px 16px rgba(0,0,0,.95), 0 0 2px rgba(0,0,0,.92); }
+      text-shadow: 0 0 4px #000, 0 1px 2px #000, 0 2px 20px rgba(0,0,0,.96), 0 0 40px rgba(0,0,0,.72); }  /* legível sobre o branco do globo (nota Vitor) */
     #caption.show { opacity:1; transform: translate(-50%, 0); filter:none;
       transition: opacity .42s ease-out, transform .42s cubic-bezier(.2,.7,.2,1), filter .42s ease-out; }   /* mais seco (dinâmica s.46) */
     #caption .big { font-size: clamp(26px, 6vw, 54px); font-weight:800; letter-spacing:.5px; }
@@ -139,6 +143,18 @@
       font-size:11.5px; letter-spacing:.06em; color: rgba(205,220,245,.6); white-space:nowrap;
       text-shadow:0 1px 6px rgba(0,0,0,.9); opacity:0; transition:opacity .8s ease; pointer-events:none; }
     #fonte.show { opacity:1; }
+
+    /* LEGENDA SUAVE DE CORES (nota Vitor s.46): aparece quando a narração fala das cores, JÁ no canto onde a
+       legenda nativa vai ficar na obra (temp à esquerda, anomalia à direita) — foreshadow; some no handoff. */
+    .lg { position:fixed; bottom: max(2.5vh, 16px); z-index:11; display:flex; align-items:center; gap:7px;
+      font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:rgba(220,232,255,.62);
+      text-shadow:0 1px 5px #000; opacity:0; transition:opacity .7s ease; pointer-events:none; }
+    .lg.show { opacity:1; }
+    .lg i { display:block; width:84px; height:6px; border-radius:4px; }
+    .lgT { left:16px; }
+    .lgT i { background:linear-gradient(90deg,#0a1452,#0e3aa0,#0e85a8,#2aa060,#dcbe38,#ee6b1e,#e6200f); }
+    .lgA { right:16px; }
+    .lgA i { background:linear-gradient(90deg,#2b6fd6,#dfe8ff,#e6200f); }
 
     /* HINT de gesto (B7) — só se o usuário não tocar em ~3s; morre ao primeiro toque */
     #hint { position:fixed; left:50%; bottom: max(9vh, 64px); z-index:12;
@@ -217,6 +233,8 @@
   <div id="caption"></div>
   <div id="selo"></div>
   <div id="fonte">dados reais · NOAA OISST · temperatura da superfície do mar</div>
+  <div class="lg lgT"><span>frio</span><i></i><span>quente</span></div>
+  <div class="lg lgA"><span>−</span><i></i><span>+</span></div>
   <div id="hint">arraste para explorar</div>
 
   <div id="ctl">
@@ -231,7 +249,6 @@
 
   <script>
   // ===================== motores reais (reuso, sem editar a lógica/dado) =====================
-  // PUBLICADO: os motores moram NESTA pasta (cópias fiéis dos da cozinha, transparência + UI-toggle inclusos).
   const MOTOR = './';
   const ifrTemp = document.getElementById('ifrTemp');   // globo-mar-v2 = TEMPERATURA REAL (primário)
   const ifrAnom = document.getElementById('ifrAnom');   // globo-mar-v1 = ANOMALIA (entra na dobra)
@@ -477,14 +494,16 @@
     { t:'both', audio:'audio/n1.mp3', txt:'Isto é o último grande El Niño — <b>dezembro de 2023</b>.',
       go: () => flyTo(-5, -120, A(1.7), { dur:1000 }),
       during: () => flyTo(-7, -123, A(1.5), { dur:2800, swoop:0, rest:0.55 }) },                    // assenta no evento + deriva
-    { t:'temp', audio:'audio/n2.mp3', txt:'As cores são a <b>temperatura real</b> do mar: do <b>azul gelado</b> ao <b>branco escaldante</b>.',
+    { t:'temp', audio:'audio/n2.mp3', leg:'temp', txt:'As cores são a <b>temperatura real</b> do mar: do <b>azul gelado</b> ao <b>branco escaldante</b>.',
       go: () => flyTo(-5, -116, A(1.4), { dur:900 }),
-      during: () => flyTo(-4, -111, A(1.22), { dur:5000, swoop:0, rest:0.4 }) },                    // push-in contínuo no globo temp
-    { t:'anom', audio:'audio/n3.mp3', txt:'Aqui, o Pacífico esquentou <b>dois graus</b> acima do normal.',
-      during: () => flyTo(-3, -118, A(1.4), { dur:4200, swoop:0.06, rest:0.4 }) },                  // deriva sobre a anomalia
-    { t:'both', audio:'audio/n4.mp3', txt:'Os ventos <b>enfraquecem</b> — e o calor <b>invade a América do Sul</b>.',
-      go: () => flyTo(-6, -132, A(1.62), { dir:'west', dur:1100 }),                                 // começa no Pacífico oeste (a água quente presa)
-      during: () => flyTo(-12, -60, A(1.85), { dir:'east', dur:6000, swoop:0.06, rest:0.4 }) },     // ...VARRE pra leste = o calor invadindo a AS
+      during: () => flyTo(-4, -111, A(1.22), { dur:5000, swoop:0, rest:0.4 }) },                    // push-in contínuo no globo temp (acende a legenda suave)
+    { t:'anom', audio:'audio/n3.mp3', leg:'anom', txt:'Aqui, o Pacífico esquentou <b>dois graus</b> acima do normal.',
+      during: () => flyTo(-3, -118, A(1.4), { dur:4200, swoop:0.06, rest:0.4 }) },                  // deriva sobre a anomalia (acende a legenda da anomalia)
+    { t:'both', audio:'audio/n4.mp3', syncGo:true, txt:'Os ventos <b>enfraquecem</b> — e o calor <b>invade a América do Sul</b>.',
+      go: () => flyTo(-8, 142, A(1.72), { dir:'west', dur:1300 }),                                  // POSICIONA na Austrália (a água quente presa no Pacífico oeste)
+      during: () => Promise.all([                                                                  // o calor CHEGA com o tempo passando (nota Vitor s.46):
+        flyTo(-12, -60, A(1.86), { dir:'east', dur:6500, swoop:0.05, rest:0.4 }),                  //  câmera VEM da Austrália -> América do Sul...
+        driveFrames(24, PEAK, 6500) ]) },                                                          //  ...e o DADO avança (2022->dez/2023): a água quente migrando pro leste
     { t:'both', audio:'audio/n5.mp3', txt:'<b>Enchentes</b> no sul do Brasil. <b>Secas</b> na Amazônia.',
       go: () => flyTo(-15, -58, A(2.0), { dur:1100 }),
       during: () => flyTo(-12, -52, A(1.85), { dur:4000, swoop:0.04, rest:0.5 }) },                 // órbita sobre o continente (impactos)
@@ -529,6 +548,7 @@
       focus(line.t); setSelo(frameDrive);
       if (line.syncGo && line.go) { await line.go(); if (isSkipped) return; }   // posiciona ANTES (coreografia)
       cap(line.txt);
+      if (line.leg) document.querySelector('.lg' + (line.leg === 'temp' ? 'T' : 'A')).classList.add('show');  // acende a legenda suave no canto (foreshadow da obra)
       const motion = (async () => {                  // demais: o 'go' anda JUNTO com a voz (sem vão silencioso)
         if (!line.syncGo && line.go) { await line.go(); if (isSkipped) return; }
         if (line.during) await line.during();
@@ -543,12 +563,15 @@
     // e já é o CTA pra obra. Uma batida só, voz + varredura juntas.
     cap('E está esquentando de novo. <b>Veja, mês a mês, por você mesmo.</b>');
     await Promise.all([ voz('audio/n6.mp3'),
-      (async () => { flyTo(-5, -120, A(1.9), { dur:1400, rest:0.4 }); await driveFrames(PEAK, LAST, 5200); })() ]);
-    if (isSkipped) return; await sleep(250);
+      // varredura LENTA (nota Vitor s.46): a voz acaba ~5s, mas os meses seguem correndo até ~8.5s — dá pra
+      // PERCEBER o tempo acelerando 2023->presente (linear, D33: o scrub é o dado, sem ease que distorça).
+      (async () => { flyTo(-5, -120, A(1.9), { dur:1700, rest:0.4 }); await driveFrames(PEAK, LAST, 8500); })() ]);
+    if (isSkipped) return; await sleep(450);
 
     // B6 — a tremida ANCORADA (voto s.46): treme no instante exato em que o tempo real assume e a UI viva
     // surge — MOLDURA declarada, o gesto marca a passagem simulação→obra. Letterbox retrai, estrelas recuam.
     capOff(); selo(false); document.getElementById('pular').classList.remove('show');
+    document.querySelectorAll('.lg').forEach(e => e.classList.remove('show'));   // a legenda suave some — a legenda NATIVA do motor assume o canto
     document.getElementById('mark').classList.remove('show');   // o título REAL do motor assume (s.46: sem textos sobrepostos)
     stage.classList.add('handoff');
     fadeStarsTo(0, 1400);
@@ -560,7 +583,13 @@
     beat='interactive'; driveCam=false; frameDrive=null; rotate=false;
     stage.classList.add('interactive'); document.getElementById('guard').classList.add('off');
     setTimeout(() => document.getElementById('ctl').classList.add('show'), 400);
+    // instrução de saída (nota Vitor s.46): depois do "veja você mesmo", ensina a pilotar a obra — sobe
+    // a caption pra NÃO cobrir a UI nativa, aponta pros botões de sincronia + a navegação no globo.
+    caption.classList.add('up');
+    cap('Sincronize o <b>tempo</b> e o <b>movimento</b> — e navegue pelo globo.');
     armaHint();
+    await sleep(6200); if (isSkipped) return;
+    capOff();
   }
 
   // ===================== sincronia no handoff (reuso do relay do duo) =====================
