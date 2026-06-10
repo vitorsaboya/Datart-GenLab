@@ -67,6 +67,10 @@
        o teclado 1/2/3 segue funcionando; o globo/oceano nao muda. */
     #jogo, #vcard { display: none !important; }
 
+    /* JANELA ESTREITA com mouse (ex.: iframe de meia-largura no duo/cinematic): a legenda longa cruzava a
+       barra de tempo central (s.46) -> sobe a legenda pra fora da faixa do trilho. Tela cheia: inalterado. */
+    @media (max-width: 1100px) and (pointer: fine) { #legenda { bottom: 72px; } }
+
     /* CELULAR (toque): compacta o HUD e SEPARA as legendas -> mata a sobreposicao no rodape.
        HUD em cima-esquerda, legenda em cima-direita, tempo embaixo; a dica some. */
     @media (pointer: coarse), (max-width: 500px) {

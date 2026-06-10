@@ -161,11 +161,11 @@
       #ctl { top:8px; bottom:auto; transform:translateX(-50%); }
     }
     @media (orientation: portrait) {
-      #stage.interactive { gap:46px; }
+      #stage.interactive { gap:32px; }                     /* vão MÍNIMO: os globos mantêm a proporção (nota Vitor) */
       #ctl #ctlcap { display:none; }
-      #ctl { padding:6px 10px; gap:6px; max-width:96vw; }
-      #ctl label, #ctl button { font-size:11px; padding:4px 8px; }
-      #credito { font-size:10px; padding-left:7px; }
+      #ctl { padding:3px 8px; gap:5px; max-width:96vw; }
+      #ctl label, #ctl button { font-size:10.5px; padding:3px 7px; }
+      #credito { font-size:9.5px; padding-left:6px; }
     }
     /* desktop (mouse): a dica nativa do motor já ensina a arrastar — o hint do cinematic só existe no TOQUE */
     @media (pointer: fine) { #hint { display:none !important; } }
@@ -482,16 +482,19 @@
       during: () => flyTo(-3, -106, A(1.45), { dur:10000, swoop:0.05, rest:0.3 }) }, // deriva lateral lenta durante a fala
     { t:'both', audio:'audio/c4.mp3', txt:'Mas como acontece o El Niño? Normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador, dos <b>Andes</b> para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
       go: () => flyTo(-6, -80, A(1.6), { dur:2000 }),                     // COMEÇA olhando a América do Sul (nota Vitor s.46)
-      during: () => (async () => {       // CASADO com a voz (~14.3s): pergunta (parado) -> "empurram... pra Indonésia e Austrália"
-        await sleep(1800); if (isSkipped) return;                          //   (o voo + o dado recuando pro "normal", selo aceso)
-        await Promise.all([ flyTo(-10, 132, A(1.55), { dir:'west', dur:6200 }), driveFrames(PEAK, 20, 6200) ]); if (isSkipped) return;
-        await sleep(200);                                                  // "na costa do Peru... a ressurgência" -> volta ao Peru
-        await flyTo(-10, -80, A(1.4), { dir:'east', dur:3800 }); })() },
+      during: () => (async () => {       // CRONOMETRADO na voz (~14.3s, frase a frase — nota Vitor v0.9):
+        await sleep(2400); if (isSkipped) return;                          // 0-2.4s  "Mas como acontece o El Niño?" — parado na AS
+        const recuo = driveFrames(PEAK, 20, 7000);                         // 2.4s    "Normalmente..." — o oceano VOLTA ao normal (selo)
+        await sleep(2800); if (isSkipped) return;                          // 2.4-5.2 "...empurram a água quente na linha do equador,"
+        await flyTo(-10, 132, A(1.55), { dir:'west', dur:4600 });          // 5.2-9.8 "dos Andes para a Indonésia e a Austrália" = o VOO
+        await recuo; if (isSkipped) return;
+        await sleep(300);                                                  // respiro
+        await flyTo(-10, -80, A(1.4), { dir:'east', dur:3700 }); })() },   // 10.1-13.8 "Na costa do Peru... a ressurgência"
     { t:'both', audio:'audio/c5.mp3', txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
-      go: () => flyTo(-13, -60, A(1.8), { dir:'east', dur:3600 }),        // a câmera já espera sobre a América do Sul
-      during: () => (async () => {       // CASADO com a voz (~9.5s): "enfraquecem" (pausa) -> "a água avança" = o DADO avança
-        await sleep(2200); if (isSkipped) return;
-        await driveFrames(20, PEAK, 5500); })() },                         // o El Niño se forma na tela (selo correndo)
+      go: () => flyTo(-12, -68, A(1.75), { dir:'east', dur:2000 }),       // sobe do Peru pra ver a costa inteira (curto: sem vácuo)
+      during: () => (async () => {       // CRONOMETRADO na voz (~9.5s):
+        await sleep(2800); if (isSkipped) return;                          // 0-2.8s  "No El Niño, esses ventos enfraquecem." — parado
+        await driveFrames(20, PEAK, 5800); })() },                         // 2.8-8.6 "a água quente escorrega... e AVANÇA" = o DADO avança (selo)
     { t:'both', audio:'audio/c6.mp3', txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>, e <b>secas</b> na <b>Amazônia e no Nordeste</b>.',
       go: () => flyTo(-15, -60, A(2.1), { dur:2400 }) },                  // abre: o continente inteiro no quadro
     { t:'temp', audio:'audio/c7.mp3', txt:'E quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas, o movimento no globo é o tamanho do evento.',
