@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>011 · El Niño — abertura</title>
   <!--
-    011 · PRODUTO PÚBLICO — CINEMATIC DE ABERTURA (v0.2, s.45).
+    011 · PRODUTO PÚBLICO — CINEMATIC DE ABERTURA (v0.7, s.46 — passe de FINALIZAÇÃO: entrada enxuta
+    com gancho durante o dolly, voz começa ~2.5s após o clique, "pular" o vídeo todo, ctl em pill compacta
+    na divisa dos globos, movimento contínuo nas falas 2-3, caption 4 alinhada ao áudio, crédito Datart GenLab).
     PRINCÍPIO-MÃE (voto Vitor): tudo aqui é SIMULAÇÃO DA OBRA REAL — os globos são os motores
     reais (globo-mar-v2 = temperatura real, globo-mar-v1 = anomalia), dirigidos por postMessage
     (duoCmd cam/frame/play/pause/freeze/ui). ZERO edição na lógica/dado dos motores.
@@ -145,16 +147,23 @@
     #hint.show { opacity:1; }
     @keyframes hintPulse { 0%,100%{ transform:translate(-50%,0); } 50%{ transform:translate(-50%,-7px); } }
 
-    /* CONTROLES do handoff (B7): sincronia + rever */
-    /* abaixo do HUD nativo dos motores (s.46: nada do cinematic cobre a UI real) */
-    #ctl { position:fixed; top:54px; left:50%; transform:translateX(-50%); z-index:13; display:flex; gap:8px;
-      opacity:0; pointer-events:none; transition:opacity .8s ease; flex-wrap:wrap; justify-content:center; }
+    /* CONTROLES do handoff (B7) — pill COMPACTA na DIVISA dos dois globos (s.46: não cobre nada nativo).
+       RETRATO: centro da tela (a junção dos globos). PAISAGEM: rodapé central (entre os dois relógios de ano). */
+    #ctl { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:13; display:flex; gap:7px;
+      align-items:center; white-space:nowrap; background:rgba(8,16,30,.85); border:1px solid rgba(150,180,230,.35);
+      border-radius:999px; padding:7px 14px; backdrop-filter:blur(5px);
+      opacity:0; pointer-events:none; transition:opacity .8s ease; }
+    @media (orientation: landscape) { #ctl { top:auto; bottom:12px; transform:translateX(-50%); } }
+    #ctl #ctlcap { color:#7e93bb; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; margin-right:2px; }
+    #credito { color:rgba(170,195,235,.55); font-size:10.5px; letter-spacing:.06em; text-decoration:none;
+      border-left:1px solid rgba(150,180,230,.25); padding-left:9px; margin-left:2px; }
+    #credito:hover { color:rgba(210,225,250,.9); }
     #ctl.show { opacity:1; pointer-events:auto; }
-    #ctl label, #ctl button { display:flex; align-items:center; gap:6px; color:#cfe0ff; font-size:12.5px;
-      background: rgba(8,16,30,.82); border:1px solid rgba(150,180,230,.4); border-radius:8px; padding:6px 12px;
+    #ctl label, #ctl button { display:flex; align-items:center; gap:5px; color:#cfe0ff; font-size:12px;
+      background: rgba(20,34,58,.6); border:1px solid rgba(150,180,230,.35); border-radius:999px; padding:4px 10px;
       cursor:pointer; user-select:none; white-space:nowrap; -webkit-tap-highlight-color:transparent; }
     #ctl label.on { background:#1f6f3f; border-color:#2ea05a; color:#fff; }
-    #ctl input { accent-color:#2b6fd6; cursor:pointer; }
+    #ctl input { accent-color:#2b6fd6; cursor:pointer; margin:0; }
 
     @keyframes shake {
       0%,100%{ transform:translate(0,0); } 15%{ transform:translate(-3px,2px); }
@@ -196,9 +205,11 @@
   <div id="hint">arraste para explorar</div>
 
   <div id="ctl">
-    <label id="lblTempo"><input type="checkbox" id="ckTempo"> sincronizar tempo</label>
-    <label id="lblMov"><input type="checkbox" id="ckMov"> sincronizar movimento</label>
-    <button id="rever">↻ rever</button>
+    <span id="ctlcap">sincronizar</span>
+    <label id="lblTempo"><input type="checkbox" id="ckTempo"> tempo</label>
+    <label id="lblMov"><input type="checkbox" id="ckMov"> movimento</label>
+    <button id="rever" title="rever a abertura">↻</button>
+    <a id="credito" href="https://vitorsaboya.github.io/Datart-GenLab/" target="_blank" rel="noopener">Datart GenLab</a>
   </div>
 
   <div id="boot">· · ·</div>
@@ -429,7 +440,7 @@
   });
 
   const bootT = performance.now();
-  const HOLD = 1500;            // black-rest mínimo: estrelas sozinhas antes do planeta
+  const HOLD = 900;             // black-rest mínimo encurtado (s.46 finalização: a entrada estava longa)
   let started = false;
   function onTempReady(){
     if (started) return; started = true;
@@ -448,11 +459,13 @@
   const A = x => isPortrait ? Math.min(x * 1.3, 2.6) : x;   // retrato vê de mais longe (nota Vitor s.45)
   const CORPO = [
     { t:'both', audio:'audio/c1.mp3', txt:'Você está vendo o último grande El Niño — <b>dezembro de 2023</b>.',
-      go: () => flyTo(-5, -120, A(1.7), { dur:2600 }) },                  // assenta no coração do evento
+      go: () => flyTo(-5, -120, A(1.7), { dur:1500 }) },                  // assenta no coração do evento (curto: já estamos lá)
     { t:'temp', audio:'audio/c2.mp3', txt:'O primeiro globo que você vê agora, o mais colorido, representa a <b>temperatura real</b> do oceano — do frio, em azul e verde, ao quente, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.',
-      go: () => flyTo(-5, -118, A(1.45), { dur:2200 }) },                 // push-in suave: o olho desce ao dado
-    { t:'anom', audio:'audio/c3.mp3', txt:'No outro, só o que <b>ultrapassou o "normal"</b>: quanto mais vermelho, mais a temperatura da água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.' },
-    { t:'both', audio:'audio/c4.mp3', txt:'Mas como acontece o El Niño: normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador dos andes para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
+      go: () => flyTo(-5, -118, A(1.55), { dur:1200 }),
+      during: () => flyTo(-5, -116, A(1.32), { dur:11000, swoop:0, rest:0.3 }) },  // dolly CONTÍNUO a fala toda (nada parado na tela)
+    { t:'anom', audio:'audio/c3.mp3', txt:'No outro, só o que <b>ultrapassou o "normal"</b>: quanto mais vermelho, mais a temperatura da água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.',
+      during: () => flyTo(-3, -106, A(1.45), { dur:10000, swoop:0.05, rest:0.3 }) }, // deriva lateral lenta durante a fala
+    { t:'both', audio:'audio/c4.mp3', txt:'Mas como acontece o El Niño: normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador, dos <b>Andes</b> para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
       go: () => flyTo(-6, -80, A(1.6), { dur:2000 }),                     // COMEÇA olhando a América do Sul (nota Vitor s.46)
       during: () => (async () => {                                         // alísios empurram pra Austrália... e a ressurgência na costa do Peru
         await flyTo(-10, 132, A(1.55), { dir:'west', dur:4200 }); if (isSkipped) return;
@@ -471,19 +484,21 @@
   entrarBtn.addEventListener('click', () => { primeAudio(); entrarResolve(); }, { once:true });
 
   async function director(){
-    // B1 — cold open: a Terra entra PEQUENA e LONGE (alt 4.8), flutuando, e cresce devagar até ALT_END.
+    // B1 — cold open ENXUTO (s.46 finalização): a Terra cresce e o GANCHO já entra DURANTE o dolly —
+    // você clica assim que lê, sem esperar o pouso. O "pular" fica disponível o vídeo TODO (nota Vitor).
     beat='cold'; active=[wTemp]; driveCam=true; rotate=true; frameDrive=PEAK; floatAmp=REDUCED?0:1.0; camAlt=4.8;
-    await tween(v => camAlt=v, 4.8, ALT_END, REDUCED ? 400 : 3000, easeInOutCubic);   // metade do tempo (nota Vitor s.46)
-    if (isSkipped) return;
-    await sleep(400); if (isSkipped) return;
+    document.getElementById('pular').classList.add('show');
+    const dolly = tween(v => camAlt=v, 4.8, ALT_END, REDUCED ? 400 : 2200, easeInOutCubic);
+    await sleep(700); if (isSkipped) return;
 
-    // B2 — gancho: espera o clique (ou o pular); texto entra suave (CSS)
+    // B2 — gancho (durante o dolly): espera o clique (ou o pular); texto entra suave (CSS)
     beat='gancho'; document.getElementById('gancho').classList.add('show');
     await Promise.race([entrarClicked, skipSignal]);
     if (isSkipped) return;
+    await dolly;                                       // se clicou cedo, deixa o dolly pousar (máx ~1.5s)
     document.getElementById('gancho').classList.remove('show');
     try { const ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(_){}
-    await sleep(650); if (isSkipped) return;
+    await sleep(300); if (isSkipped) return;
 
     // B3 — dobra: a anomalia entra; os dois travam no evento. A fonte do dado se declara (micro-legenda ~4s).
     beat='duo'; active=[wTemp, wAnom]; frameDrive=PEAK; floatAmp=0.55;
@@ -491,13 +506,12 @@
     stage.classList.add('duo');
     const fonteEl = document.getElementById('fonte');
     fonteEl.classList.add('show'); setTimeout(() => fonteEl.classList.remove('show'), 4600);
-    await sleep(1300); if (isSkipped) return;
+    await sleep(700); if (isSkipped) return;
 
     // B4 — a narração ensina: gesto de câmera → settle → caption (follow-through) → dado/hold.
     // 1 fala = 1 gesto; a caption entra DEPOIS do pouso; o skip persistente entra após a 2ª fala.
     rotate = false;                                  // daqui em diante o flyTo dirige (a deriva Lissajous segue por cima)
     setSelo(frameDrive); selo(true);                 // o ANO em DESTAQUE no centro, persistente no corpo (nota Vitor s.46)
-    let nFala = 0;
     for (const line of CORPO){
       if (isSkipped) return;
       focus(line.t); setSelo(frameDrive);
@@ -505,8 +519,7 @@
       cap(line.txt);                                   // a VOZ é o relógio: caption + voz juntas, câmera (during) por cima
       await Promise.all([ voz(line.audio), line.during ? line.during() : Promise.resolve() ]);
       if (isSkipped) return;
-      capOff(); await sleep(380);
-      if (++nFala === 2) document.getElementById('pular').classList.add('show');
+      capOff(); await sleep(300);
     }
     focus(null);
 
@@ -529,7 +542,7 @@
     fadeStarsTo(0, 1400);
     send(wTemp, { duoCmd:'ui', show:true }); send(wAnom, { duoCmd:'ui', show:true });   // o tempo real assume...
     stage.classList.add('shake'); setTimeout(()=>stage.classList.remove('shake'), 600); // ...e a obra aterrissa AQUI
-    await sleep(1300); if (isSkipped) return;
+    await sleep(1000); if (isSkipped) return;
 
     // B7 — interativo: o tempo é seu. Controles entram com stagger (nada surge no mesmo frame — craft s.46).
     beat='interactive'; driveCam=false; frameDrive=null; rotate=false;
