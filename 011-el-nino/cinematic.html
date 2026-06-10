@@ -505,10 +505,10 @@
     { t:'both', audio:'audio/n1.mp3', txt:'Isto é o último grande El Niño — <b>dezembro de 2023</b>.',
       go: () => flyTo(-5, -120, A(1.7), { dur:1000 }),
       during: () => flyTo(-7, -123, A(1.5), { dur:2800, swoop:0, rest:0.55 }) },                    // assenta no evento + deriva
-    { t:'temp', audio:'audio/n2.mp3', leg:'temp', txt:'As cores são a <b>temperatura real</b> do mar: do <b>azul gelado</b> ao <b>branco escaldante</b>.',
+    { t:'temp', audio:'audio/n2.mp3', leg:'temp', txt:'<b>Neste globo</b>, as cores são a <b>temperatura real</b> do mar: do azul gelado ao branco escaldante.',
       go: () => flyTo(-5, -116, A(1.4), { dur:900 }),
       during: () => flyTo(-4, -111, A(1.22), { dur:5000, swoop:0, rest:0.4 }) },                    // push-in contínuo no globo temp (acende a legenda suave)
-    { t:'anom', audio:'audio/n3.mp3', leg:'anom', txt:'Aqui, o Pacífico esquentou <b>dois graus</b> acima do normal.',
+    { t:'anom', audio:'audio/n3.mp3', leg:'anom', txt:'<b>Já neste</b>, aparece o Pacífico que esquentou <b>dois graus</b> acima do normal.',
       during: () => flyTo(-3, -118, A(1.4), { dur:4200, swoop:0.06, rest:0.4 }) },                  // deriva sobre a anomalia (acende a legenda da anomalia)
     { t:'both', audio:'audio/n4.mp3', syncGo:true, txt:'Os ventos <b>enfraquecem</b> — e o calor <b>invade a América do Sul</b>.',
       go: () => flyTo(-8, 142, A(1.72), { dir:'west', dur:1300 }),                                  // POSICIONA na Austrália (a água quente presa no Pacífico oeste)
