@@ -324,6 +324,23 @@
   // foco (s.46): escurece o globo NÃO citado (véu), sem filete azul na borda
   function focus(which){ halfTemp.classList.toggle('dim', which==='anom'); halfAnom.classList.toggle('dim', which==='temp'); }
 
+  // ===== VOZ (narração Thalita, edge-tts neural) — a voz vira o RELÓGIO: a caption dura o tempo da fala.
+  // Destrava SÓ no ENTRAR (o clique é o gesto; ress. Vitor s.46: o gancho, antes do start, é MUDO). =====
+  const voiceEl = new Audio(); voiceEl.preload = 'auto';
+  function primeAudio(){   // desbloqueia o áudio dentro do gesto do clique (iOS exige): toca mudo e pausa
+    try { voiceEl.muted = true; voiceEl.src = 'audio/c1.mp3';
+      const p = voiceEl.play();
+      if (p) p.then(() => { voiceEl.pause(); voiceEl.currentTime = 0; voiceEl.muted = false; }).catch(() => { voiceEl.muted = false; });
+    } catch(_){}
+  }
+  function voz(src){
+    if (isSkipped || !src) return Promise.resolve();
+    voiceEl.src = src;
+    const done = new Promise(res => { voiceEl.onended = res; voiceEl.onerror = res; });
+    const p = voiceEl.play(); if (p) p.catch(() => {});
+    return Promise.race([done, skipSignal]);
+  }
+
   // ===== a régua do texto (voto 3: o texto manda na duração) — 17 cps (Netflix pt-BR) + respiro =====
   const msFor = txt => Math.max(3500, Math.round(txt.replace(/<[^>]+>/g,'').length / 17 * 1000) + 900);
 
@@ -385,6 +402,7 @@
     document.getElementById('pular').classList.remove('show');
     document.getElementById('mark').classList.remove('show');
     capOff(); selo(false);
+    try { voiceEl.pause(); } catch(_){}   // pular: corta a voz
     try { const ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(_){}
     active = [wTemp, wAnom];
     send(wTemp, { duoCmd:'frame', t:LAST }); send(wAnom, { duoCmd:'frame', t:LAST });
@@ -429,29 +447,28 @@
   // during = movimento do tempo de DADO durante a fala (4-5: o mecanismo é espaço-temporal — precedente NASA SVS).
   const A = x => isPortrait ? Math.min(x * 1.3, 2.6) : x;   // retrato vê de mais longe (nota Vitor s.45)
   const CORPO = [
-    { t:'both', txt:'Você está vendo o último grande El Niño — <b>dezembro de 2023</b>.',
+    { t:'both', audio:'audio/c1.mp3', txt:'Você está vendo o último grande El Niño — <b>dezembro de 2023</b>.',
       go: () => flyTo(-5, -120, A(1.7), { dur:2600 }) },                  // assenta no coração do evento
-    { t:'temp', txt:'O primeiro globo que você vê agora, o mais colorido, representa a <b>temperatura real</b> do oceano — do frio, em azul e verde, ao quente, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.',
+    { t:'temp', audio:'audio/c2.mp3', txt:'O primeiro globo que você vê agora, o mais colorido, representa a <b>temperatura real</b> do oceano — do frio, em azul e verde, ao quente, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.',
       go: () => flyTo(-5, -118, A(1.45), { dur:2200 }) },                 // push-in suave: o olho desce ao dado
-    { t:'anom', txt:'No outro, só o que <b>ultrapassou o "normal"</b>: quanto mais vermelho, mais a temperatura da água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.' },
-    { t:'both', txt:'Mas como acontece o El Niño: normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador dos andes para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
+    { t:'anom', audio:'audio/c3.mp3', txt:'No outro, só o que <b>ultrapassou o "normal"</b>: quanto mais vermelho, mais a temperatura da água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.' },
+    { t:'both', audio:'audio/c4.mp3', txt:'Mas como acontece o El Niño: normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador dos andes para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
       go: () => flyTo(-6, -80, A(1.6), { dur:2000 }),                     // COMEÇA olhando a América do Sul (nota Vitor s.46)
-      during: () => Promise.all([                                          // ...e CORRE pra Austrália: o vento empurrando a água quente
-        flyTo(-10, 132, A(1.55), { dir:'west', dur:4400 }),
-        driveFrames(PEAK, 20, 4200) ]) },                                  // o dado recua pro "normal" enquanto a câmera varre (selo)
-    { t:'both', txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
-      go: () => flyTo(-12, -62, A(1.8), { dir:'east', dur:3800 }),        // a água quente VOLTA pro leste, sobre a América do Sul
-      during: () => driveFrames(20, PEAK, 4200) },                        // o El Niño se forma de novo (dado avança)
-    { t:'both', txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>; <b>secas</b> na <b>Amazônia e no Nordeste</b>.',
+      during: () => (async () => {                                         // alísios empurram pra Austrália... e a ressurgência na costa do Peru
+        await flyTo(-10, 132, A(1.55), { dir:'west', dur:4200 }); if (isSkipped) return;
+        await flyTo(-10, -80, A(1.4), { dir:'east', dur:3200 }); })() },
+    { t:'both', audio:'audio/c5.mp3', txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
+      go: () => flyTo(-13, -60, A(1.8), { dir:'east', dur:3600 }) },      // a água quente VOLTA pro leste, sobre a América do Sul
+    { t:'both', audio:'audio/c6.mp3', txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>; <b>secas</b> na <b>Amazônia e no Nordeste</b>.',
       go: () => flyTo(-15, -60, A(2.1), { dur:2400 }) },                  // abre: o continente inteiro no quadro
-    { t:'temp', txt:'E quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas, o movimento no globo é o tamanho do evento.',
+    { t:'temp', audio:'audio/c7.mp3', txt:'E quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas, o movimento no globo é o tamanho do evento.',
       go: () => flyTo(-5, -112, A(1.25), { dir:'west' }) },               // desce perto: a agitação é o dado
   ];
 
   // ===================== a sequência (os beats) =====================
   const entrarBtn = document.getElementById('entrar');
   let entrarResolve; const entrarClicked = new Promise(r => entrarResolve = r);
-  entrarBtn.addEventListener('click', () => entrarResolve(), { once:true });
+  entrarBtn.addEventListener('click', () => { primeAudio(); entrarResolve(); }, { once:true });
 
   async function director(){
     // B1 — cold open: a Terra entra PEQUENA e LONGE (alt 4.8), flutuando, e cresce devagar até ALT_END.
@@ -484,25 +501,25 @@
     for (const line of CORPO){
       if (isSkipped) return;
       focus(line.t); setSelo(frameDrive);
-      if (line.go) { await line.go(); if (isSkipped) return; await sleep(200); }
-      const t0 = performance.now(); cap(line.txt);
-      if (line.during) { await line.during(); if (isSkipped) return; }
-      await sleep(Math.max(0, msFor(line.txt) - (performance.now() - t0)));
-      capOff(); await sleep(420);
+      if (line.go) { await line.go(); if (isSkipped) return; await sleep(150); }
+      cap(line.txt);                                   // a VOZ é o relógio: caption + voz juntas, câmera (during) por cima
+      await Promise.all([ voz(line.audio), line.during ? line.during() : Promise.resolve() ]);
+      if (isSkipped) return;
+      capOff(); await sleep(380);
       if (++nFala === 2) document.getElementById('pular').classList.add('show');
     }
     focus(null);
 
     // B5 — o fecho: pull-back, oscila sobre 2023 e avança até hoje — scrub LINEAR com selo (dado real, D33)
     await flyTo(-5, -120, A(2.0), { dur:2600 }); if (isSkipped) return;
-    cap('Agora, volte comigo a 2023 — e avance, mês a mês, até hoje.'); await sleep(4400); if (isSkipped) return;
-    await driveFrames(PEAK, 44, 1100); await driveFrames(44, PEAK, 1100); if (isSkipped) return;
-    capOff(); await sleep(360);
+    cap('Agora, volte comigo a 2023 — e avance, mês a mês, até hoje.');
+    await Promise.all([ voz('audio/f8.mp3'), (async () => { await driveFrames(PEAK, 44, 1100); await driveFrames(44, PEAK, 1100); })() ]);
+    if (isSkipped) return; capOff(); await sleep(320);
     cap('Veja os últimos meses: o oceano se acendendo outra vez.');
-    await driveFrames(PEAK, LAST, 6700); if (isSkipped) return;            // 28 meses a taxa constante
-    await sleep(500); capOff(); await sleep(420);
+    await Promise.all([ voz('audio/f9.mp3'), driveFrames(PEAK, LAST, 6700) ]);   // a voz e o varrer de 28 meses, juntos
+    if (isSkipped) return; await sleep(300); capOff(); await sleep(360);
     cap('Essa obra se manterá atualizada com os dados mais recentes, volte para ver o que se confirmará.');
-    await sleep(6500); if (isSkipped) return;
+    await voz('audio/f10.mp3'); if (isSkipped) return; await sleep(600);
 
     // B6 — a tremida ANCORADA (voto s.46): treme no instante exato em que o tempo real assume e a UI viva
     // surge — MOLDURA declarada, o gesto marca a passagem simulação→obra. Letterbox retrai, estrelas recuam.
@@ -521,7 +538,7 @@
     cap('Agora o tempo é seu. Sincronize os dois globos, vá e volte no tempo — e veja por você mesmo.');
     setTimeout(() => document.getElementById('ctl').classList.add('show'), 450);
     armaHint();
-    await sleep(6800); capOff();
+    await voz('audio/i11.mp3'); await sleep(900); capOff();
   }
 
   // ===================== sincronia no handoff (reuso do relay do duo) =====================
