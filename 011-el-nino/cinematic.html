@@ -153,7 +153,22 @@
       align-items:center; white-space:nowrap; background:rgba(8,16,30,.85); border:1px solid rgba(150,180,230,.35);
       border-radius:999px; padding:7px 14px; backdrop-filter:blur(5px);
       opacity:0; pointer-events:none; transition:opacity .8s ease; }
-    @media (orientation: landscape) { #ctl { top:auto; bottom:12px; transform:translateX(-50%); } }
+    /* O PRINCÍPIO (s.46 v0.8, fix dos prints iPhone+desktop): a tela CEDE espaço pra pill — nunca cobrir UI.
+       PAISAGEM: o stage desce 52px no interativo e a pill mora no topo (rodapé é da dica/caption/anos nativos).
+       RETRATO: a divisa entre os globos abre 46px e a pill mora no vão. */
+    @media (orientation: landscape) {
+      #stage.interactive { padding-top:52px; }
+      #ctl { top:8px; bottom:auto; transform:translateX(-50%); }
+    }
+    @media (orientation: portrait) {
+      #stage.interactive { gap:46px; }
+      #ctl #ctlcap { display:none; }
+      #ctl { padding:6px 10px; gap:6px; max-width:96vw; }
+      #ctl label, #ctl button { font-size:11px; padding:4px 8px; }
+      #credito { font-size:10px; padding-left:7px; }
+    }
+    /* desktop (mouse): a dica nativa do motor já ensina a arrastar — o hint do cinematic só existe no TOQUE */
+    @media (pointer: fine) { #hint { display:none !important; } }
     #ctl #ctlcap { color:#7e93bb; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; margin-right:2px; }
     #credito { color:rgba(170,195,235,.55); font-size:10.5px; letter-spacing:.06em; text-decoration:none;
       border-left:1px solid rgba(150,180,230,.25); padding-left:9px; margin-left:2px; }
@@ -462,17 +477,22 @@
       go: () => flyTo(-5, -120, A(1.7), { dur:1500 }) },                  // assenta no coração do evento (curto: já estamos lá)
     { t:'temp', audio:'audio/c2.mp3', txt:'O primeiro globo que você vê agora, o mais colorido, representa a <b>temperatura real</b> do oceano — do frio, em azul e verde, ao quente, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.',
       go: () => flyTo(-5, -118, A(1.55), { dur:1200 }),
-      during: () => flyTo(-5, -116, A(1.32), { dur:11000, swoop:0, rest:0.3 }) },  // dolly CONTÍNUO a fala toda (nada parado na tela)
+      during: () => flyTo(-5, -116, A(1.32), { dur:13000, swoop:0, rest:0.3 }) },  // dolly CONTÍNUO a fala toda (nada parado na tela)
     { t:'anom', audio:'audio/c3.mp3', txt:'No outro, só o que <b>ultrapassou o "normal"</b>: quanto mais vermelho, mais a temperatura da água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.',
       during: () => flyTo(-3, -106, A(1.45), { dur:10000, swoop:0.05, rest:0.3 }) }, // deriva lateral lenta durante a fala
-    { t:'both', audio:'audio/c4.mp3', txt:'Mas como acontece o El Niño: normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador, dos <b>Andes</b> para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
+    { t:'both', audio:'audio/c4.mp3', txt:'Mas como acontece o El Niño? Normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador, dos <b>Andes</b> para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
       go: () => flyTo(-6, -80, A(1.6), { dur:2000 }),                     // COMEÇA olhando a América do Sul (nota Vitor s.46)
-      during: () => (async () => {                                         // alísios empurram pra Austrália... e a ressurgência na costa do Peru
-        await flyTo(-10, 132, A(1.55), { dir:'west', dur:4200 }); if (isSkipped) return;
-        await flyTo(-10, -80, A(1.4), { dir:'east', dur:3200 }); })() },
+      during: () => (async () => {       // CASADO com a voz (~14.3s): pergunta (parado) -> "empurram... pra Indonésia e Austrália"
+        await sleep(1800); if (isSkipped) return;                          //   (o voo + o dado recuando pro "normal", selo aceso)
+        await Promise.all([ flyTo(-10, 132, A(1.55), { dir:'west', dur:6200 }), driveFrames(PEAK, 20, 6200) ]); if (isSkipped) return;
+        await sleep(200);                                                  // "na costa do Peru... a ressurgência" -> volta ao Peru
+        await flyTo(-10, -80, A(1.4), { dir:'east', dur:3800 }); })() },
     { t:'both', audio:'audio/c5.mp3', txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
-      go: () => flyTo(-13, -60, A(1.8), { dir:'east', dur:3600 }) },      // a água quente VOLTA pro leste, sobre a América do Sul
-    { t:'both', audio:'audio/c6.mp3', txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>; <b>secas</b> na <b>Amazônia e no Nordeste</b>.',
+      go: () => flyTo(-13, -60, A(1.8), { dir:'east', dur:3600 }),        // a câmera já espera sobre a América do Sul
+      during: () => (async () => {       // CASADO com a voz (~9.5s): "enfraquecem" (pausa) -> "a água avança" = o DADO avança
+        await sleep(2200); if (isSkipped) return;
+        await driveFrames(20, PEAK, 5500); })() },                         // o El Niño se forma na tela (selo correndo)
+    { t:'both', audio:'audio/c6.mp3', txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>, e <b>secas</b> na <b>Amazônia e no Nordeste</b>.',
       go: () => flyTo(-15, -60, A(2.1), { dur:2400 }) },                  // abre: o continente inteiro no quadro
     { t:'temp', audio:'audio/c7.mp3', txt:'E quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas, o movimento no globo é o tamanho do evento.',
       go: () => flyTo(-5, -112, A(1.25), { dir:'west' }) },               // desce perto: a agitação é o dado
