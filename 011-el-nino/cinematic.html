@@ -117,10 +117,10 @@
       text-align:center; font-size: clamp(15px, 2.4vw, 21px); line-height:1.4; font-weight:500;
       color: rgba(238,245,255,.92);
       opacity:0; transform: translate(-50%, 10px); filter: blur(7px); pointer-events:none;
-      transition: opacity .35s ease-in, transform .35s ease-in, filter .35s ease-in;
+      transition: opacity .22s ease-in, transform .22s ease-in, filter .22s ease-in;
       text-shadow: 0 2px 16px rgba(0,0,0,.95), 0 0 2px rgba(0,0,0,.92); }
     #caption.show { opacity:1; transform: translate(-50%, 0); filter:none;
-      transition: opacity .6s ease-out, transform .6s cubic-bezier(.2,.7,.2,1), filter .6s ease-out; }
+      transition: opacity .42s ease-out, transform .42s cubic-bezier(.2,.7,.2,1), filter .42s ease-out; }   /* mais seco (dinâmica s.46) */
     #caption .big { font-size: clamp(26px, 6vw, 54px); font-weight:800; letter-spacing:.5px; }
     /* B7: sobe a caption pra NÃO cobrir a UI nativa do motor que surge no rodapé (nota Vitor s.46) */
     #caption.up { bottom:auto; top: max(20vh, 130px); }
@@ -455,7 +455,7 @@
   });
 
   const bootT = performance.now();
-  const HOLD = 900;             // black-rest mínimo encurtado (s.46 finalização: a entrada estava longa)
+  const HOLD = 500;             // black-rest curtíssimo (s.46 dinâmica: a Terra aparece quase instantânea — janela de 3s)
   let started = false;
   function onTempReady(){
     if (started) return; started = true;
@@ -474,31 +474,34 @@
   const A = x => isPortrait ? Math.min(x * 1.3, 2.6) : x;   // retrato vê de mais longe (nota Vitor s.45)
   const CORPO = [
     { t:'both', audio:'audio/c1.mp3', txt:'Você está vendo o último grande El Niño — <b>dezembro de 2023</b>.',
-      go: () => flyTo(-5, -120, A(1.7), { dur:1500 }) },                  // assenta no coração do evento (curto: já estamos lá)
+      go: () => flyTo(-5, -120, A(1.7), { dur:1100 }),
+      during: () => flyTo(-7, -123, A(1.5), { dur:3400, swoop:0, rest:0.55 }) },  // deriva contínua (nada parado — retenção)
     { t:'temp', audio:'audio/c2.mp3', txt:'O primeiro globo que você vê agora, o mais colorido, representa a <b>temperatura real</b> do oceano — do frio, em azul e verde, ao quente, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.',
       go: () => flyTo(-5, -118, A(1.55), { dur:1200 }),
       during: () => flyTo(-5, -116, A(1.32), { dur:13000, swoop:0, rest:0.3 }) },  // dolly CONTÍNUO a fala toda (nada parado na tela)
     { t:'anom', audio:'audio/c3.mp3', txt:'No outro, só o que <b>ultrapassou o "normal"</b>: quanto mais vermelho, mais a temperatura da água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.',
       during: () => flyTo(-3, -106, A(1.45), { dur:10000, swoop:0.05, rest:0.3 }) }, // deriva lateral lenta durante a fala
     { t:'both', audio:'audio/c4.mp3', txt:'Mas como acontece o El Niño? Normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador, dos <b>Andes</b> para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
-      go: () => flyTo(-6, -80, A(1.6), { dur:2000 }),                     // COMEÇA olhando a América do Sul (nota Vitor s.46)
-      during: () => (async () => {       // CRONOMETRADO na voz (~14.3s, frase a frase — nota Vitor v0.9):
-        await sleep(2400); if (isSkipped) return;                          // 0-2.4s  "Mas como acontece o El Niño?" — parado na AS
-        const recuo = driveFrames(PEAK, 20, 7000);                         // 2.4s    "Normalmente..." — o oceano VOLTA ao normal (selo)
-        await sleep(2800); if (isSkipped) return;                          // 2.4-5.2 "...empurram a água quente na linha do equador,"
-        await flyTo(-10, 132, A(1.55), { dir:'west', dur:4600 });          // 5.2-9.8 "dos Andes para a Indonésia e a Austrália" = o VOO
+      go: () => flyTo(-6, -80, A(1.6), { dur:1700 }),                     // COMEÇA olhando a América do Sul (nota Vitor s.46)
+      during: () => (async () => {       // RE-SINCRONIZADO pra voz +5% (×0.88; frase a frase):
+        await sleep(2100); if (isSkipped) return;                          // "Mas como acontece o El Niño?" — parado na AS
+        const recuo = driveFrames(PEAK, 20, 6200);                         // "Normalmente..." — o oceano VOLTA ao normal (selo)
+        await sleep(2450); if (isSkipped) return;                          // "...empurram a água quente na linha do equador,"
+        await flyTo(-10, 132, A(1.55), { dir:'west', dur:4050 });          // "dos Andes para a Indonésia e a Austrália" = o VOO
         await recuo; if (isSkipped) return;
-        await sleep(300);                                                  // respiro
-        await flyTo(-10, -80, A(1.4), { dir:'east', dur:3700 }); })() },   // 10.1-13.8 "Na costa do Peru... a ressurgência"
+        await sleep(260);
+        await flyTo(-10, -80, A(1.4), { dir:'east', dur:3250 }); })() },   // "Na costa do Peru... a ressurgência"
     { t:'both', audio:'audio/c5.mp3', txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
-      go: () => flyTo(-12, -68, A(1.75), { dir:'east', dur:2000 }),       // sobe do Peru pra ver a costa inteira (curto: sem vácuo)
-      during: () => (async () => {       // CRONOMETRADO na voz (~9.5s):
-        await sleep(2800); if (isSkipped) return;                          // 0-2.8s  "No El Niño, esses ventos enfraquecem." — parado
-        await driveFrames(20, PEAK, 5800); })() },                         // 2.8-8.6 "a água quente escorrega... e AVANÇA" = o DADO avança (selo)
+      go: () => flyTo(-12, -68, A(1.75), { dir:'east', dur:1700 }),       // sobe do Peru pra ver a costa inteira
+      during: () => Promise.all([        // RE-SINCRONIZADO (×0.88) + câmera deriva GENTIL enquanto o dado avança (nunca parado)
+        (async () => { await sleep(2450); if (isSkipped) return; await driveFrames(20, PEAK, 5100); })(),
+        flyTo(-12, -73, A(1.62), { dir:'east', dur:7500, swoop:0, rest:0.4 }) ]) },
     { t:'both', audio:'audio/c6.mp3', txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>, e <b>secas</b> na <b>Amazônia e no Nordeste</b>.',
-      go: () => flyTo(-15, -60, A(2.1), { dur:2400 }) },                  // abre: o continente inteiro no quadro
+      go: () => flyTo(-15, -60, A(2.1), { dur:1700 }),                    // abre: o continente inteiro no quadro
+      during: () => flyTo(-13, -54, A(1.92), { dur:5800, swoop:0.04, rest:0.5 }) },  // órbita lenta sobre o continente (movimento)
     { t:'temp', audio:'audio/c7.mp3', txt:'E quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas, o movimento no globo é o tamanho do evento.',
-      go: () => flyTo(-5, -112, A(1.25), { dir:'west' }) },               // desce perto: a agitação é o dado
+      go: () => flyTo(-5, -114, A(1.3), { dir:'west', dur:1400 }),
+      during: () => flyTo(-3, -120, A(1.12), { dur:4800, swoop:0, rest:0.5 }) },      // desce na língua quente (a agitação é o dado)
   ];
 
   // ===================== a sequência (os beats) =====================
