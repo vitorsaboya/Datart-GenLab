@@ -159,8 +159,8 @@
   const MOTOR = './';
   const ifrTemp = document.getElementById('ifrTemp');   // globo-mar-v2 = TEMPERATURA REAL (primário)
   const ifrAnom = document.getElementById('ifrAnom');   // globo-mar-v1 = ANOMALIA (entra na dobra)
-  ifrTemp.src = MOTOR + 'globo-mar-v2.html';
-  ifrAnom.src = MOTOR + 'globo-mar-v1.html';
+  ifrTemp.src = MOTOR + 'globo-mar-v2.html?embed=1';   // ?embed = corpo transparente no motor -> starfield aparece atrás
+  ifrAnom.src = MOTOR + 'globo-mar-v1.html?embed=1';
   const wTemp = () => ifrTemp.contentWindow;
   const wAnom = () => ifrAnom.contentWindow;
   function send(wfn, msg){ try { wfn().postMessage(msg, '*'); } catch(_){} }
@@ -343,9 +343,11 @@
     await tween(v => frameDrive=v, PEAK, LAST, 5400, easeInOutCubic);
     await sleep(500); capOff(); await sleep(420); cap('Será?', true); await sleep(3000);
 
-    // B6 — a tremida; a letterbox se retrai e a moldura REAL da obra surge (controles nativos)
+    // B6 — a tremida; a letterbox se retrai, a moldura REAL surge, e o ESPAÇO recua: a obra aterrissa.
+    // As estrelas ficaram a cena TODA (atrás dos globos) e saem só AQUI, "quando vira" (direção Vitor, s.45).
     capOff(); stage.classList.add('shake'); setTimeout(()=>stage.classList.remove('shake'), 600);
     stage.classList.add('handoff');
+    tween(v => starsAlpha = v, starsAlpha, 0, 1400);
     await sleep(1300);
 
     // B7 — interativo: o tempo é seu. Solta a câmera; os controles reais assumem. Sincronia + rever.

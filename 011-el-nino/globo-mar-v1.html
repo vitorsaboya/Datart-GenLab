@@ -353,6 +353,9 @@
       `,
     });
 
+    // embarcado no cinematic (?embed): corpo transparente p/ o starfield do cinematic aparecer ATRÁS do globo.
+    // standalone/duo (sem ?embed): corpo segue #04060d -> visual idêntico ao de sempre.
+    if (new URLSearchParams(location.search).has('embed')) document.documentElement.style.background = document.body.style.background = 'transparent';
     const world = Globe({ rendererConfig: { preserveDrawingBuffer: true, antialias: !isMobile, alpha: true } })(el)
       .backgroundColor('rgba(0,0,0,0)')   // transparente: standalone mostra o #04060d do body (idêntico); no cinematic, deixa o starfield por trás
       .showAtmosphere(true).atmosphereColor('#5b8cff').atmosphereAltitude(0.18)
