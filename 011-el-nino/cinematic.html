@@ -10,6 +10,12 @@
     reais (globo-mar-v2 = temperatura real, globo-mar-v1 = anomalia), dirigidos por postMessage
     (duoCmd cam/frame/play/pause/freeze/ui). ZERO edição na lógica/dado dos motores.
 
+    PASSE v0.3 (s.46, aprovado pelo Vitor — Rodada 1): COREOGRAFIA POR FALA (flyTo com arco curto de lng,
+    micro-swoop, altitude em log, easeOutQuart "trava de mira" — pesquisa N1 coreografia-camera), dado VIVO
+    nas falas 4-5 com SELO de data (precedente NASA SVS; scrub linear = D33), ms das captions pela régua
+    17cps (voto 3: o texto manda na duração), fades assimétricos, stagger, micro-legenda da fonte na dobra,
+    "~2 min" no gancho, sem letterbox no retrato, tremida ANCORADA no instante em que o tempo real assume,
+    hint de gesto no interativo, prefers-reduced-motion honrado.
     PASSE v0.2 (direção do Vitor, s.45 — notas do 1º look no link):
     - SÓ O GLOBO: a UI nativa do motor (ano, barra de tempo, card, legenda) fica ESCONDIDA no ?embed e
       só é revelada no HANDOFF (duoCmd:'ui'). Durante a intro: globo + o "note" (caption), nada mais.
@@ -63,6 +69,8 @@
       transition: transform 1.1s cubic-bezier(.5,0,.2,1); }
     #bandTop { top:0; height: max(15vh, 96px); --d: to bottom; }
     #bandBot { bottom:0; height: max(19vh, 120px); --d: to top; }
+    /* RETRATO: sem letterbox (pixel vertical é escasso no celular; convenção horizontal — voto s.46) */
+    @media (orientation: portrait) { .band { display:none; } }
     #stage.handoff ~ #bandTop { transform: translateY(-101%); }
     #stage.handoff ~ #bandBot { transform: translateY(101%); }
 
@@ -94,6 +102,8 @@
     #gancho.show #entrar { opacity:1; transform:none; filter:none; transition-delay:.85s; }
     #gancho.show #pularGancho { opacity:.55; transform:none; filter:none; transition-delay:1.15s; }
     #entrar:hover { background:#2b6fd6; border-color:#5b8cff; }
+    #gancho #dur { font-size:12px; letter-spacing:.25em; text-transform:uppercase; }
+    #gancho.show #dur { opacity:.42; transition-delay:1.3s; }
 
     /* PULAR persistente (ao longo da apresentação) — discreto, canto inferior */
     #pular { position:fixed; right:16px; bottom:14px; z-index:13; cursor:pointer; background:transparent;
@@ -102,14 +112,36 @@
     #pular.show { opacity:1; pointer-events:auto; }
     #pular:hover { color:rgba(220,232,255,.85); }
 
-    /* CAPTIONS (B4/B5) — o "note"; entrada suave (blur->nítido) */
+    /* CAPTIONS (B4/B5) — o "note"; fades ASSIMÉTRICOS (entra lento ease-out, sai rápido ease-in — craft s.46)
+       e off-white (nunca #FFF puro sobre cena escura — glare) */
     #caption { position:fixed; left:50%; bottom: max(4.5vh, 30px); z-index:11; width: min(86vw, 760px);
       text-align:center; font-size: clamp(15px, 2.4vw, 21px); line-height:1.4; font-weight:500;
+      color: rgba(238,245,255,.92);
       opacity:0; transform: translate(-50%, 10px); filter: blur(7px); pointer-events:none;
-      transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1), filter .7s ease;
+      transition: opacity .35s ease-in, transform .35s ease-in, filter .35s ease-in;
       text-shadow: 0 2px 16px rgba(0,0,0,.95), 0 0 2px rgba(0,0,0,.92); }
-    #caption.show { opacity:1; transform: translate(-50%, 0); filter:none; }
+    #caption.show { opacity:1; transform: translate(-50%, 0); filter:none;
+      transition: opacity .6s ease-out, transform .6s cubic-bezier(.2,.7,.2,1), filter .6s ease-out; }
     #caption .big { font-size: clamp(26px, 6vw, 54px); font-weight:800; letter-spacing:.5px; }
+
+    /* SELO DE DATA — o tempo de dado declarado (D33: dado recuando/avançando SEMPRE com selo visível) */
+    #selo { position:fixed; top:14px; right:16px; z-index:11; font-size:12.5px; letter-spacing:.12em;
+      color: rgba(220,232,255,.78); font-variant-numeric: tabular-nums; text-transform:uppercase;
+      text-shadow:0 1px 6px rgba(0,0,0,.9); opacity:0; transition:opacity .5s ease; pointer-events:none; }
+    #selo.show { opacity:1; }
+
+    /* FONTE DO DADO — micro-legenda no instante em que a cor vira dado (confiança; some em ~4s) */
+    #fonte { position:fixed; left:50%; transform:translateX(-50%); bottom: max(2vh, 12px); z-index:11;
+      font-size:11.5px; letter-spacing:.06em; color: rgba(205,220,245,.6); white-space:nowrap;
+      text-shadow:0 1px 6px rgba(0,0,0,.9); opacity:0; transition:opacity .8s ease; pointer-events:none; }
+    #fonte.show { opacity:1; }
+
+    /* HINT de gesto (B7) — só se o usuário não tocar em ~3s; morre ao primeiro toque */
+    #hint { position:fixed; left:50%; bottom: max(9vh, 64px); z-index:12;
+      font-size:13px; color: rgba(215,228,250,.75); text-shadow:0 1px 8px rgba(0,0,0,.9);
+      opacity:0; transition:opacity .7s ease; pointer-events:none; animation: hintPulse 2.2s ease-in-out infinite; }
+    #hint.show { opacity:1; }
+    @keyframes hintPulse { 0%,100%{ transform:translate(-50%,0); } 50%{ transform:translate(-50%,-7px); } }
 
     /* CONTROLES do handoff (B7): sincronia + rever */
     #ctl { position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:13; display:flex; gap:8px;
@@ -143,18 +175,22 @@
   <div class="band" id="bandTop"></div>
   <div class="band" id="bandBot"></div>
 
-  <div id="mark">011 · um retrato dos oceanos</div>
+  <div id="mark">011 · EL NIÑO — Datart GenLab — jun.2026</div>
 
   <div id="gancho">
-    <h1>Estamos próximos de um novo El Niño?</h1>
+    <h1>Um novo El Niño se aproxima?</h1>
     <p>Esta obra explora os padrões de temperatura dos oceanos da Terra.</p>
     <button id="entrar">ENTRAR</button>
+    <p id="dur">~2 min</p>
     <button id="pularGancho">pular introdução</button>
   </div>
 
   <button id="pular">pular introdução ›</button>
 
   <div id="caption"></div>
+  <div id="selo"></div>
+  <div id="fonte">dados reais · NOAA OISST · temperatura da superfície do mar</div>
+  <div id="hint">arraste para explorar</div>
 
   <div id="ctl">
     <label id="lblTempo"><input type="checkbox" id="ckTempo"> sincronizar tempo</label>
@@ -240,9 +276,10 @@
   const stage = document.getElementById('stage');
   const halfTemp = document.getElementById('halfTemp'), halfAnom = document.getElementById('halfAnom');
   const caption = document.getElementById('caption');
-  let camAlt = 4.8, camLng = POV0.lng;        // dolly (longe->perto) + rotação base
+  let camAlt = 4.8, camLat = POV0.lat, camLng = POV0.lng;  // pose-BASE da câmera (o flyTo move; o Lissajous flutua por cima)
   let rotate = true, driveCam = true, frameDrive = PEAK;
   let floatAmp = 1.0;                           // amplitude da flutuação
+  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches; // voos viram saltos; o dado (cor) segue
   let active = [wTemp];
   let readyTemp = false, readyAnom = false;
   let beat = 'preload';
@@ -254,13 +291,13 @@
     requestAnimationFrame(loop);
     const dt = lastNow === null ? 0 : Math.min((now - lastNow)/1000, 0.05); lastNow = now;
     T += dt;
-    if (rotate) camLng -= dt * 0.9;             // rotação base LENTA
+    if (rotate && !REDUCED) camLng -= dt * 0.9; // rotação base LENTA (off em reduced-motion)
     const a = floatAmp;                          // deriva orgânica (Lissajous): a Terra FLUTUA
     const latOff = a * 6.5 * Math.sin(T*0.241 + 0.6);
     const lngOff = a * 4.5 * Math.sin(T*0.331 + 2.1);
     const altOff = a * 0.05 * Math.sin(T*0.57  + 1.3);
     if (driveCam && beat !== 'interactive'){
-      const pov = { lat: POV0.lat + latOff, lng: camLng + lngOff, altitude: camAlt + altOff };
+      const pov = { lat: camLat + latOff, lng: camLng + lngOff, altitude: camAlt + altOff };
       active.forEach(w => send(w, { duoCmd:'cam', pov }));
     }
     if (beat !== 'interactive' && frameDrive !== null) active.forEach(w => send(w, { duoCmd:'frame', t: frameDrive }));
@@ -283,11 +320,65 @@
   function capOff(){ caption.classList.remove('show'); }
   function focus(which){ halfTemp.classList.toggle('focus', which==='temp'); halfAnom.classList.toggle('focus', which==='anom'); }
 
+  // ===== a régua do texto (voto 3: o texto manda na duração) — 17 cps (Netflix pt-BR) + respiro =====
+  const msFor = txt => Math.max(3500, Math.round(txt.replace(/<[^>]+>/g,'').length / 17 * 1000) + 900);
+
+  // ===== selo de data (D33: tempo de dado em movimento SEMPRE declarado) =====
+  const seloEl = document.getElementById('selo');
+  const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const mesLabel = f => { const m = Math.round(f); return `${MESES[m % 12]} ${2020 + Math.floor(m / 12)}`; }; // frame 0 = jan/2020
+  const selo = on => seloEl.classList.toggle('show', on);
+
+  // ===== flyTo — o voo "rápido e preciso" (pesquisa N1 s.46: arco CURTO de lng normalizado, micro-swoop,
+  // altitude em LOG, easeOutQuart = trava de mira; floatAmp zera no voo e volta no settle; duração ∝ distância) =====
+  const normLng = l => ((l % 360) + 540) % 360 - 180;
+  function flyTo(lat, lng, alt, opts={}){
+    camLng = normLng(camLng);
+    let dLng = lng - camLng;
+    while (dLng > 180) dLng -= 360;
+    while (dLng < -180) dLng += 360;
+    if (opts.dir === 'west' && dLng > 0) dLng -= 360;   // força o lado narrativo (o Pacífico é o palco)
+    if (opts.dir === 'east' && dLng < 0) dLng += 360;
+    const dist = Math.hypot(dLng, lat - camLat);
+    let dur = opts.dur ?? Math.min(5000, Math.max(1800, 1200 + dist * 28));
+    if (isPortrait) dur *= 1.3;                          // mobile: +30% (conforto + frame drop)
+    if (REDUCED || isSkipped) dur = 1;                   // reduced-motion: salto, não voo
+    const fLat = camLat, fLng = camLng, fAltL = Math.log(camAlt), tAltL = Math.log(alt);
+    const peak = opts.swoop ?? 0.18, rest = REDUCED ? 0 : (opts.rest ?? 0.45);
+    const ease = t => 1 - Math.pow(1 - t, 4);            // easeOutQuart
+    return new Promise(res => { let s = null;
+      function st(now){
+        if (s === null) s = now;
+        const k = Math.min((now - s) / dur, 1), e = ease(k);
+        camLat = fLat + (lat - fLat) * e;
+        camLng = fLng + dLng * e;
+        camAlt = Math.exp(fAltL + (tAltL - fAltL) * e) * (1 + peak * Math.sin(Math.PI * e));
+        floatAmp = rest * Math.max(0, (k - 0.8) / 0.2);  // a flutuação só volta no settle
+        if (k < 1 && !isSkipped) requestAnimationFrame(st); else { floatAmp = rest; res(); }
+      }
+      requestAnimationFrame(st); });
+  }
+
+  // ===== driveFrames — scrub do tempo de DADO: LINEAR de propósito (taxa constante; easear o tempo de
+  // dado distorce o fenômeno = RUÍDO) e sempre com o selo aceso (recuo declarado = CANAL — D33) =====
+  function driveFrames(from, to, dur){
+    selo(true); seloEl.textContent = mesLabel(from);
+    return new Promise(res => { let s = null;
+      function st(now){
+        if (s === null) s = now;
+        const k = Math.min((now - s) / dur, 1);
+        frameDrive = from + (to - from) * k;
+        seloEl.textContent = mesLabel(frameDrive);
+        if (k < 1 && !isSkipped) requestAnimationFrame(st); else { frameDrive = to; res(); }
+      }
+      requestAnimationFrame(st); });
+  }
+
   // salta direto pro INTERATIVO (o "pular"): mostra os dois globos no presente, revela a UI real, solta tudo.
   function goInteractive(){
     document.getElementById('gancho').classList.remove('show');
     document.getElementById('pular').classList.remove('show');
-    capOff();
+    capOff(); selo(false);
     try { const ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(_){}
     active = [wTemp, wAnom];
     send(wTemp, { duoCmd:'frame', t:LAST }); send(wAnom, { duoCmd:'frame', t:LAST });
@@ -297,7 +388,8 @@
     document.getElementById('guard').classList.add('off');
     fadeStarsTo(0, 1000);
     send(wTemp, { duoCmd:'ui', show:true }); send(wAnom, { duoCmd:'ui', show:true });
-    document.getElementById('ctl').classList.add('show');
+    setTimeout(() => document.getElementById('ctl').classList.add('show'), 450);
+    armaHint();
   }
   function pular(){ if (isSkipped || beat==='interactive') return; isSkipped = true; skipResolve(); goInteractive(); }
   document.getElementById('pular').addEventListener('click', pular);
@@ -326,15 +418,29 @@
     }, wait);
   }
 
-  // ===================== a narração (texto do Vitor, 2ª pessoa) — captions = o "note" =====================
+  // ===================== a narração (texto do Vitor, 2ª pessoa) + a COREOGRAFIA por fala (N1 s.46) =====
+  // go = o gesto de câmera ANTES da caption (a caption entra no settle — follow-through);
+  // during = movimento do tempo de DADO durante a fala (4-5: o mecanismo é espaço-temporal — precedente NASA SVS).
+  const A = x => isPortrait ? Math.min(x * 1.3, 2.6) : x;   // retrato vê de mais longe (nota Vitor s.45)
   const CORPO = [
-    { t:'both', ms:4200, txt:'Você está vendo o último grande El Niño — <b>dezembro de 2023</b>.' },
-    { t:'temp', ms:6200, txt:'Num deles, as cores são a <b>temperatura real</b> do oceano — do frio, em azul e verde, ao quente, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.' },
-    { t:'anom', ms:6200, txt:'No outro, só o que <b>fugiu do normal</b>: quanto mais vermelho, mais a água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.' },
-    { t:'both', ms:6400, txt:'Normalmente, os ventos <b>alísios</b> empurram a água quente para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.' },
-    { t:'both', ms:5600, txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.' },
-    { t:'both', ms:6000, txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>; <b>secas</b> na <b>Amazônia e no Nordeste</b>.' },
-    { t:'temp', ms:5200, txt:'E quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas é o tamanho do evento.' },
+    { t:'both', txt:'Você está vendo o último grande El Niño — <b>dezembro de 2023</b>.',
+      go: () => flyTo(-5, -120, A(1.7), { dur:2600 }) },                  // assenta no coração do evento
+    { t:'temp', txt:'O primeiro globo que você vê agora, o mais colorido, representa a <b>temperatura real</b> do oceano — do frio, em azul e verde, ao quente, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.',
+      go: () => flyTo(-5, -118, A(1.45), { dur:2200 }) },                 // push-in suave: o olho desce ao dado
+    { t:'anom', txt:'No outro, só o que <b>ultrapassou o "normal"</b>: quanto mais vermelho, mais a temperatura da água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.' },
+    { t:'both', txt:'Mas como acontece o El Niño: normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador dos andes para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
+      go: () => flyTo(-8, 128, A(1.6), { dir:'west' }),                   // a câmera ENCENA o vento: leste→oeste pelo Pacífico
+      during: async () => {                                               // o "normal": o dado recua pra fora do evento (selo aceso)
+        await driveFrames(PEAK, 20, 3300); if (isSkipped) return;
+        await flyTo(-10, -80, A(1.45), { dir:'east' });                   // ...e a ressurgência fria, na costa do Peru
+      } },
+    { t:'both', txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
+      go: () => flyTo(-14, -64, A(1.8), { dir:'east' }),
+      during: () => driveFrames(20, PEAK, 4200) },                        // a água quente AVANÇA na tela (dado real)
+    { t:'both', txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>; <b>secas</b> na <b>Amazônia e no Nordeste</b>.',
+      go: () => flyTo(-15, -60, A(2.1), { dur:2400 }) },                  // abre: o continente inteiro no quadro
+    { t:'temp', txt:'E quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas, o movimento no globo é o tamanho do evento.',
+      go: () => flyTo(-5, -112, A(1.25), { dir:'west' }) },               // desce perto: a agitação é o dado
   ];
 
   // ===================== a sequência (os beats) =====================
@@ -344,8 +450,8 @@
 
   async function director(){
     // B1 — cold open: a Terra entra PEQUENA e LONGE (alt 4.8), flutuando, e cresce devagar até ALT_END.
-    beat='cold'; active=[wTemp]; driveCam=true; rotate=true; frameDrive=PEAK; floatAmp=1.0; camAlt=4.8;
-    await tween(v => camAlt=v, 4.8, ALT_END, 6000, easeInOutCubic);
+    beat='cold'; active=[wTemp]; driveCam=true; rotate=true; frameDrive=PEAK; floatAmp=REDUCED?0:1.0; camAlt=4.8;
+    await tween(v => camAlt=v, 4.8, ALT_END, REDUCED ? 400 : 6000, easeInOutCubic);
     if (isSkipped) return;
     await sleep(400); if (isSkipped) return;
 
@@ -357,46 +463,69 @@
     try { const ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(_){}
     await sleep(650); if (isSkipped) return;
 
-    // B3 — dobra: a anomalia entra; os dois travam no evento. O "pular" persistente aparece aqui.
+    // B3 — dobra: a anomalia entra; os dois travam no evento. A fonte do dado se declara (micro-legenda ~4s).
     beat='duo'; active=[wTemp, wAnom]; frameDrive=PEAK; floatAmp=0.55;
     send(wAnom, { duoCmd:'pause' }); send(wAnom, { duoCmd:'frame', t:PEAK });
     stage.classList.add('duo');
-    document.getElementById('pular').classList.add('show');
+    const fonteEl = document.getElementById('fonte');
+    fonteEl.classList.add('show'); setTimeout(() => fonteEl.classList.remove('show'), 4600);
     await sleep(1300); if (isSkipped) return;
 
-    // B4 — a narração ensina, dando foco ao globo citado
-    for (const line of CORPO){ if (isSkipped) return; focus(line.t); cap(line.txt); await sleep(line.ms); capOff(); await sleep(420); }
+    // B4 — a narração ensina: gesto de câmera → settle → caption (follow-through) → dado/hold.
+    // 1 fala = 1 gesto; a caption entra DEPOIS do pouso; o skip persistente entra após a 2ª fala.
+    rotate = false;                                  // daqui em diante o flyTo dirige (a deriva Lissajous segue por cima)
+    let nFala = 0;
+    for (const line of CORPO){
+      if (isSkipped) return;
+      focus(line.t);
+      if (line.go) { await line.go(); if (isSkipped) return; await sleep(200); }
+      const t0 = performance.now(); cap(line.txt);
+      if (line.during) { await line.during(); if (isSkipped) return; }
+      await sleep(Math.max(0, msFor(line.txt) - (performance.now() - t0)));
+      capOff(); selo(false); await sleep(420);
+      if (++nFala === 2) document.getElementById('pular').classList.add('show');
+    }
     focus(null);
 
-    // B5 — o fecho: sincroniza, oscila sobre 2023 e avança até hoje (dado real). "Será?"
-    cap('Volte comigo a 2023 — e agora avance, mês a mês, até hoje.'); await sleep(2800); if (isSkipped) return;
-    await tween(v => frameDrive=v, PEAK, 44, 1000); await tween(v => frameDrive=v, 44, PEAK, 1000); if (isSkipped) return;
+    // B5 — o fecho: pull-back, oscila sobre 2023 e avança até hoje — scrub LINEAR com selo (dado real, D33)
+    await flyTo(-5, -120, A(2.0), { dur:2600 }); if (isSkipped) return;
+    cap('Agora, volte comigo a 2023 — e avance, mês a mês, até hoje.'); await sleep(4400); if (isSkipped) return;
+    await driveFrames(PEAK, 44, 1100); await driveFrames(44, PEAK, 1100); if (isSkipped) return;
     capOff(); await sleep(360);
     cap('Veja os últimos meses: o oceano se acendendo outra vez.');
-    await tween(v => frameDrive=v, PEAK, LAST, 5400, easeInOutCubic); if (isSkipped) return;
-    await sleep(500); capOff(); await sleep(420); cap('Será?', true); await sleep(3000); if (isSkipped) return;
+    await driveFrames(PEAK, LAST, 6700); if (isSkipped) return;            // 28 meses a taxa constante
+    await sleep(500); capOff(); await sleep(420);
+    cap('Essa obra se manterá atualizada com os dados mais recentes, volte para ver o que se confirmará.');
+    await sleep(6500); if (isSkipped) return;
 
-    // B6 — a tremida; a letterbox retrai, a UI REAL surge, o espaço (estrelas) recua: a obra aterrissa.
-    capOff(); document.getElementById('pular').classList.remove('show');
-    stage.classList.add('shake'); setTimeout(()=>stage.classList.remove('shake'), 600);
+    // B6 — a tremida ANCORADA (voto s.46): treme no instante exato em que o tempo real assume e a UI viva
+    // surge — MOLDURA declarada, o gesto marca a passagem simulação→obra. Letterbox retrai, estrelas recuam.
+    capOff(); selo(false); document.getElementById('pular').classList.remove('show');
     stage.classList.add('handoff');
     fadeStarsTo(0, 1400);
-    send(wTemp, { duoCmd:'ui', show:true }); send(wAnom, { duoCmd:'ui', show:true });
+    send(wTemp, { duoCmd:'ui', show:true }); send(wAnom, { duoCmd:'ui', show:true });   // o tempo real assume...
+    stage.classList.add('shake'); setTimeout(()=>stage.classList.remove('shake'), 600); // ...e a obra aterrissa AQUI
     await sleep(1300); if (isSkipped) return;
 
-    // B7 — interativo: o tempo é seu. Solta a câmera; os controles reais assumem.
+    // B7 — interativo: o tempo é seu. Controles entram com stagger (nada surge no mesmo frame — craft s.46).
     beat='interactive'; driveCam=false; frameDrive=null; rotate=false;
     stage.classList.add('interactive'); document.getElementById('guard').classList.add('off');
     cap('Agora o tempo é seu. Sincronize os dois globos, vá e volte no tempo — e veja por você mesmo.');
-    document.getElementById('ctl').classList.add('show');
-    await sleep(5600); capOff();
+    setTimeout(() => document.getElementById('ctl').classList.add('show'), 450);
+    armaHint();
+    await sleep(6800); capOff();
   }
 
   // ===================== sincronia no handoff (reuso do relay do duo) =====================
+  // hint de gesto: aparece se o usuário não tocar em ~3s; morre no 1º toque (o motor posta duoCam active)
+  let userTouched = false;
+  const hintEl = document.getElementById('hint');
+  function armaHint(){ setTimeout(() => { if (!userTouched && beat === 'interactive') hintEl.classList.add('show'); }, 3000); }
   let syncMov=false, syncTempo=false;
   function relay(e, who){
     if (beat !== 'interactive') return;
     const m = e.data; if (!m) return;
+    if (m.duoCam && m.active && !userTouched){ userTouched = true; hintEl.classList.remove('show'); }
     const dst = who==='temp' ? wAnom : wTemp;
     if (m.duoCam){ if (syncMov && m.active && m.pov) send(dst, { duoCmd:'cam', pov:m.pov }); }
     else if (m.duoTime){ if (!syncTempo) return;
@@ -412,7 +541,9 @@
 
   // hook de verificação por efeito (preview headless)
   window.__cine = { get beat(){ return beat; }, get ready(){ return { temp:readyTemp, anom:readyAnom }; },
-    get frame(){ return frameDrive; }, get alt(){ return camAlt; }, get stars(){ return starsAlpha; },
+    get frame(){ return frameDrive; }, get alt(){ return camAlt; }, get lat(){ return camLat; },
+    get lng(){ return normLng(camLng); }, get selo(){ return seloEl.classList.contains('show'); },
+    get stars(){ return starsAlpha; },
     get floatAmp(){ return floatAmp; }, get skipped(){ return isSkipped; }, altEnd: ALT_END,
     skipTo: (b)=>{ if(b==='entrar') entrarResolve(); if(b==='pular') pular(); } };
   </script>
