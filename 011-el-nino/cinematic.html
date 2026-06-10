@@ -167,28 +167,6 @@
       .lgA { left:auto; right:10px; top:88px; bottom:auto; }
     }
 
-    /* ===== MODO REEL (?reel=1): trailer vertical 9:16 pro Instagram — sem gancho/interativo, hook+endcard ===== */
-    body.reel #gancho, body.reel #pular, body.reel #ctl, body.reel #hint, body.reel #fonte { display:none !important; }
-    body.reel #mark { opacity:.45; }
-    #reelPlay { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:16; display:none;
-      width:92px; height:92px; border-radius:50%; border:1.5px solid rgba(255,255,255,.7); background:rgba(20,44,86,.42);
-      color:#fff; font-size:34px; line-height:88px; cursor:pointer; backdrop-filter:blur(3px); }
-    body.reel #reelPlay.show { display:block; }
-    #reelHook { position:fixed; inset:0; z-index:13; display:flex; align-items:center; justify-content:center; text-align:center;
-      padding:0 8vw; font-size:clamp(30px,7.6vw,56px); font-weight:800; line-height:1.12; letter-spacing:-.01em; color:#fff;
-      text-shadow:0 2px 20px rgba(0,0,0,.96), 0 0 46px rgba(0,0,0,.82); opacity:0; transition:opacity .5s ease; pointer-events:none; }
-    #reelHook.show { opacity:1; }
-    #reelHook b { color:#ffd9b0; }
-    #reelEnd { position:fixed; inset:0; z-index:14; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:13px;
-      text-align:center; padding:0 10vw; opacity:0; transition:opacity .8s ease; pointer-events:none;
-      background:radial-gradient(ellipse 85% 60% at 50% 50%, rgba(3,7,18,.74), rgba(2,4,10,.93)); }
-    #reelEnd.show { opacity:1; }
-    #reelEnd .re-1 { font-size:clamp(32px,8.4vw,58px); font-weight:800; color:#fff; letter-spacing:-.01em;
-      text-shadow:0 2px 18px rgba(0,0,0,.9); }
-    #reelEnd .re-2 { font-size:clamp(15px,3.8vw,22px); color:#a9c4ff; }
-    #reelEnd .re-3 { margin-top:20px; font-size:clamp(19px,4.6vw,28px); color:#e3edff; letter-spacing:.02em; }
-    #reelEnd .re-3 b { color:#5b8cff; }
-
     /* HINT de gesto (B7) — só se o usuário não tocar em ~3s; morre ao primeiro toque */
     #hint { position:fixed; left:50%; bottom: max(9vh, 64px); z-index:12;
       font-size:13px; color: rgba(215,228,250,.75); text-shadow:0 1px 8px rgba(0,0,0,.9);
@@ -278,14 +256,6 @@
     <a id="credito" href="https://vitorsaboya.github.io/Datart-GenLab/" target="_blank" rel="noopener">Datart GenLab</a>
   </div>
 
-  <button id="reelPlay">▶</button>
-  <div id="reelHook"></div>
-  <div id="reelEnd">
-    <div class="re-1">Pilota você mesmo.</div>
-    <div class="re-2">o globo do El Niño, mês a mês — no link da bio</div>
-    <div class="re-3">Datart <b>Gen</b>Lab</div>
-  </div>
-
   <div id="boot">· · ·</div>
 
   <script>
@@ -367,8 +337,6 @@
   let rotate = true, driveCam = true, frameDrive = PEAK;
   let floatAmp = 1.0;                           // amplitude da flutuação
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches; // voos viram saltos; o dado (cor) segue
-  const REEL = new URLSearchParams(location.search).has('reel');   // MODO REEL (?reel=1): trailer vertical p/ Instagram
-  if (REEL) document.body.classList.add('reel');
   let active = [wTemp];
   let readyTemp = false, readyAnom = false;
   let beat = 'preload';
@@ -524,7 +492,7 @@
       const boot = document.getElementById('boot'); boot.style.opacity='0'; setTimeout(()=>boot.remove(), 850);
       stage.classList.add('in');
       document.getElementById('mark').classList.add('show');
-      if (REEL) reelStart(); else director();
+      director();
     }, wait);
   }
 
@@ -633,59 +601,6 @@
     armaHint();
     await sleep(6200); if (isSkipped) return;
     capOff();
-  }
-
-  // ===================== MODO REEL (trailer vertical p/ Instagram) =====================
-  // Reusa os MESMOS helpers (focus/flyTo/voz/driveFrames/cap) — só muda a orquestração: hook queimado nos 3s,
-  // os beats lineares, clímax, end-card. SEM gancho, SEM handoff interativo. Audio destrava no ▶ (gesto).
-  const REEL_HOOK = 'O oceano está com <b>febre</b>.<br>E dá pra ver.';
-  const reelHookEl = () => document.getElementById('reelHook');
-  function reelHook(html){ const e = reelHookEl(); e.innerHTML = html; e.classList.add('show'); }
-  function reelHookOff(){ reelHookEl().classList.remove('show'); }
-
-  function reelStart(){
-    const pb = document.getElementById('reelPlay'); pb.classList.add('show');
-    pb.addEventListener('click', () => { primeAudio(); pb.classList.remove('show'); reelDirector(); }, { once:true });
-  }
-
-  async function reelDirector(){
-    // entra DIRETO no globo escaldante (sem cold-open/gancho): os 2 globos travados no PEAK, foco no temp
-    beat='reel'; active=[wTemp, wAnom]; driveCam=true; rotate=false; frameDrive=PEAK; floatAmp=REDUCED?0:0.5; camAlt=ALT_END;
-    send(wAnom, { duoCmd:'pause' }); send(wAnom, { duoCmd:'frame', t:PEAK });
-    stage.classList.add('duo'); focus('temp');
-    flyTo(-5, -120, A(1.45), { dur:1 }); setSelo(PEAK); selo(true);
-
-    // HOOK (texto queimado nos ~3s, com a n1 por baixo — a narração JÁ é o contexto)
-    reelHook(REEL_HOOK);
-    flyTo(-6, -122, A(1.3), { dur:2900, swoop:0, rest:0.5 });
-    await voz('audio/n1.mp3');
-    reelHookOff();
-
-    // os beats n2..n5 (reuso do CORPO, mesma coreografia do produto)
-    for (const line of CORPO.slice(1)){
-      focus(line.t); setSelo(frameDrive);
-      if (line.syncGo && line.go) await line.go();
-      cap(line.txt);
-      if (line.leg) document.querySelector('.lg' + (line.leg === 'temp' ? 'T' : 'A')).classList.add('show');
-      const motion = (async () => {
-        if (!line.syncGo && line.go) await line.go();
-        if (line.during) await line.during();
-      })();
-      await Promise.all([ voz(line.audio), motion ]);
-      capOff(); await sleep(80);
-    }
-    focus(null);
-
-    // CLÍMAX (n6) — varre 2023 até o presente
-    cap('E está esquentando de novo. <b>Veja, mês a mês, por você mesmo.</b>');
-    await Promise.all([ voz('audio/n6.mp3'),
-      (async () => { flyTo(-5, -120, A(1.9), { dur:1700, rest:0.4 }); await driveFrames(PEAK, LAST, 7000); })() ]);
-    capOff(); selo(false);
-    document.querySelectorAll('.lg').forEach(e => e.classList.remove('show'));
-
-    // END-CARD (o CTA pro funil: link na bio)
-    await sleep(250);
-    document.getElementById('reelEnd').classList.add('show');
   }
 
   // ===================== sincronia no handoff (reuso do relay do duo) =====================
