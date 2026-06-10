@@ -481,21 +481,21 @@
       during: () => flyTo(-5, -116, A(1.32), { dur:13000, swoop:0, rest:0.3 }) },  // dolly CONTÍNUO a fala toda (nada parado na tela)
     { t:'anom', audio:'audio/c3.mp3', txt:'No outro, só o que <b>ultrapassou o "normal"</b>: quanto mais vermelho, mais a temperatura da água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.',
       during: () => flyTo(-3, -106, A(1.45), { dur:10000, swoop:0.05, rest:0.3 }) }, // deriva lateral lenta durante a fala
-    { t:'both', audio:'audio/c4.mp3', txt:'Mas como acontece o El Niño? Normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador, dos <b>Andes</b> para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
-      go: () => flyTo(-6, -80, A(1.6), { dur:1700 }),                     // COMEÇA olhando a América do Sul (nota Vitor s.46)
-      during: () => (async () => {       // RE-SINCRONIZADO pra voz +5% (×0.88; frase a frase):
-        await sleep(2100); if (isSkipped) return;                          // "Mas como acontece o El Niño?" — parado na AS
-        const recuo = driveFrames(PEAK, 20, 6200);                         // "Normalmente..." — o oceano VOLTA ao normal (selo)
-        await sleep(2450); if (isSkipped) return;                          // "...empurram a água quente na linha do equador,"
-        await flyTo(-10, 132, A(1.55), { dir:'west', dur:4050 });          // "dos Andes para a Indonésia e a Austrália" = o VOO
+    { t:'both', audio:'audio/c4.mp3', syncGo:true, txt:'Mas como acontece o El Niño? Normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador, dos <b>Andes</b> para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
+      go: () => flyTo(-6, -80, A(1.6), { dur:1200 }),                     // posiciona na América do Sul (syncGo: antes da voz)
+      during: () => (async () => {       // RE-SINCRONIZADO pra voz +10% (frase a frase):
+        await sleep(2000); if (isSkipped) return;                          // "Mas como acontece o El Niño?" — parado na AS
+        const recuo = driveFrames(PEAK, 20, 5900);                         // "Normalmente..." — o oceano VOLTA ao normal (selo)
+        await sleep(2340); if (isSkipped) return;                          // "...empurram a água quente na linha do equador,"
+        await flyTo(-10, 132, A(1.55), { dir:'west', dur:3870 });          // "dos Andes para a Indonésia e a Austrália" = o VOO
         await recuo; if (isSkipped) return;
-        await sleep(260);
-        await flyTo(-10, -80, A(1.4), { dir:'east', dur:3250 }); })() },   // "Na costa do Peru... a ressurgência"
-    { t:'both', audio:'audio/c5.mp3', txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
-      go: () => flyTo(-12, -68, A(1.75), { dir:'east', dur:1700 }),       // sobe do Peru pra ver a costa inteira
-      during: () => Promise.all([        // RE-SINCRONIZADO (×0.88) + câmera deriva GENTIL enquanto o dado avança (nunca parado)
-        (async () => { await sleep(2450); if (isSkipped) return; await driveFrames(20, PEAK, 5100); })(),
-        flyTo(-12, -73, A(1.62), { dir:'east', dur:7500, swoop:0, rest:0.4 }) ]) },
+        await sleep(250);
+        await flyTo(-10, -80, A(1.4), { dir:'east', dur:3100 }); })() },   // "Na costa do Peru... a ressurgência"
+    { t:'both', audio:'audio/c5.mp3', syncGo:true, txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
+      go: () => flyTo(-12, -68, A(1.75), { dir:'east', dur:1200 }),       // posiciona na costa (syncGo)
+      during: () => Promise.all([        // RE-SINCRONIZADO pra voz +10% + câmera deriva GENTIL enquanto o dado avança
+        (async () => { await sleep(2340); if (isSkipped) return; await driveFrames(20, PEAK, 4870); })(),
+        flyTo(-12, -73, A(1.62), { dir:'east', dur:7200, swoop:0, rest:0.4 }) ]) },
     { t:'both', audio:'audio/c6.mp3', txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>, e <b>secas</b> na <b>Amazônia e no Nordeste</b>.',
       go: () => flyTo(-15, -60, A(2.1), { dur:1700 }),                    // abre: o continente inteiro no quadro
       during: () => flyTo(-13, -54, A(1.92), { dur:5800, swoop:0.04, rest:0.5 }) },  // órbita lenta sobre o continente (movimento)
@@ -532,33 +532,37 @@
     stage.classList.add('duo');
     const fonteEl = document.getElementById('fonte');
     fonteEl.classList.add('show'); setTimeout(() => fonteEl.classList.remove('show'), 4600);
-    await sleep(700); if (isSkipped) return;
+    await sleep(450); if (isSkipped) return;
 
-    // B4 — a narração ensina: gesto de câmera → settle → caption (follow-through) → dado/hold.
-    // 1 fala = 1 gesto; a caption entra DEPOIS do pouso; o skip persistente entra após a 2ª fala.
+    // B4 — a narração ensina. Transição entre blocos no MÍNIMO (nota Vitor): nas falas simples o 'go' roda
+    // JUNTO com a voz (zera o vão silencioso); c4/c5 (syncGo) posicionam antes porque a coreografia depende.
     rotate = false;                                  // daqui em diante o flyTo dirige (a deriva Lissajous segue por cima)
     setSelo(frameDrive); selo(true);                 // o ANO em DESTAQUE no centro, persistente no corpo (nota Vitor s.46)
     for (const line of CORPO){
       if (isSkipped) return;
       focus(line.t); setSelo(frameDrive);
-      if (line.go) { await line.go(); if (isSkipped) return; await sleep(150); }
-      cap(line.txt);                                   // a VOZ é o relógio: caption + voz juntas, câmera (during) por cima
-      await Promise.all([ voz(line.audio), line.during ? line.during() : Promise.resolve() ]);
+      if (line.syncGo && line.go) { await line.go(); if (isSkipped) return; }   // posiciona ANTES (coreografia)
+      cap(line.txt);
+      const motion = (async () => {                  // demais: o 'go' anda JUNTO com a voz (sem vão silencioso)
+        if (!line.syncGo && line.go) { await line.go(); if (isSkipped) return; }
+        if (line.during) await line.during();
+      })();
+      await Promise.all([ voz(line.audio), motion ]);
       if (isSkipped) return;
-      capOff(); await sleep(300);
+      capOff(); await sleep(60);                      // transição entre blocos no mínimo
     }
     focus(null);
 
-    // B5 — o fecho: pull-back, oscila sobre 2023 e avança até hoje — scrub LINEAR com selo (dado real, D33)
-    await flyTo(-5, -120, A(2.0), { dur:2600 }); if (isSkipped) return;
+    // B5 — o fecho: pull-back JUNTO com a voz (sem vão), oscila sobre 2023 e avança até hoje — scrub LINEAR (D33)
     cap('Agora, volte comigo a 2023 — e avance, mês a mês, até hoje.');
-    await Promise.all([ voz('audio/f8.mp3'), (async () => { await driveFrames(PEAK, 44, 1100); await driveFrames(44, PEAK, 1100); })() ]);
-    if (isSkipped) return; capOff(); await sleep(320);
+    await Promise.all([ voz('audio/f8.mp3'),
+      (async () => { flyTo(-5, -120, A(2.0), { dur:1700, rest:0.4 }); await driveFrames(PEAK, 44, 1000); await driveFrames(44, PEAK, 1000); })() ]);
+    if (isSkipped) return; capOff(); await sleep(70);
     cap('Veja os últimos meses: o oceano se acendendo outra vez.');
     await Promise.all([ voz('audio/f9.mp3'), driveFrames(PEAK, LAST, 6700) ]);   // a voz e o varrer de 28 meses, juntos
-    if (isSkipped) return; await sleep(300); capOff(); await sleep(360);
+    if (isSkipped) return; capOff(); await sleep(70);
     cap('Essa obra se manterá atualizada com os dados mais recentes, volte para ver o que se confirmará.');
-    await voz('audio/f10.mp3'); if (isSkipped) return; await sleep(600);
+    await voz('audio/f10.mp3'); if (isSkipped) return; await sleep(400);
 
     // B6 — a tremida ANCORADA (voto s.46): treme no instante exato em que o tempo real assume e a UI viva
     // surge — MOLDURA declarada, o gesto marca a passagem simulação→obra. Letterbox retrai, estrelas recuam.
