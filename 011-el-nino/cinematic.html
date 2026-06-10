@@ -42,13 +42,10 @@
     #halfTemp { flex-grow:1; }                 /* temp-real ocupa sozinha no cold-open */
     #stage.duo #halfAnom { flex-grow:1; }       /* dobra: anomalia entra (por cima/ao lado) */
     iframe { width:100%; height:100%; border:0; display:block; background:transparent; }
-    /* foco: realça o globo que a narração cita (B4) */
-    .half::after { content:""; position:absolute; inset:0; pointer-events:none; box-shadow: inset 0 0 0 0 rgba(120,170,255,0);
-      transition: box-shadow .6s ease; }
-    .half.focus::after { box-shadow: inset 0 0 0 2px rgba(150,190,255,.5), inset 0 0 70px rgba(80,130,230,.16); }
-    /* glow suave quando a anomalia entra na dobra (passagem crafted) */
-    #stage.duo #halfAnom { animation: enterGlow 1.4s ease; }
-    @keyframes enterGlow { 0%{ box-shadow: inset 0 0 90px rgba(120,170,255,.32); } 100%{ box-shadow: inset 0 0 0 rgba(120,170,255,0); } }
+    /* foco (s.46): SEM filete azul na moldura (nota Vitor) — realça escurecendo o globo NÃO citado com um véu */
+    .half::after { content:""; position:absolute; inset:0; pointer-events:none; background:rgba(0,2,8,0);
+      transition: background .6s ease; }
+    .half.dim::after { background:rgba(0,2,8,.5); }
 
     /* RETRATO empilha; PAISAGEM lado a lado. O eixo da dobra é a ÚNICA coisa que muda. */
     @media (orientation: landscape) { #stage { flex-direction:row; } }
@@ -123,12 +120,17 @@
     #caption.show { opacity:1; transform: translate(-50%, 0); filter:none;
       transition: opacity .6s ease-out, transform .6s cubic-bezier(.2,.7,.2,1), filter .6s ease-out; }
     #caption .big { font-size: clamp(26px, 6vw, 54px); font-weight:800; letter-spacing:.5px; }
+    /* B7: sobe a caption pra NÃO cobrir a UI nativa do motor que surge no rodapé (nota Vitor s.46) */
+    #caption.up { bottom:auto; top: max(20vh, 130px); }
 
-    /* SELO DE DATA — o tempo de dado declarado (D33: dado recuando/avançando SEMPRE com selo visível) */
-    #selo { position:fixed; top:14px; right:16px; z-index:11; font-size:12.5px; letter-spacing:.12em;
-      color: rgba(220,232,255,.78); font-variant-numeric: tabular-nums; text-transform:uppercase;
-      text-shadow:0 1px 6px rgba(0,0,0,.9); opacity:0; transition:opacity .5s ease; pointer-events:none; }
+    /* SELO DE DATA — o ano em DESTAQUE no centro (nota Vitor s.46; D33: tempo de dado sempre declarado) */
+    #selo { position:fixed; top:10vh; left:50%; transform:translateX(-50%); z-index:11; text-align:center;
+      font-weight:800; font-size:clamp(30px,7vw,58px); letter-spacing:.03em; line-height:1;
+      color:rgba(238,245,255,.96); font-variant-numeric:tabular-nums; white-space:nowrap;
+      text-shadow:0 2px 22px rgba(0,0,0,.95), 0 0 4px rgba(0,0,0,.92);
+      opacity:0; transition:opacity .5s ease; pointer-events:none; }
     #selo.show { opacity:1; }
+    #selo .ms { font-size:.4em; font-weight:600; opacity:.78; margin-left:.4em; text-transform:uppercase; letter-spacing:.18em; }
 
     /* FONTE DO DADO — micro-legenda no instante em que a cor vira dado (confiança; some em ~4s) */
     #fonte { position:fixed; left:50%; transform:translateX(-50%); bottom: max(2vh, 12px); z-index:11;
@@ -318,8 +320,9 @@
       requestAnimationFrame(st); });
   }
   function cap(html, big){ caption.innerHTML = big ? `<span class="big">${html}</span>` : html; caption.classList.add('show'); }
-  function capOff(){ caption.classList.remove('show'); }
-  function focus(which){ halfTemp.classList.toggle('focus', which==='temp'); halfAnom.classList.toggle('focus', which==='anom'); }
+  function capOff(){ caption.classList.remove('show', 'up'); }
+  // foco (s.46): escurece o globo NÃO citado (véu), sem filete azul na borda
+  function focus(which){ halfTemp.classList.toggle('dim', which==='anom'); halfAnom.classList.toggle('dim', which==='temp'); }
 
   // ===== a régua do texto (voto 3: o texto manda na duração) — 17 cps (Netflix pt-BR) + respiro =====
   const msFor = txt => Math.max(3500, Math.round(txt.replace(/<[^>]+>/g,'').length / 17 * 1000) + 900);
@@ -327,7 +330,8 @@
   // ===== selo de data (D33: tempo de dado em movimento SEMPRE declarado) =====
   const seloEl = document.getElementById('selo');
   const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  const mesLabel = f => { const m = Math.round(f); return `${MESES[m % 12]} ${2020 + Math.floor(m / 12)}`; }; // frame 0 = jan/2020
+  const mesHtml = f => { const m = Math.round(f); return `${2020 + Math.floor(m / 12)}<span class="ms">${MESES[m % 12]}</span>`; }; // frame 0 = jan/2020
+  const setSelo = f => { seloEl.innerHTML = mesHtml(f); };
   const selo = on => seloEl.classList.toggle('show', on);
 
   // ===== flyTo — o voo "rápido e preciso" (pesquisa N1 s.46: arco CURTO de lng normalizado, micro-swoop,
@@ -363,13 +367,13 @@
   // ===== driveFrames — scrub do tempo de DADO: LINEAR de propósito (taxa constante; easear o tempo de
   // dado distorce o fenômeno = RUÍDO) e sempre com o selo aceso (recuo declarado = CANAL — D33) =====
   function driveFrames(from, to, dur){
-    selo(true); seloEl.textContent = mesLabel(from);
+    selo(true); setSelo(from);
     return new Promise(res => { let s = null;
       function st(now){
         if (s === null) s = now;
         const k = Math.min((now - s) / dur, 1);
         frameDrive = from + (to - from) * k;
-        seloEl.textContent = mesLabel(frameDrive);
+        setSelo(frameDrive);
         if (k < 1 && !isSkipped) requestAnimationFrame(st); else { frameDrive = to; res(); }
       }
       requestAnimationFrame(st); });
@@ -431,14 +435,13 @@
       go: () => flyTo(-5, -118, A(1.45), { dur:2200 }) },                 // push-in suave: o olho desce ao dado
     { t:'anom', txt:'No outro, só o que <b>ultrapassou o "normal"</b>: quanto mais vermelho, mais a temperatura da água está <b>acima da média</b>. Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.' },
     { t:'both', txt:'Mas como acontece o El Niño: normalmente, os ventos <b>alísios</b> empurram a água quente na linha do equador dos andes para a <b>Indonésia e a Austrália</b>. Na costa do <b>Peru</b>, sobe água fria do fundo — a <b>ressurgência</b>.',
-      go: () => flyTo(-8, 128, A(1.6), { dir:'west' }),                   // a câmera ENCENA o vento: leste→oeste pelo Pacífico
-      during: async () => {                                               // o "normal": o dado recua pra fora do evento (selo aceso)
-        await driveFrames(PEAK, 20, 3300); if (isSkipped) return;
-        await flyTo(-10, -80, A(1.45), { dir:'east' });                   // ...e a ressurgência fria, na costa do Peru
-      } },
+      go: () => flyTo(-6, -80, A(1.6), { dur:2000 }),                     // COMEÇA olhando a América do Sul (nota Vitor s.46)
+      during: () => Promise.all([                                          // ...e CORRE pra Austrália: o vento empurrando a água quente
+        flyTo(-10, 132, A(1.55), { dir:'west', dur:4400 }),
+        driveFrames(PEAK, 20, 4200) ]) },                                  // o dado recua pro "normal" enquanto a câmera varre (selo)
     { t:'both', txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
-      go: () => flyTo(-14, -64, A(1.8), { dir:'east' }),
-      during: () => driveFrames(20, PEAK, 4200) },                        // a água quente AVANÇA na tela (dado real)
+      go: () => flyTo(-12, -62, A(1.8), { dir:'east', dur:3800 }),        // a água quente VOLTA pro leste, sobre a América do Sul
+      during: () => driveFrames(20, PEAK, 4200) },                        // o El Niño se forma de novo (dado avança)
     { t:'both', txt:'O efeito transborda: <b>chuvas e enchentes</b> no Peru, no Equador e no <b>sul do Brasil</b>; <b>secas</b> na <b>Amazônia e no Nordeste</b>.',
       go: () => flyTo(-15, -60, A(2.1), { dur:2400 }) },                  // abre: o continente inteiro no quadro
     { t:'temp', txt:'E quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas, o movimento no globo é o tamanho do evento.',
@@ -476,15 +479,16 @@
     // B4 — a narração ensina: gesto de câmera → settle → caption (follow-through) → dado/hold.
     // 1 fala = 1 gesto; a caption entra DEPOIS do pouso; o skip persistente entra após a 2ª fala.
     rotate = false;                                  // daqui em diante o flyTo dirige (a deriva Lissajous segue por cima)
+    setSelo(frameDrive); selo(true);                 // o ANO em DESTAQUE no centro, persistente no corpo (nota Vitor s.46)
     let nFala = 0;
     for (const line of CORPO){
       if (isSkipped) return;
-      focus(line.t);
+      focus(line.t); setSelo(frameDrive);
       if (line.go) { await line.go(); if (isSkipped) return; await sleep(200); }
       const t0 = performance.now(); cap(line.txt);
       if (line.during) { await line.during(); if (isSkipped) return; }
       await sleep(Math.max(0, msFor(line.txt) - (performance.now() - t0)));
-      capOff(); selo(false); await sleep(420);
+      capOff(); await sleep(420);
       if (++nFala === 2) document.getElementById('pular').classList.add('show');
     }
     focus(null);
@@ -513,6 +517,7 @@
     // B7 — interativo: o tempo é seu. Controles entram com stagger (nada surge no mesmo frame — craft s.46).
     beat='interactive'; driveCam=false; frameDrive=null; rotate=false;
     stage.classList.add('interactive'); document.getElementById('guard').classList.add('off');
+    caption.classList.add('up');   // sobe a caption pra não cobrir a UI nativa do rodapé (nota Vitor s.46)
     cap('Agora o tempo é seu. Sincronize os dois globos, vá e volte no tempo — e veja por você mesmo.');
     setTimeout(() => document.getElementById('ctl').classList.add('show'), 450);
     armaHint();
