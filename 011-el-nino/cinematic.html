@@ -5,26 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>011 · El Niño — abertura</title>
   <!--
-    011 · PRODUTO PÚBLICO — CINEMATIC DE ABERTURA (v0.1 cinematográfico, s.45).
+    011 · PRODUTO PÚBLICO — CINEMATIC DE ABERTURA (v0.2, s.45).
     PRINCÍPIO-MÃE (voto Vitor): tudo aqui é SIMULAÇÃO DA OBRA REAL — os globos são os motores
-    reais da obra (globo-mar-v2 = temperatura real, globo-mar-v1 = anomalia), dirigidos por
-    postMessage (o MESMO protocolo do duo: duoCmd cam/frame/play/pause/freeze). ZERO edição na
-    lógica/dado dos motores. O cinematic é DIRETOR + atmosfera; no fim a letterbox se retrai e os
-    controles REAIS da obra surgem (o handoff = a moldura da obra nascendo). Voz = camada final (ainda não).
+    reais (globo-mar-v2 = temperatura real, globo-mar-v1 = anomalia), dirigidos por postMessage
+    (duoCmd cam/frame/play/pause/freeze/ui). ZERO edição na lógica/dado dos motores.
 
-    PASSE CINEMATOGRÁFICO (s.45 — direção do Vitor "mais bonita, realista, emoção"):
-    - BLACK-REST: a tela abre preta; o starfield surge suave (o olho descansa) ANTES do planeta.
-    - REVELAÇÃO DE ESCALA: a Terra entra pequena e longe (alt 4.8) e cresce devagar até 1.6 (~6s, easeInOut).
-    - CÂMERA FLUTUANTE: deriva orgânica em lat+lng+altitude (Lissajous incomensurável) — flutua, não gira mecânico.
-    - SKIN DE FILME: nebulosa sutil + vinheta + grão fino. Texto entra com blur->nítido + letter-spacing assentando.
-    - HONESTIDADE D33 / D-CAP-11: o acabamento serve o sinal. Bloom NÃO é jogado no globo-inteiro (lavaria a
-      temperatura); a beleza vem de estrelas/escala/movimento/atmosfera. A cor do globo segue sendo o DADO.
-    Mobile-first: retrato empilha (temp em cima, anomalia desce por cima); paisagem = lado a lado.
+    PASSE v0.2 (direção do Vitor, s.45 — notas do 1º look no link):
+    - SÓ O GLOBO: a UI nativa do motor (ano, barra de tempo, card, legenda) fica ESCONDIDA no ?embed e
+      só é revelada no HANDOFF (duoCmd:'ui'). Durante a intro: globo + o "note" (caption), nada mais.
+    - ESTRELAS a cena TODA: céu preto de verdade, estrelas densas/brilhantes atrás dos globos
+      (corpo do motor transparente via ?embed); saem só "quando vira" (B6).
+    - CELULAR: a Terra termina mais LONGE (altitude responsiva) pra aparecer quase INTEIRA.
+    - PULAR: botão discreto abaixo do ENTRAR e persistente ao longo da apresentação (salta pro interativo).
+    - HONESTIDADE D33 / D-CAP-11: bloom NÃO no globo-inteiro (não lava o dado); a cor é o DADO.
+    Mobile-first: retrato empilha; paisagem lado a lado.
   -->
   <style>
-    :root { --bg:#02030a; }
+    :root { --bg:#000206; }
     html, body { margin:0; height:100%; overflow:hidden;
-      background: radial-gradient(ellipse at 50% 42%, #070b18 0%, #03040c 58%, #000004 100%);
+      background: radial-gradient(ellipse at 50% 42%, #03050e 0%, #000206 68%, #000 100%);
       font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; color:#eaf2ff; }
 
     /* STARFIELD — o vazio do espaço onde a Terra flutua (camada mais ao fundo) */
@@ -42,7 +41,6 @@
       transition: box-shadow .6s ease; }
     .half.focus::after { box-shadow: inset 0 0 0 2px rgba(150,190,255,.5), inset 0 0 70px rgba(80,130,230,.16); }
     /* glow suave quando a anomalia entra na dobra (passagem crafted) */
-    #halfAnom { box-shadow: inset 0 0 0 rgba(120,170,255,0); }
     #stage.duo #halfAnom { animation: enterGlow 1.4s ease; }
     @keyframes enterGlow { 0%{ box-shadow: inset 0 0 90px rgba(120,170,255,.32); } 100%{ box-shadow: inset 0 0 0 rgba(120,170,255,0); } }
 
@@ -53,16 +51,15 @@
     #guard { position:fixed; inset:0; z-index:5; background:transparent; }
     #stage.interactive ~ #guard, #guard.off { display:none; }
 
-    /* NEBULOSA + VINHETA + GRÃO — a skin de filme (MOLDURA declarada; serve a atmosfera, não o dado) */
+    /* VINHETA + GRÃO — skin de filme (MOLDURA declarada). Vinheta LEVE pra não comer as estrelas. */
     #vignette { position:fixed; inset:0; z-index:6; pointer-events:none;
-      background: radial-gradient(ellipse at 50% 48%, rgba(0,0,0,0) 50%, rgba(0,0,2,.5) 100%); }
-    #grain { position:fixed; inset:-50%; z-index:7; pointer-events:none; opacity:.045; mix-blend-mode:overlay;
+      background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 64%, rgba(0,0,3,.34) 100%); }
+    #grain { position:fixed; inset:-50%; z-index:7; pointer-events:none; opacity:.04; mix-blend-mode:overlay;
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 
-    /* LETTERBOX cinematográfica (MOLDURA declarada): emoldura E cobre a UI nativa dos motores
-       durante os beats. No handoff (B6) ela se retrai e a UI real da obra aparece. */
+    /* LETTERBOX cinematográfica (MOLDURA declarada): cobre a UI nativa nos beats; retrai no handoff (B6). */
     .band { position:fixed; left:0; right:0; z-index:8; pointer-events:none;
-      background: linear-gradient(var(--d), rgba(1,2,7,1) 0%, rgba(1,2,7,.96) 55%, rgba(1,2,7,0) 100%);
+      background: linear-gradient(var(--d), rgba(0,1,4,1) 0%, rgba(0,1,4,.96) 55%, rgba(0,1,4,0) 100%);
       transition: transform 1.1s cubic-bezier(.5,0,.2,1); }
     #bandTop { top:0; height: max(15vh, 96px); --d: to bottom; }
     #bandBot { bottom:0; height: max(19vh, 120px); --d: to top; }
@@ -76,9 +73,9 @@
 
     /* GANCHO (B2) — entrada suave: blur->nítido, sobe, letter-spacing assenta, stagger */
     #gancho { position:fixed; inset:0; z-index:12; display:flex; flex-direction:column; align-items:center;
-      justify-content:center; gap:18px; text-align:center; padding:24px; pointer-events:none; }
+      justify-content:center; gap:16px; text-align:center; padding:24px; pointer-events:none; }
     #gancho.show { pointer-events:auto; }
-    #gancho h1, #gancho p, #gancho #entrar {
+    #gancho h1, #gancho p, #gancho #entrar, #gancho #pularGancho {
       opacity:0; transform: translateY(16px); filter: blur(9px);
       transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1), filter 1.2s ease, letter-spacing 1.2s ease; }
     #gancho h1 { margin:0; font-size: clamp(22px, 4.4vw, 40px); font-weight:700; letter-spacing:.55em;
@@ -89,12 +86,23 @@
       background: rgba(20,40,80,.42); color:#fff; font-size: clamp(15px,2.4vw,18px); font-weight:600;
       padding:12px 34px; border-radius:999px; backdrop-filter: blur(6px);
       -webkit-tap-highlight-color: transparent; }
+    #pularGancho { cursor:pointer; background:transparent; border:0; color:rgba(200,215,245,.5);
+      font-size:13px; letter-spacing:.2px; padding:4px 8px; -webkit-tap-highlight-color:transparent; }
+    #pularGancho:hover { color:rgba(220,232,255,.85); }
     #gancho.show h1 { opacity:1; transform:none; filter:none; letter-spacing:.3px; }
     #gancho.show p  { opacity:.82; transform:none; filter:none; transition-delay:.4s; }
     #gancho.show #entrar { opacity:1; transform:none; filter:none; transition-delay:.85s; }
+    #gancho.show #pularGancho { opacity:.55; transform:none; filter:none; transition-delay:1.15s; }
     #entrar:hover { background:#2b6fd6; border-color:#5b8cff; }
 
-    /* CAPTIONS (B4/B5) — placeholder da voz; entrada suave (blur->nítido) */
+    /* PULAR persistente (ao longo da apresentação) — discreto, canto inferior */
+    #pular { position:fixed; right:16px; bottom:14px; z-index:13; cursor:pointer; background:transparent;
+      border:0; color:rgba(200,215,245,.42); font-size:12px; letter-spacing:.3px; padding:8px 10px;
+      opacity:0; pointer-events:none; transition:opacity .8s ease; -webkit-tap-highlight-color:transparent; }
+    #pular.show { opacity:1; pointer-events:auto; }
+    #pular:hover { color:rgba(220,232,255,.85); }
+
+    /* CAPTIONS (B4/B5) — o "note"; entrada suave (blur->nítido) */
     #caption { position:fixed; left:50%; bottom: max(4.5vh, 30px); z-index:11; width: min(86vw, 760px);
       text-align:center; font-size: clamp(15px, 2.4vw, 21px); line-height:1.4; font-weight:500;
       opacity:0; transform: translate(-50%, 10px); filter: blur(7px); pointer-events:none;
@@ -103,7 +111,7 @@
     #caption.show { opacity:1; transform: translate(-50%, 0); filter:none; }
     #caption .big { font-size: clamp(26px, 6vw, 54px); font-weight:800; letter-spacing:.5px; }
 
-    /* CONTROLES do handoff (B7): sincronia + rever (a obra real já traz as barras de tempo) */
+    /* CONTROLES do handoff (B7): sincronia + rever */
     #ctl { position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:13; display:flex; gap:8px;
       opacity:0; pointer-events:none; transition:opacity .8s ease; flex-wrap:wrap; justify-content:center; }
     #ctl.show { opacity:1; pointer-events:auto; }
@@ -141,7 +149,10 @@
     <h1>Estamos próximos de um novo El Niño?</h1>
     <p>Esta obra explora os padrões de temperatura dos oceanos da Terra.</p>
     <button id="entrar">ENTRAR</button>
+    <button id="pularGancho">pular introdução</button>
   </div>
+
+  <button id="pular">pular introdução ›</button>
 
   <div id="caption"></div>
 
@@ -155,11 +166,11 @@
 
   <script>
   // ===================== motores reais (reuso, sem editar a lógica/dado) =====================
-  // PUBLICADO: os motores moram NESTA pasta (cópias fiéis dos da cozinha, transparência inclusa).
+  // PUBLICADO: os motores moram NESTA pasta (cópias fiéis dos da cozinha, transparência + UI-toggle inclusos).
   const MOTOR = './';
   const ifrTemp = document.getElementById('ifrTemp');   // globo-mar-v2 = TEMPERATURA REAL (primário)
   const ifrAnom = document.getElementById('ifrAnom');   // globo-mar-v1 = ANOMALIA (entra na dobra)
-  ifrTemp.src = MOTOR + 'globo-mar-v2.html?embed=1';   // ?embed = corpo transparente no motor -> starfield aparece atrás
+  ifrTemp.src = MOTOR + 'globo-mar-v2.html?embed=1';   // ?embed = corpo transparente + UI nativa escondida
   ifrAnom.src = MOTOR + 'globo-mar-v1.html?embed=1';
   const wTemp = () => ifrTemp.contentWindow;
   const wAnom = () => ifrAnom.contentWindow;
@@ -168,10 +179,11 @@
   const PEAK = 47;          // 2023-12 (auge do El Niño; manifest.peak_idx)
   const LAST = 75;          // 2026-04 (último frame real da série)
   const POV0 = { lat:-5, lng:-120 };   // Pacífico equatorial centrado (abertura nativa da obra)
+  // CELULAR/retrato: a Terra termina mais LONGE pra aparecer quase inteira (nota Vitor s.45)
+  const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+  const ALT_END = isPortrait ? 2.5 : 1.6;
 
   // ===================== STARFIELD — o vazio onde a Terra flutua =====================
-  // 2D canvas (leve, sem puxar three.js pro cinematic): estrelas com cintilação + parallax sutil
-  // ligado à deriva da câmera (dá profundidade), nebulosa fraca pra riqueza, e um fade-in inicial.
   const starCanvas = document.getElementById('stars');
   const sctx = starCanvas.getContext('2d');
   const SDPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -181,97 +193,115 @@
     SW = window.innerWidth; SH = window.innerHeight;
     starCanvas.width = SW*SDPR; starCanvas.height = SH*SDPR;
     sctx.setTransform(SDPR,0,0,SDPR,0,0);
-    const n = Math.round(SW*SH/5200);                 // densidade
+    const n = Math.round(SW*SH/3000);                  // densidade (mais estrelas que o v0.1)
     stars = Array.from({length:n}, () => ({
       x: Math.random()*SW, y: Math.random()*SH,
-      r: 0.3 + Math.random()*Math.random()*1.5,        // a maioria pequena, poucas grandes
-      b: 0.22 + Math.random()*0.78,                    // brilho base
-      tw: rint(0.5, 2.1), ph: Math.random()*6.283,      // cintilação
-      depth: 0.15 + Math.random()*0.85                  // parallax (perto move mais)
+      r: 0.45 + Math.random()*Math.random()*1.8,        // maioria pequena, algumas bem visíveis
+      b: 0.38 + Math.random()*0.62,                     // brilho base (mais alto)
+      tw: rint(0.5, 2.0), ph: Math.random()*6.283,       // cintilação
+      depth: 0.15 + Math.random()*0.85                   // parallax
     }));
-    neb = [                                            // nebulosa fraca (profundidade, não decoração gritante)
-      { x:SW*0.30, y:SH*0.34, r:Math.max(SW,SH)*0.42, c:'56,86,160' },
-      { x:SW*0.74, y:SH*0.66, r:Math.max(SW,SH)*0.40, c:'92,58,150' },
-      { x:SW*0.58, y:SH*0.20, r:Math.max(SW,SH)*0.30, c:'40,70,120' },
+    neb = [
+      { x:SW*0.28, y:SH*0.32, r:Math.max(SW,SH)*0.45, c:'46,72,150' },
+      { x:SW*0.76, y:SH*0.68, r:Math.max(SW,SH)*0.42, c:'84,52,140' },
     ];
   }
   function drawStars(t, camDrift){
     sctx.clearRect(0,0,SW,SH);
     sctx.globalCompositeOperation = 'lighter';
-    for (const m of neb){                              // nebulosa
+    for (const m of neb){
       const g = sctx.createRadialGradient(m.x,m.y,0, m.x,m.y,m.r);
-      g.addColorStop(0, `rgba(${m.c},${0.05*starsAlpha})`);
+      g.addColorStop(0, `rgba(${m.c},${0.045*starsAlpha})`);
       g.addColorStop(1, 'rgba(0,0,0,0)');
       sctx.fillStyle = g; sctx.fillRect(0,0,SW,SH);
     }
-    for (const s of stars){                            // estrelas
-      const tw = 0.62 + 0.38*Math.sin(t*s.tw + s.ph);
+    for (const s of stars){
+      const tw = 0.72 + 0.28*Math.sin(t*s.tw + s.ph);   // cintila sem apagar
       const a = s.b * tw * starsAlpha;
       let x = s.x + camDrift*s.depth; x = ((x % SW)+SW)%SW;
-      sctx.globalAlpha = a;
-      sctx.fillStyle = '#e6eeff';
+      sctx.globalAlpha = a; sctx.fillStyle = '#eaf1ff';
       sctx.beginPath(); sctx.arc(x, s.y, s.r, 0, 6.283); sctx.fill();
-      if (s.r > 1.05){                                  // halo nas estrelas-herói
-        sctx.globalAlpha = a*0.22;
-        sctx.beginPath(); sctx.arc(x, s.y, s.r*3.2, 0, 6.283); sctx.fill();
+      if (s.r > 1.1){                                    // halo nas estrelas-herói
+        sctx.globalAlpha = a*0.28;
+        sctx.beginPath(); sctx.arc(x, s.y, s.r*3.4, 0, 6.283); sctx.fill();
       }
     }
     sctx.globalAlpha = 1; sctx.globalCompositeOperation = 'source-over';
   }
+  function fadeStarsTo(target, dur){ const from = starsAlpha; let s=null;
+    function st(now){ if(s===null)s=now; const k=Math.min((now-s)/dur,1);
+      starsAlpha = from + (target-from)*k; if(k<1) requestAnimationFrame(st); }
+    requestAnimationFrame(st); }
   initStars();
   window.addEventListener('resize', initStars);
+  fadeStarsTo(1, 1700);   // as estrelas surgem suaves na largada (tela de descanso)
 
   // ===================== estado do diretor =====================
   const stage = document.getElementById('stage');
   const halfTemp = document.getElementById('halfTemp'), halfAnom = document.getElementById('halfAnom');
   const caption = document.getElementById('caption');
-  let camAlt = 4.8, camLng = POV0.lng;        // dolly (longe->perto) + rotação base dirigidos pelo cinematic
+  let camAlt = 4.8, camLng = POV0.lng;        // dolly (longe->perto) + rotação base
   let rotate = true, driveCam = true, frameDrive = PEAK;
-  let floatAmp = 1.0;                           // amplitude da flutuação (cheia no cold-open, calma na narração)
-  let active = [wTemp];                         // iframes que recebem o comando da câmera/tempo
+  let floatAmp = 1.0;                           // amplitude da flutuação
+  let active = [wTemp];
   let readyTemp = false, readyAnom = false;
   let beat = 'preload';
-  let T = 0;                                    // relógio contínuo (s) pra deriva orgânica
+  let T = 0;
 
-  // loop único: empurra câmera/tempo pros motores reais E desenha o starfield
+  // loop único: empurra câmera/tempo pros motores E desenha o starfield
   let lastNow = null;
   function loop(now){
     requestAnimationFrame(loop);
     const dt = lastNow === null ? 0 : Math.min((now - lastNow)/1000, 0.05); lastNow = now;
     T += dt;
-    if (rotate) camLng -= dt * 0.9;             // rotação base LENTA (era 3.2 mecânico)
-    // deriva orgânica (Lissajous incomensurável): lat+lng+altitude — a Terra FLUTUA, não gira em eixo
-    const a = floatAmp;
+    if (rotate) camLng -= dt * 0.9;             // rotação base LENTA
+    const a = floatAmp;                          // deriva orgânica (Lissajous): a Terra FLUTUA
     const latOff = a * 6.5 * Math.sin(T*0.241 + 0.6);
     const lngOff = a * 4.5 * Math.sin(T*0.331 + 2.1);
     const altOff = a * 0.05 * Math.sin(T*0.57  + 1.3);
-    if (driveCam){
+    if (driveCam && beat !== 'interactive'){
       const pov = { lat: POV0.lat + latOff, lng: camLng + lngOff, altitude: camAlt + altOff };
       active.forEach(w => send(w, { duoCmd:'cam', pov }));
     }
-    if (frameDrive !== null) active.forEach(w => send(w, { duoCmd:'frame', t: frameDrive }));
-    drawStars(T, (camLng - POV0.lng) * 1.4);    // parallax preso à deriva da câmera
+    if (beat !== 'interactive' && frameDrive !== null) active.forEach(w => send(w, { duoCmd:'frame', t: frameDrive }));
+    drawStars(T, (camLng - POV0.lng) * 1.4);
   }
   requestAnimationFrame(loop);
 
-  // fade-in das estrelas (independente do motor — vira a tela de carregamento "descanso")
-  (function fadeStars(){ let s=null;
-    function st(now){ if(s===null)s=now; starsAlpha = Math.min((now-s)/1700, 1);
-      if (starsAlpha < 1) requestAnimationFrame(st); }
-    requestAnimationFrame(st); })();
-
-  // ===================== utilidades de tempo (browser) =====================
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // ===================== utilidades de tempo + SKIP (pular) =====================
+  let isSkipped = false, skipResolve; const skipSignal = new Promise(r => skipResolve = r);
+  const sleep = ms => Promise.race([ new Promise(r => setTimeout(r, ms)), skipSignal ]);
   const easeInOutCubic = k => k < 0.5 ? 4*k*k*k : 1 - Math.pow(-2*k+2, 3)/2;
   function tween(setter, from, to, dur, ease){
     return new Promise(res => { let s=null;
-      function st(now){ if(s===null)s=now; const k=Math.min((now-s)/dur,1);
+      function st(now){ if (isSkipped) { setter(to); return res(); }
+        if(s===null)s=now; const k=Math.min((now-s)/dur,1);
         setter(from + (to-from)*(ease?ease(k):k)); if(k<1) requestAnimationFrame(st); else res(); }
       requestAnimationFrame(st); });
   }
   function cap(html, big){ caption.innerHTML = big ? `<span class="big">${html}</span>` : html; caption.classList.add('show'); }
   function capOff(){ caption.classList.remove('show'); }
   function focus(which){ halfTemp.classList.toggle('focus', which==='temp'); halfAnom.classList.toggle('focus', which==='anom'); }
+
+  // salta direto pro INTERATIVO (o "pular"): mostra os dois globos no presente, revela a UI real, solta tudo.
+  function goInteractive(){
+    document.getElementById('gancho').classList.remove('show');
+    document.getElementById('pular').classList.remove('show');
+    capOff();
+    try { const ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(_){}
+    active = [wTemp, wAnom];
+    send(wTemp, { duoCmd:'frame', t:LAST }); send(wAnom, { duoCmd:'frame', t:LAST });
+    stage.classList.add('duo');
+    beat = 'interactive'; driveCam = false; rotate = false; frameDrive = null;
+    stage.classList.add('handoff','interactive');
+    document.getElementById('guard').classList.add('off');
+    fadeStarsTo(0, 1000);
+    send(wTemp, { duoCmd:'ui', show:true }); send(wAnom, { duoCmd:'ui', show:true });
+    document.getElementById('ctl').classList.add('show');
+  }
+  function pular(){ if (isSkipped || beat==='interactive') return; isSkipped = true; skipResolve(); goInteractive(); }
+  document.getElementById('pular').addEventListener('click', pular);
+  document.getElementById('pularGancho').addEventListener('click', pular);
 
   // ===================== handshake: motor pronto = 1º duoCam que ele posta =====================
   window.addEventListener('message', (e) => {
@@ -296,7 +326,7 @@
     }, wait);
   }
 
-  // ===================== a narração (texto do Vitor, 2ª pessoa) — captions placeholder da voz =====================
+  // ===================== a narração (texto do Vitor, 2ª pessoa) — captions = o "note" =====================
   const CORPO = [
     { t:'both', ms:4200, txt:'Você está vendo o último grande El Niño — <b>dezembro de 2023</b>.' },
     { t:'temp', ms:6200, txt:'Num deles, as cores são a <b>temperatura real</b> do oceano — do frio, em azul e verde, ao quente, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.' },
@@ -313,44 +343,48 @@
   entrarBtn.addEventListener('click', () => entrarResolve(), { once:true });
 
   async function director(){
-    // B1 — cold open: a Terra entra PEQUENA e LONGE (alt 4.8), flutuando, e cresce devagar até 1.6.
+    // B1 — cold open: a Terra entra PEQUENA e LONGE (alt 4.8), flutuando, e cresce devagar até ALT_END.
     beat='cold'; active=[wTemp]; driveCam=true; rotate=true; frameDrive=PEAK; floatAmp=1.0; camAlt=4.8;
-    await tween(v => camAlt=v, 4.8, 1.6, 6000, easeInOutCubic);
-    await sleep(400);
+    await tween(v => camAlt=v, 4.8, ALT_END, 6000, easeInOutCubic);
+    if (isSkipped) return;
+    await sleep(400); if (isSkipped) return;
 
-    // B2 — gancho: espera o clique (o gesto que destrava o áudio); texto entra suave (CSS)
+    // B2 — gancho: espera o clique (ou o pular); texto entra suave (CSS)
     beat='gancho'; document.getElementById('gancho').classList.add('show');
-    await entrarClicked;
+    await Promise.race([entrarClicked, skipSignal]);
+    if (isSkipped) return;
     document.getElementById('gancho').classList.remove('show');
     try { const ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(_){}
-    await sleep(650);                          // deixa o texto se dissolver (saída suave)
+    await sleep(650); if (isSkipped) return;
 
-    // B3 — dobra: a anomalia entra (por cima no retrato / ao lado na paisagem); os dois travam no evento
-    beat='duo'; active=[wTemp, wAnom]; frameDrive=PEAK; floatAmp=0.55;   // calma a flutuação pra leitura
+    // B3 — dobra: a anomalia entra; os dois travam no evento. O "pular" persistente aparece aqui.
+    beat='duo'; active=[wTemp, wAnom]; frameDrive=PEAK; floatAmp=0.55;
     send(wAnom, { duoCmd:'pause' }); send(wAnom, { duoCmd:'frame', t:PEAK });
     stage.classList.add('duo');
-    await sleep(1300);
+    document.getElementById('pular').classList.add('show');
+    await sleep(1300); if (isSkipped) return;
 
     // B4 — a narração ensina, dando foco ao globo citado
-    for (const line of CORPO){ focus(line.t); cap(line.txt); await sleep(line.ms); capOff(); await sleep(420); }
+    for (const line of CORPO){ if (isSkipped) return; focus(line.t); cap(line.txt); await sleep(line.ms); capOff(); await sleep(420); }
     focus(null);
 
-    // B5 — o fecho: sincroniza tudo, oscila sobre 2023 e avança até hoje (dado real). "Será?"
-    cap('Volte comigo a 2023 — e agora avance, mês a mês, até hoje.'); await sleep(2800);
-    await tween(v => frameDrive=v, PEAK, 44, 1000); await tween(v => frameDrive=v, 44, PEAK, 1000);
+    // B5 — o fecho: sincroniza, oscila sobre 2023 e avança até hoje (dado real). "Será?"
+    cap('Volte comigo a 2023 — e agora avance, mês a mês, até hoje.'); await sleep(2800); if (isSkipped) return;
+    await tween(v => frameDrive=v, PEAK, 44, 1000); await tween(v => frameDrive=v, 44, PEAK, 1000); if (isSkipped) return;
     capOff(); await sleep(360);
     cap('Veja os últimos meses: o oceano se acendendo outra vez.');
-    await tween(v => frameDrive=v, PEAK, LAST, 5400, easeInOutCubic);
-    await sleep(500); capOff(); await sleep(420); cap('Será?', true); await sleep(3000);
+    await tween(v => frameDrive=v, PEAK, LAST, 5400, easeInOutCubic); if (isSkipped) return;
+    await sleep(500); capOff(); await sleep(420); cap('Será?', true); await sleep(3000); if (isSkipped) return;
 
-    // B6 — a tremida; a letterbox se retrai, a moldura REAL surge, e o ESPAÇO recua: a obra aterrissa.
-    // As estrelas ficaram a cena TODA (atrás dos globos) e saem só AQUI, "quando vira" (direção Vitor, s.45).
-    capOff(); stage.classList.add('shake'); setTimeout(()=>stage.classList.remove('shake'), 600);
+    // B6 — a tremida; a letterbox retrai, a UI REAL surge, o espaço (estrelas) recua: a obra aterrissa.
+    capOff(); document.getElementById('pular').classList.remove('show');
+    stage.classList.add('shake'); setTimeout(()=>stage.classList.remove('shake'), 600);
     stage.classList.add('handoff');
-    tween(v => starsAlpha = v, starsAlpha, 0, 1400);
-    await sleep(1300);
+    fadeStarsTo(0, 1400);
+    send(wTemp, { duoCmd:'ui', show:true }); send(wAnom, { duoCmd:'ui', show:true });
+    await sleep(1300); if (isSkipped) return;
 
-    // B7 — interativo: o tempo é seu. Solta a câmera; os controles reais assumem. Sincronia + rever.
+    // B7 — interativo: o tempo é seu. Solta a câmera; os controles reais assumem.
     beat='interactive'; driveCam=false; frameDrive=null; rotate=false;
     stage.classList.add('interactive'); document.getElementById('guard').classList.add('off');
     cap('Agora o tempo é seu. Sincronize os dois globos, vá e volte no tempo — e veja por você mesmo.');
@@ -379,8 +413,8 @@
   // hook de verificação por efeito (preview headless)
   window.__cine = { get beat(){ return beat; }, get ready(){ return { temp:readyTemp, anom:readyAnom }; },
     get frame(){ return frameDrive; }, get alt(){ return camAlt; }, get stars(){ return starsAlpha; },
-    get floatAmp(){ return floatAmp; },
-    skipTo: (b)=>{ if(b==='entrar') entrarResolve(); } };
+    get floatAmp(){ return floatAmp; }, get skipped(){ return isSkipped; }, altEnd: ALT_END,
+    skipTo: (b)=>{ if(b==='entrar') entrarResolve(); if(b==='pular') pular(); } };
   </script>
 </body>
 </html>

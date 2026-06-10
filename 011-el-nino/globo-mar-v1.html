@@ -353,9 +353,15 @@
       `,
     });
 
-    // embarcado no cinematic (?embed): corpo transparente p/ o starfield do cinematic aparecer ATRÁS do globo.
-    // standalone/duo (sem ?embed): corpo segue #04060d -> visual idêntico ao de sempre.
-    if (new URLSearchParams(location.search).has('embed')) document.documentElement.style.background = document.body.style.background = 'transparent';
+    // embarcado no cinematic (?embed): corpo transparente (starfield atrás) + UI nativa ESCONDIDA (só o globo).
+    // standalone/duo (sem ?embed): visual idêntico ao de sempre. O cinematic revela a UI no handoff via duoCmd:'ui'.
+    if (new URLSearchParams(location.search).has('embed')) {
+      document.documentElement.style.background = document.body.style.background = 'transparent';
+      const _s = document.createElement('style');
+      _s.textContent = 'body.embed-hide > *:not(#globo){display:none!important}';
+      document.head.appendChild(_s);
+      document.body.classList.add('embed-hide');
+    }
     const world = Globe({ rendererConfig: { preserveDrawingBuffer: true, antialias: !isMobile, alpha: true } })(el)
       .backgroundColor('rgba(0,0,0,0)')   // transparente: standalone mostra o #04060d do body (idêntico); no cinematic, deixa o starfield por trás
       .showAtmosphere(true).atmosphereColor('#5b8cff').atmosphereAltitude(0.18)
@@ -501,6 +507,7 @@
         else if (m.duoCmd === 'play')  { if (!playing) { playing = true; last = null; setPP(); } }
         else if (m.duoCmd === 'pause') { if (playing)  { playing = false; setPP(); } }
         else if (m.duoCmd === 'freeze'){ controls.autoRotate = false; }
+        else if (m.duoCmd === 'ui')    { document.body.classList.toggle('embed-hide', !m.show); }   // cinematic revela/esconde a UI nativa
       });
     }
 
