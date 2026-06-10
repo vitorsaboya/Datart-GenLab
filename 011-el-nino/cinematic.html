@@ -144,7 +144,8 @@
     @keyframes hintPulse { 0%,100%{ transform:translate(-50%,0); } 50%{ transform:translate(-50%,-7px); } }
 
     /* CONTROLES do handoff (B7): sincronia + rever */
-    #ctl { position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:13; display:flex; gap:8px;
+    /* abaixo do HUD nativo dos motores (s.46: nada do cinematic cobre a UI real) */
+    #ctl { position:fixed; top:54px; left:50%; transform:translateX(-50%); z-index:13; display:flex; gap:8px;
       opacity:0; pointer-events:none; transition:opacity .8s ease; flex-wrap:wrap; justify-content:center; }
     #ctl.show { opacity:1; pointer-events:auto; }
     #ctl label, #ctl button { display:flex; align-items:center; gap:6px; color:#cfe0ff; font-size:12.5px;
@@ -378,6 +379,7 @@
   function goInteractive(){
     document.getElementById('gancho').classList.remove('show');
     document.getElementById('pular').classList.remove('show');
+    document.getElementById('mark').classList.remove('show');
     capOff(); selo(false);
     try { const ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(_){}
     active = [wTemp, wAnom];
@@ -451,7 +453,7 @@
   async function director(){
     // B1 — cold open: a Terra entra PEQUENA e LONGE (alt 4.8), flutuando, e cresce devagar até ALT_END.
     beat='cold'; active=[wTemp]; driveCam=true; rotate=true; frameDrive=PEAK; floatAmp=REDUCED?0:1.0; camAlt=4.8;
-    await tween(v => camAlt=v, 4.8, ALT_END, REDUCED ? 400 : 6000, easeInOutCubic);
+    await tween(v => camAlt=v, 4.8, ALT_END, REDUCED ? 400 : 3000, easeInOutCubic);   // metade do tempo (nota Vitor s.46)
     if (isSkipped) return;
     await sleep(400); if (isSkipped) return;
 
@@ -501,6 +503,7 @@
     // B6 — a tremida ANCORADA (voto s.46): treme no instante exato em que o tempo real assume e a UI viva
     // surge — MOLDURA declarada, o gesto marca a passagem simulação→obra. Letterbox retrai, estrelas recuam.
     capOff(); selo(false); document.getElementById('pular').classList.remove('show');
+    document.getElementById('mark').classList.remove('show');   // o título REAL do motor assume (s.46: sem textos sobrepostos)
     stage.classList.add('handoff');
     fadeStarsTo(0, 1400);
     send(wTemp, { duoCmd:'ui', show:true }); send(wAnom, { duoCmd:'ui', show:true });   // o tempo real assume...

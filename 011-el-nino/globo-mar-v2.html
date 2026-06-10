@@ -196,7 +196,10 @@
           dir[2]=normalize(vec2(-0.4,0.25));  k[2]=17.0; am[2]=0.28; q[2]=0.4;  spd[2]=0.85;
           dir[3]=normalize(vec2(0.25,0.9));   k[3]=24.0; am[3]=0.16; q[3]=0.35; spd[3]=1.10;
           for (int i=0;i<4;i++){
-            float phase = (k[i]*uFreq)*dot(dir[i], uv)*PI2 - uTime*spd[i];
+            // EMENDA FECHADA (s.46): ciclos INTEIROS em u -> a fase casa exata no antimeridiano (u=0|1)
+            // e a malha nao rasga ao deslocar (round preserva a direcao aproximada original).
+            float cu = floor(k[i]*uFreq*dir[i].x + 0.5);
+            float phase = (cu*uv.x + (k[i]*uFreq)*dir[i].y*uv.y)*PI2 - uTime*spd[i];
             float a = amp*am[i];
             h += a*sin(phase); horiz += q[i]*a*dir[i]*cos(phase);
           }
@@ -244,34 +247,40 @@
         const float PI2 = 6.28318530718;
 
         float hash21(vec2 p){ p = fract(p*vec2(123.34, 345.45)); p += dot(p, p+34.345); return fract(p.x*p.y); }
-        float vnoise(vec2 p){
+        // EMENDA FECHADA (s.46): noise PERIODICO em x (lattice com mod no periodo de ciclos em u)
+        // + lacunarity 2.0 EXATA -> espuma/relevo fino sem degrau no antimeridiano.
+        float vnoise(vec2 p, float px){
           vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
-          float a = hash21(i), b = hash21(i+vec2(1.,0.)), c = hash21(i+vec2(0.,1.)), d = hash21(i+vec2(1.,1.));
+          float i0 = mod(i.x, px), i1 = mod(i.x + 1.0, px);
+          float a = hash21(vec2(i0, i.y)),     b = hash21(vec2(i1, i.y)),
+                c = hash21(vec2(i0, i.y+1.0)), d = hash21(vec2(i1, i.y+1.0));
           return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
         }
-        float fbm(vec2 p){ float s=0.0, a=0.5; for(int i=0;i<4;i++){ s+=a*vnoise(p); p=p*2.03+vec2(11.3,7.7); a*=0.5; } return s; }
+        float fbm(vec2 p, float px){ float s=0.0, a=0.5;
+          for(int i=0;i<4;i++){ s+=a*vnoise(p, px); p=p*2.0+vec2(11.3,7.7); px*=2.0; a*=0.5; } return s; }
 
         float foamField(vec2 uv){
           vec2 flow = vec2(0.9, 0.32) * uTime * 0.018;
-          float f1 = fbm(uv*vec2(190.0, 95.0) + flow*55.0);
-          float f2 = fbm(uv*130.0 - flow*40.0);
+          float f1 = fbm(uv*vec2(190.0, 95.0) + flow*55.0, 190.0);
+          float f2 = fbm(uv*130.0 - flow*40.0, 130.0);
           return clamp(f1*0.62 + f2*0.55, 0.0, 1.0);
         }
         vec2 detailSlope(vec2 uv) {
           vec2 fl = vec2(0.85, 0.30) * uTime * 0.02;
           float e = 0.0016;
-          float n  = fbm(uv*150.0 + fl);
-          float nx = fbm((uv+vec2(e,0.0))*150.0 + fl);
-          float ny = fbm((uv+vec2(0.0,e))*150.0 + fl);
+          float n  = fbm(uv*150.0 + fl, 150.0);
+          float nx = fbm((uv+vec2(e,0.0))*150.0 + fl, 150.0);
+          float ny = fbm((uv+vec2(0.0,e))*150.0 + fl, 150.0);
           return (vec2(nx - n, ny - n) / e) * 0.006;
         }
         vec2 chopSlope(vec2 uv, out float h) {
           vec2 d0 = vec2( 0.86, 0.51); float f0 = 22.0;
           vec2 d1 = vec2(-0.62, 0.78); float f1 = 34.0;
           vec2 d2 = vec2( 0.21,-0.98); float f2 = 48.0;
-          float p0 = dot(d0, uv) * f0 * PI2 - uTime*1.4;
-          float p1 = dot(d1, uv) * f1 * PI2 - uTime*1.9;
-          float p2 = dot(d2, uv) * f2 * PI2 - uTime*2.5;
+          // EMENDA FECHADA (s.46): ciclos inteiros em u -> chop continuo no antimeridiano
+          float p0 = (floor(d0.x*f0+0.5)*uv.x + d0.y*f0*uv.y) * PI2 - uTime*1.4;
+          float p1 = (floor(d1.x*f1+0.5)*uv.x + d1.y*f1*uv.y) * PI2 - uTime*1.9;
+          float p2 = (floor(d2.x*f2+0.5)*uv.x + d2.y*f2*uv.y) * PI2 - uTime*2.5;
           h = 0.42 * sin(p0) + 0.30 * sin(p1) + 0.20 * sin(p2);
           return 0.42 * d0 * cos(p0) + 0.30 * d1 * cos(p1) + 0.20 * d2 * cos(p2);
         }
@@ -370,7 +379,7 @@
     }
     const world = Globe({ rendererConfig: { preserveDrawingBuffer: true, antialias: !isMobile, alpha: true } })(el)
       .backgroundColor('rgba(0,0,0,0)')   // transparente: standalone mostra o #04060d do body (idêntico); no cinematic, deixa o starfield por trás
-      .showAtmosphere(true).atmosphereColor('#5b8cff').atmosphereAltitude(0.18)
+      .showAtmosphere(true).atmosphereColor('#2a4a78').atmosphereAltitude(0.05)   // halo MINIMO (nota Vitor s.46): o preto do espaco encosta na Terra
       .globeMaterial(oceanMat);
 
     const renderer = world.renderer();
@@ -482,11 +491,12 @@
       aplicaFrame(f * (COUNT - 1));
       if (window.__duoTime) window.__duoTime({ frame: tSerie });
     }
-    let scrub = false;
+    let scrub = false, scrubWasPlaying = false;
     function setPP() { ppEl.textContent = playing ? '❚❚ pausar' : '► tocar'; }
-    trilhoI.addEventListener('pointerdown', e => { scrub = true; playing = false; setPP(); if (window.__duoTime) window.__duoTime({ playing: false }); seekEv(e); try { trilhoI.setPointerCapture(e.pointerId); } catch (_) {} });
+    // arrastar a barra NAO exige pausar (nota Vitor s.46): pausa so DURANTE o arrasto e retoma ao soltar.
+    trilhoI.addEventListener('pointerdown', e => { scrub = true; scrubWasPlaying = playing; playing = false; setPP(); if (window.__duoTime) window.__duoTime({ playing: false }); seekEv(e); try { trilhoI.setPointerCapture(e.pointerId); } catch (_) {} });
     trilhoI.addEventListener('pointermove', e => { if (scrub) seekEv(e); });
-    window.addEventListener('pointerup', () => { scrub = false; });
+    window.addEventListener('pointerup', () => { if (scrub && scrubWasPlaying) { playing = true; last = null; setPP(); if (window.__duoTime) window.__duoTime({ playing: true }); } scrub = false; });
     ppEl.addEventListener('click', () => { playing = !playing; if (playing) last = null; setPP(); if (window.__duoTime) window.__duoTime({ playing }); });
     window.addEventListener('keydown', ev => {
       if (ev.key === 'ArrowRight') { playing = false; setPP(); aplicaFrame(Math.floor(tSerie) + 1); }
