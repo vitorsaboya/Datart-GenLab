@@ -337,6 +337,8 @@
   let camAlt = 4.8, camLat = POV0.lat, camLng = POV0.lng;  // pose-BASE da câmera (o flyTo move; o Lissajous flutua por cima)
   let rotate = true, driveCam = true, frameDrive = PEAK;
   let floatAmp = 1.0;                           // amplitude da flutuação
+  let flyGen = 0;                               // guarda de geração do flyTo (cues s.49: um voo novo supersede o anterior)
+  let driveGen = 0;                             // idem pro driveFrames (varreduras de tempo adjacentes não brigam)
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches; // voos viram saltos; o dado (cor) segue
   let active = [wTemp];
   let readyTemp = false, readyAnom = false;
@@ -383,7 +385,7 @@
   // Destrava SÓ no ENTRAR (o clique é o gesto; ress. Vitor s.46: o gancho, antes do start, é MUDO). =====
   const voiceEl = new Audio(); voiceEl.preload = 'auto';
   function primeAudio(){   // desbloqueia o áudio dentro do gesto do clique (iOS exige): toca mudo e pausa
-    try { voiceEl.muted = true; voiceEl.src = 'voz/blocos/b01.mp3';
+    try { voiceEl.muted = true; voiceEl.src = 'voz/narracao-full.mp3';
       const p = voiceEl.play();
       if (p) p.then(() => { voiceEl.pause(); voiceEl.currentTime = 0; voiceEl.muted = false; }).catch(() => { voiceEl.muted = false; });
     } catch(_){}
@@ -425,8 +427,10 @@
     const fLat = camLat, fLng = camLng, fAltL = Math.log(camAlt), tAltL = Math.log(alt);
     const peak = opts.swoop ?? 0.18, rest = REDUCED ? 0 : (opts.rest ?? 0.45);
     const ease = t => 1 - Math.pow(1 - t, 4);            // easeOutQuart
+    const myGen = ++flyGen;                              // um flyTo novo (do próximo cue) supersede este
     return new Promise(res => { let s = null;
       function st(now){
+        if (myGen !== flyGen || isSkipped) { floatAmp = rest; return res(); }
         if (s === null) s = now;
         const k = Math.min((now - s) / dur, 1), e = ease(k);
         camLat = fLat + (lat - fLat) * e;
@@ -442,9 +446,12 @@
   // dado distorce o fenômeno = RUÍDO) e sempre com o selo aceso (recuo declarado = CANAL — D33) =====
   function driveFrames(from, to, dur){
     dur /= PACE;                                         // acelera junto com a voz (PACE)
+    const myGen = ++driveGen;
     selo(true); setSelo(from);
     return new Promise(res => { let s = null;
       function st(now){
+        if (isSkipped) { frameDrive = to; return res(); }
+        if (myGen !== driveGen) return res();            // uma varredura nova assumiu
         if (s === null) s = now;
         const k = Math.min((now - s) / dur, 1);
         frameDrive = from + (to - from) * k;
@@ -500,59 +507,76 @@
     }, wait);
   }
 
-  // ===================== a narração (texto do Vitor, 2ª pessoa) + a COREOGRAFIA por fala (N1 s.46) =====
-  // go = o gesto de câmera ANTES da caption (a caption entra no settle — follow-through);
-  // during = movimento do tempo de DADO durante a fala (4-5: o mecanismo é espaço-temporal — precedente NASA SVS).
+  // ===================== a narração HUMANA FINAL — FAIXA ÚNICA + CUES por TEMPO (s.49) =====================
+  // Regra do Vitor: SEM CORTES no áudio (a cadência já é dele). A faixa toca inteira; a CÂMERA e a LEGENDA
+  // são guiadas por TEMPO (cues lidos de voiceEl.currentTime, tempos de voz/transcricao-full.json). PACE 1.1x
+  // acelera a voz (playbackRate) e a câmera (flyTo/driveFrames dividem por PACE) JUNTAS. A legenda é VERBATIM.
+  // PEDAGOGIA: evento (dez/2023) -> temperatura real (frio->branco) -> anomalia (vermelho,+2°) -> mecanismo
+  // (esfria pro normal; alísios empurram OESTE -> Indonésia/Austrália -> ressurgência fria no Peru) -> El Niño
+  // (ventos cedem, calor volta pro LESTE, dado avança 2021->dez/2023) -> impactos -> a onda -> FECHO (varre
+  // dez/2023 -> presente real). O `cam` dispara nos inícios de beat; `dur` em ms de MÍDIA (flyTo/PACE -> casa).
   const A = x => isPortrait ? Math.min(x * 1.3, 2.6) : x;   // retrato vê de mais longe (nota Vitor s.45)
-  // FORMA LONGA (s.49) — VOZ HUMANA do Vitor, 14 blocos (sentença a sentença: a câmera bate no que é dito).
-  // Coreografia por D-CIN-2: flyTo (arco curto, micro-swoop, log-alt, easeOutQuart) + driveFrames (scrub LINEAR
-  // do tempo de dado, D33; selo sempre aceso). Tudo escalado por PACE (acelera ~10%, voz+câmera juntas).
-  // PEDAGOGIA: b01 evento; b02-b03 a temperatura real (frio->quente->branco); b04-b05 a anomalia (vermelho, +2°);
-  // b06 alísios normais empurram a água quente pro OESTE; b07 chega à Indonésia/Austrália; b08 ressurgência fria
-  // no Peru; b09 El Niño: ventos cedem, calor volta pro LESTE (dado 2021->dez/2023); b10 impactos; b11 a onda;
-  // b12-b14 o FECHO (varre dez/2023 -> presente real). Captions = legenda condensada da fala (editável).
-  const CORPO = [
-    { t:'both', audio:'voz/blocos/b01.mp3', txt:'Você está vendo o último grande El Niño, <b>de dezembro de 2023</b>.',
-      go: () => flyTo(-5, -120, A(1.7), { dur:1000 }),
-      during: () => flyTo(-7, -124, A(1.5), { dur:4000, swoop:0, rest:0.55 }) },                    // assenta no evento
-    { t:'temp', audio:'voz/blocos/b02.mp3', leg:'temp', txt:'O primeiro globo que você vê agora, o mais colorido, representa a <b>temperatura real</b> do oceano.',
-      go: () => flyTo(-5, -116, A(1.4), { dur:900 }),
-      during: () => flyTo(-4, -112, A(1.2), { dur:5000, swoop:0, rest:0.35 }) },                    // foca o globo temp
-    { t:'temp', audio:'voz/blocos/b03.mp3', txt:'Do <b>frio</b>, em azul e verde, ao <b>quente</b>, em amarelo e laranja; o calor mais extremo satura até o <b>branco</b>.',
-      go: () => flyTo(-1, -140, A(1.3), { dir:'west', dur:800 }),                                   // rumo à língua quente equatorial
-      during: () => flyTo(0, -128, A(1.12), { dur:7800, swoop:0, rest:0.35 }) },                    // push-in na água mais quente (branca)
-    { t:'anom', audio:'voz/blocos/b04.mp3', leg:'anom', txt:'No outro, mostramos a temperatura que <b>ultrapassou a média</b>: quanto mais <b>vermelho</b> e branco saturado, mais a temperatura da água está acima da média.',
-      go: () => flyTo(-3, -120, A(1.42), { dir:'east', dur:900 }),
-      during: () => flyTo(-2, -126, A(1.3), { dur:8700, swoop:0.05, rest:0.35 }) },                 // deriva sobre a anomalia
-    { t:'anom', audio:'voz/blocos/b05.mp3', txt:'Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.',  // verbatim
-      go: () => flyTo(-2, -120, A(1.18), { dur:800 }),
-      during: () => flyTo(-1, -118, A(1.05), { dur:2700, swoop:0, rest:0.3 }) },                    // push-in no foco vermelho (+2°)
-    { t:'both', audio:'voz/blocos/b06.mp3', txt:'Mas como acontece o El Niño? Normalmente, os <b>ventos alísios</b> empurram a água quente na linha do equador,',
-      go: () => Promise.all([ flyTo(-1, -92, A(1.7), { dir:'east', dur:2400 }),                     // vai pro equador leste...
-                              driveFrames(PEAK, 22, 2400) ]),                                      // ...e ESFRIA pro normal (dez/2023 -> 2021)
-      during: () => flyTo(-3, 172, A(1.86), { dir:'west', dur:4500, swoop:0.05, rest:0.4 }) },      // começa o empurrão pro OESTE
-    { t:'both', audio:'voz/blocos/b07.mp3', txt:'dos Andes para a <b>Indonésia</b> e a <b>Austrália</b>.',
-      during: () => flyTo(-5, 136, A(1.8), { dir:'west', dur:2600, swoop:0, rest:0.4 }) },          // chega ao Pacífico oeste (a água quente acumulada)
-    { t:'both', audio:'voz/blocos/b08.mp3', txt:'Na costa do <b>Peru</b>, sobe água fria do fundo — evento chamado de <b>ressurgência</b>.',
-      go: () => flyTo(-10, -78, A(1.9), { dir:'east', dur:1500 }),                                  // corta pro Peru
-      during: () => flyTo(-13, -76, A(1.68), { dur:4000, swoop:0, rest:0.4 }) },                    // segura na costa (água fria, dado normal)
-    { t:'both', audio:'voz/blocos/b09.mp3', txt:'No El Niño, esses ventos <b>enfraquecem</b>. A água quente escorrega de volta e avança sobre a <b>América do Sul</b>, sufocando a ressurgência fria.',
-      during: () => Promise.all([ flyTo(-6, -98, A(1.82), { dir:'west', dur:9050, swoop:0.04, rest:0.4 }),  // revela o Pacífico leste...
-                                  driveFrames(22, PEAK, 9050) ]) },                                // ...e o DADO avança (2021->dez/2023): o calor chegando à SA
-    { t:'both', audio:'voz/blocos/b10.mp3', txt:'O efeito transborda: chuvas e <b>enchentes</b> no Peru, no Equador e no sul do Brasil; e <b>secas</b> na Amazônia e no Nordeste.',
-      go: () => flyTo(-15, -55, A(2.0), { dur:1200 }),
-      during: () => flyTo(-8, -48, A(1.86), { dur:8000, swoop:0.04, rest:0.5 }) },                  // órbita sobre o continente
-    { t:'both', audio:'voz/blocos/b11.mp3', txt:'E nos dois globos, quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>: a força das ondas, o movimento no globo, é o tamanho do evento.',
-      go: () => flyTo(-5, -150, A(1.5), { dir:'west', dur:1400 }),
-      during: () => flyTo(-5, -140, A(1.1), { dur:7400, swoop:0, rest:0.4 }) },                     // push-in fundo (a onda/agitação no pico)
-    { t:'both', audio:'voz/blocos/b12.mp3', txt:'Agora, volte comigo a <b>2023</b> — e veja o avanço, <b>mês a mês</b>, até hoje.',
-      go: () => flyTo(-5, -120, A(1.95), { dir:'east', dur:1500, rest:0.4 }),                       // recua p/ ver o globo inteiro
-      during: () => driveFrames(PEAK, 64, 4500) },                                                 // FECHO: varre dez/2023 -> ~2025
-    { t:'both', audio:'voz/blocos/b13.mp3', txt:'Veja os <b>últimos meses</b>: o oceano se acendendo outra vez.',  // verbatim
-      during: () => driveFrames(64, LAST, 4100) },                                                 // ...até o presente real (re-aquecimento, D33)
-    { t:'both', audio:'voz/blocos/b14.mp3', txt:'Essa obra se manterá <b>atualizada</b> com os dados mais recentes. Volte para ver o que se confirmará.',
-      during: () => flyTo(-5, -118, A(2.05), { dur:5100, swoop:0, rest:0.5 }) },                    // segura o presente, deriva suave (reflexivo)
+  const TRACK = 'voz/narracao-full.mp3';
+  const CUES = [
+    { t:0.7,   focus:'both', txt:'Você está vendo o último grande El Niño, <b>de dezembro de 2023</b>.',
+      cam:() => flyTo(-7, -124, A(1.5), { dur:5600, swoop:0, rest:0.5 }) },                         // assenta no evento
+    { t:6.3,   focus:'temp', leg:'temp', txt:'O primeiro globo que você vê agora, o mais colorido, representa a <b>temperatura real</b> do oceano,',
+      cam:() => flyTo(-4, -112, A(1.2), { dur:6600, swoop:0, rest:0.35 }) },                        // foca o globo temp
+    { t:12.9,  focus:'temp', txt:'do <b>frio</b>, em azul e verde, ao <b>quente</b>, em amarelo e laranja.',
+      cam:() => flyTo(0, -128, A(1.12), { dir:'west', dur:8200, swoop:0, rest:0.35 }) },            // rumo à língua quente equatorial
+    { t:17.9,  focus:'temp', txt:'O calor mais extremo satura até o <b>branco</b>.' },
+    { t:21.1,  focus:'anom', leg:'anom', txt:'Nesse outro globo, mostramos a temperatura que <b>ultrapassou a média</b>.',
+      cam:() => flyTo(-2, -126, A(1.3), { dir:'east', dur:11400, swoop:0.05, rest:0.35 }) },        // move/deriva sobre a anomalia
+    { t:26.1,  focus:'anom', txt:'Quanto mais <b>vermelho</b> e branco saturado, mais a temperatura da água está acima da média.' },
+    { t:32.5,  focus:'anom', txt:'Aqui, o Pacífico passou de <b>dois graus</b> acima do normal.',
+      cam:() => flyTo(-1, -118, A(1.05), { dur:4200, swoop:0, rest:0.3 }) },                        // push-in no foco vermelho (+2°)
+    { t:36.7,  focus:'both', txt:'Mas como acontece o El Niño?',
+      cam:() => Promise.all([ driveFrames(PEAK, 22, 2600),                                          // ESFRIA pro normal (dez/2023 -> 2021)...
+                              flyTo(-3, 172, A(1.86), { dir:'west', dur:8200, swoop:0.05, rest:0.4 }) ]) },  // ...e empurra pro OESTE
+    { t:39.1,  focus:'both', txt:'Normalmente, os <b>ventos alísios</b> empurram a água quente na linha do equador,' },
+    { t:44.9,  focus:'both', txt:'dos Andes para a <b>Indonésia</b> e a <b>Austrália</b>.',
+      cam:() => flyTo(-5, 136, A(1.8), { dir:'west', dur:3800, swoop:0, rest:0.4 }) },              // chega ao Pacífico oeste
+    { t:48.7,  focus:'both', txt:'Na costa do <b>Peru</b>, sobe água fria do fundo, evento chamado de <b>ressurgência</b>.',
+      cam:() => flyTo(-12, -78, A(1.78), { dir:'east', dur:6200, swoop:0, rest:0.4 }) },            // corta pro Peru (água fria, dado normal)
+    { t:54.9,  focus:'both', txt:'No El Niño, esses ventos <b>enfraquecem</b>.',
+      cam:() => Promise.all([ driveFrames(22, PEAK, 10400),                                         // o DADO avança (2021->dez/2023)...
+                              flyTo(-6, -98, A(1.82), { dir:'west', dur:10400, swoop:0.04, rest:0.4 }) ]) },  // ...o calor chegando à SA
+    { t:57.9,  focus:'both', txt:'A água quente escorrega de volta e avança sobre a <b>América do Sul</b>,' },
+    { t:62.5,  focus:'both', txt:'sufocando a ressurgência fria.' },
+    { t:65.3,  focus:'both', txt:'O efeito transborda.',
+      cam:() => flyTo(-8, -50, A(1.9), { dur:9600, swoop:0.04, rest:0.5 }) },                       // órbita sobre o continente
+    { t:67.1,  focus:'both', txt:'Chuvas e <b>enchentes</b> no Peru, no Equador e no sul do Brasil.' },
+    { t:71.7,  focus:'both', txt:'E <b>secas</b> na Amazônia e no Nordeste.' },
+    { t:74.9,  focus:'both', txt:'E nos dois globos, quanto mais o oceano <b>esquenta</b>, mais ele se <b>agita</b>.',
+      cam:() => flyTo(-5, -140, A(1.12), { dir:'west', dur:10400, swoop:0, rest:0.4 }) },           // push-in fundo (a onda no pico)
+    { t:79.7,  focus:'both', txt:'A força das ondas, o movimento no globo, é o tamanho do evento.' },
+    { t:85.3,  focus:'both', txt:'Agora volte comigo a <b>2023</b> e veja o avanço, <b>mês a mês</b>, até hoje.',
+      cam:() => Promise.all([ driveFrames(PEAK, 64, 7600),                                          // FECHO: varre dez/2023 -> ~2025...
+                              flyTo(-5, -120, A(1.95), { dir:'east', dur:2000, rest:0.4 }) ]) },    // ...recuando p/ ver o globo inteiro
+    { t:92.9,  focus:'both', txt:'Veja os <b>últimos meses</b>, o oceano se acendendo outra vez.',
+      cam:() => driveFrames(64, LAST, 5200) },                                                      // ...até o presente real (re-aquecimento, D33)
+    { t:98.1,  focus:'both', txt:'Essa obra se manterá <b>atualizada</b> com os dados mais recentes.',
+      cam:() => flyTo(-5, -118, A(2.05), { dur:7800, swoop:0, rest:0.5 }) },                        // segura o presente, deriva suave
+    { t:102.3, focus:'both', txt:'Volte para ver o que se confirmará.' },
   ];
+
+  // motor de CUES: lê voiceEl.currentTime e dispara legenda/foco/legenda-suave/câmera no tempo (s.49)
+  function runCues(){
+    let i = 0;
+    function tick(){
+      if (isSkipped || beat === 'interactive') return;
+      const t = voiceEl.currentTime;
+      while (i < CUES.length && t >= CUES[i].t){
+        const c = CUES[i++];
+        focus(c.focus === 'both' ? null : c.focus);
+        if (c.leg) document.querySelector('.lg' + (c.leg === 'temp' ? 'T' : 'A')).classList.add('show');
+        if (c.txt) { setSelo(frameDrive); cap(c.txt); }
+        if (c.cam) c.cam();                 // fire-and-forget; flyTo tem guarda de geração (não conflita)
+      }
+      if (i < CUES.length) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
 
   // ===================== a sequência (os beats) =====================
   const entrarBtn = document.getElementById('entrar');
@@ -584,27 +608,18 @@
     fonteEl.classList.add('show'); setTimeout(() => fonteEl.classList.remove('show'), 4600);
     await sleep(250); if (isSkipped) return;
 
-    // B4 — a narração ensina. Transição entre blocos no MÍNIMO (nota Vitor): nas falas simples o 'go' roda
-    // JUNTO com a voz (zera o vão silencioso); c4/c5 (syncGo) posicionam antes porque a coreografia depende.
-    rotate = false;                                  // daqui em diante o flyTo dirige (a deriva Lissajous segue por cima)
-    setSelo(frameDrive); selo(true);                 // o ANO em DESTAQUE no centro, persistente no corpo (nota Vitor s.46)
-    for (const line of CORPO){
-      if (isSkipped) return;
-      focus(line.t); setSelo(frameDrive);
-      if (line.syncGo && line.go) { await line.go(); if (isSkipped) return; }   // posiciona ANTES (coreografia)
-      cap(line.txt);
-      if (line.leg) document.querySelector('.lg' + (line.leg === 'temp' ? 'T' : 'A')).classList.add('show');  // acende a legenda suave no canto (foreshadow da obra)
-      const motion = (async () => {                  // demais: o 'go' anda JUNTO com a voz (sem vão silencioso)
-        if (!line.syncGo && line.go) { await line.go(); if (isSkipped) return; }
-        if (line.during) await line.during();
-      })();
-      await Promise.all([ voz(line.audio), motion ]);
-      if (isSkipped) return;
-      capOff(); await sleep(20);                      // transição entre blocos no MÍNIMO (dinâmico — nota Vitor s.49)
-    }
-    focus(null);
-    // O FECHO (varredura dez/2023 -> presente) agora é parte da narração (blocos b08-b10). Vai direto pro handoff.
-    if (isSkipped) return; await sleep(350);
+    // B4 — a NARRAÇÃO HUMANA: FAIXA ÚNICA, SEM CORTES (nota Vitor s.49). A câmera e a legenda são guiadas por
+    // TEMPO (runCues lê voiceEl.currentTime); o fecho (varredura) é parte da própria faixa; o handoff dispara
+    // no FIM do áudio (chave de ouro natural). PACE acelera voz (playbackRate) e câmera (flyTo/PACE) juntas.
+    beat = 'narra'; rotate = false;                  // o flyTo dirige; a deriva Lissajous segue por cima
+    setSelo(frameDrive); selo(true);                 // o ANO em DESTAQUE no centro, persistente (nota Vitor s.46)
+    runCues();
+    voiceEl.src = TRACK;
+    try { voiceEl.preservesPitch = true; voiceEl.playbackRate = PACE; } catch(_){}
+    const pv = voiceEl.play(); if (pv) pv.catch(()=>{});
+    await Promise.race([ new Promise(res => { voiceEl.onended = res; }), skipSignal ]);
+    if (isSkipped) return;
+    focus(null); capOff();
 
     // B6 — a tremida ANCORADA (voto s.46): treme no instante exato em que o tempo real assume e a UI viva
     // surge — MOLDURA declarada, o gesto marca a passagem simulação→obra. Letterbox retrai, estrelas recuam.
