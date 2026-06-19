@@ -86,8 +86,14 @@
       #ano-wrap { width: calc(100% - 20px); bottom: 8px; }
       #ano { font-size: 18px; }
       #ano .mesnum { font-size: 11px; }
-      #trilho { height: 10px; }
-      #playpause { margin-top: 5px; padding: 6px 14px; }
+      #trilho { height: 12px; }
+      /* ALVO DE TOQUE generoso (nota Vitor s.49): a barra de tempo (~10px) era pequena e o dedo errava no
+         celular ao tentar passar o tempo manualmente. Pseudo transparente estende a área de toque a ~44px
+         SEM engrossar o visual; no scrub só o eixo X importa, então tocar acima/abaixo da linha funciona igual. */
+      #trilho::before { content: ''; position: absolute; left: -8px; right: -8px; top: -20px; bottom: -12px; }
+      #alca { width: 20px; height: 20px; top: -4px; }                      /* alça maior e bem visível pro dedo */
+      #marcaPico { height: 18px; top: -3px; }
+      #playpause { margin-top: 14px; padding: 9px 18px; font-size: 13px; } /* maior + afasta do trilho (área limpa) */
     }
   </style>
   <script type="importmap">
