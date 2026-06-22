@@ -1,0 +1,658 @@
+{
+ "shape": [
+  8,
+  181,
+  288
+ ],
+ "shape_wind": [
+  16,
+  91,
+  144
+ ],
+ "bbox": {
+  "lat0": -90.0,
+  "lat1": 90.0,
+  "lon0": -180.0,
+  "lon1": 178.75
+ },
+ "alt_m": [
+  0.0,
+  15000.0
+ ],
+ "global_max": 9.68962922343053e-07,
+ "dep_max": 6.243381811543713e-09,
+ "look_cfg": {
+  "exagero": 34.0,
+  "g": 0.8,
+  "extinct": 120000000.0,
+  "onset": 0.018,
+  "sun": [
+   16.0,
+   -34.0
+  ],
+  "sun_col": [
+   1.0,
+   0.83,
+   0.55
+  ],
+  "sun_gain": 1.2,
+  "sun_base": 0.15,
+  "ambient": [
+   0.05,
+   0.06,
+   0.09
+  ]
+ },
+ "godzilla": [
+  "2020-06-13",
+  "2020-06-27"
+ ],
+ "cadencia": "mensal",
+ "shape_windlow": [
+  91,
+  144
+ ],
+ "n_frames": 66,
+ "frames": [
+  {
+   "i": 0,
+   "month": "2020-01",
+   "data": "2020-01-13",
+   "vol_file": "processed/dust_2020-01-13_i4.f16",
+   "dep_file": "processed/dep_2020-01-13.f32",
+   "windlow_file": "processed/windlow_2020-01.f16",
+   "nino34": 0.71
+  },
+  {
+   "i": 1,
+   "month": "2020-02",
+   "data": "2020-02-17",
+   "vol_file": "processed/dust_2020-02-17_i4.f16",
+   "dep_file": "processed/dep_2020-02-17.f32",
+   "windlow_file": "processed/windlow_2020-02.f16",
+   "nino34": 0.45
+  },
+  {
+   "i": 2,
+   "month": "2020-03",
+   "data": "2020-03-16",
+   "vol_file": "processed/dust_2020-03-16_i4.f16",
+   "dep_file": "processed/dep_2020-03-16.f32",
+   "windlow_file": "processed/windlow_2020-03.f16",
+   "nino34": 0.43
+  },
+  {
+   "i": 3,
+   "month": "2020-04",
+   "data": "2020-04-13",
+   "vol_file": "processed/dust_2020-04-13_i4.f16",
+   "dep_file": "processed/dep_2020-04-13.f32",
+   "windlow_file": "processed/windlow_2020-04.f16",
+   "nino34": 0.4
+  },
+  {
+   "i": 4,
+   "month": "2020-05",
+   "data": "2020-05-18",
+   "vol_file": "processed/dust_2020-05-18_i4.f16",
+   "dep_file": "processed/dep_2020-05-18.f32",
+   "windlow_file": "processed/windlow_2020-05.f16",
+   "nino34": -0.22
+  },
+  {
+   "i": 5,
+   "month": "2020-06",
+   "data": "2020-06-15",
+   "vol_file": "processed/dust_2020-06-15_i4.f16",
+   "dep_file": "processed/dep_2020-06-15.f32",
+   "windlow_file": "processed/windlow_2020-06.f16",
+   "nino34": -0.3
+  },
+  {
+   "i": 6,
+   "month": "2020-07",
+   "data": "2020-07-16",
+   "vol_file": "processed/dust_2020-07-16_i4.f16",
+   "dep_file": "processed/dep_2020-07-16.f32",
+   "windlow_file": "processed/windlow_2020-07.f16",
+   "nino34": -0.18
+  },
+  {
+   "i": 7,
+   "month": "2020-08",
+   "data": "2020-08-15",
+   "vol_file": "processed/dust_2020-08-15_i4.f16",
+   "dep_file": "processed/dep_2020-08-15.f32",
+   "windlow_file": "processed/windlow_2020-08.f16",
+   "nino34": -0.37
+  },
+  {
+   "i": 8,
+   "month": "2020-09",
+   "data": "2020-09-14",
+   "vol_file": "processed/dust_2020-09-14_i4.f16",
+   "dep_file": "processed/dep_2020-09-14.f32",
+   "windlow_file": "processed/windlow_2020-09.f16",
+   "nino34": -0.51
+  },
+  {
+   "i": 9,
+   "month": "2020-10",
+   "data": "2020-10-12",
+   "vol_file": "processed/dust_2020-10-12_i4.f16",
+   "dep_file": "processed/dep_2020-10-12.f32",
+   "windlow_file": "processed/windlow_2020-10.f16",
+   "nino34": -0.82
+  },
+  {
+   "i": 10,
+   "month": "2020-11",
+   "data": "2020-11-09",
+   "vol_file": "processed/dust_2020-11-09_i4.f16",
+   "dep_file": "processed/dep_2020-11-09.f32",
+   "windlow_file": "processed/windlow_2020-11.f16",
+   "nino34": -0.91
+  },
+  {
+   "i": 11,
+   "month": "2020-12",
+   "data": "2020-12-14",
+   "vol_file": "processed/dust_2020-12-14_i4.f16",
+   "dep_file": "processed/dep_2020-12-14.f32",
+   "windlow_file": "processed/windlow_2020-12.f16",
+   "nino34": -0.63
+  },
+  {
+   "i": 12,
+   "month": "2021-01",
+   "data": "2021-01-18",
+   "vol_file": "processed/dust_2021-01-18_i4.f16",
+   "dep_file": "processed/dep_2021-01-18.f32",
+   "windlow_file": "processed/windlow_2021-01.f16",
+   "nino34": -0.69
+  },
+  {
+   "i": 13,
+   "month": "2021-02",
+   "data": "2021-02-15",
+   "vol_file": "processed/dust_2021-02-15_i4.f16",
+   "dep_file": "processed/dep_2021-02-15.f32",
+   "windlow_file": "processed/windlow_2021-02.f16",
+   "nino34": -0.78
+  },
+  {
+   "i": 14,
+   "month": "2021-03",
+   "data": "2021-03-15",
+   "vol_file": "processed/dust_2021-03-15_i4.f16",
+   "dep_file": "processed/dep_2021-03-15.f32",
+   "windlow_file": "processed/windlow_2021-03.f16",
+   "nino34": -0.62
+  },
+  {
+   "i": 15,
+   "month": "2021-04",
+   "data": "2021-04-12",
+   "vol_file": "processed/dust_2021-04-12_i4.f16",
+   "dep_file": "processed/dep_2021-04-12.f32",
+   "windlow_file": "processed/windlow_2021-04.f16",
+   "nino34": -0.62
+  },
+  {
+   "i": 16,
+   "month": "2021-05",
+   "data": "2021-05-17",
+   "vol_file": "processed/dust_2021-05-17_i4.f16",
+   "dep_file": "processed/dep_2021-05-17.f32",
+   "windlow_file": "processed/windlow_2021-05.f16",
+   "nino34": -0.33
+  },
+  {
+   "i": 17,
+   "month": "2021-06",
+   "data": "2021-06-15",
+   "vol_file": "processed/dust_2021-06-15_i4.f16",
+   "dep_file": "processed/dep_2021-06-15.f32",
+   "windlow_file": "processed/windlow_2021-06.f16",
+   "nino34": -0.06
+  },
+  {
+   "i": 18,
+   "month": "2021-07",
+   "data": "2021-07-15",
+   "vol_file": "processed/dust_2021-07-15_i4.f16",
+   "dep_file": "processed/dep_2021-07-15.f32",
+   "windlow_file": "processed/windlow_2021-07.f16",
+   "nino34": -0.23
+  },
+  {
+   "i": 19,
+   "month": "2021-08",
+   "data": "2021-08-15",
+   "vol_file": "processed/dust_2021-08-15_i4.f16",
+   "dep_file": "processed/dep_2021-08-15.f32",
+   "windlow_file": "processed/windlow_2021-08.f16",
+   "nino34": -0.14
+  },
+  {
+   "i": 20,
+   "month": "2021-09",
+   "data": "2021-09-13",
+   "vol_file": "processed/dust_2021-09-13_i4.f16",
+   "dep_file": "processed/dep_2021-09-13.f32",
+   "windlow_file": "processed/windlow_2021-09.f16",
+   "nino34": -0.11
+  },
+  {
+   "i": 21,
+   "month": "2021-10",
+   "data": "2021-10-11",
+   "vol_file": "processed/dust_2021-10-11_i4.f16",
+   "dep_file": "processed/dep_2021-10-11.f32",
+   "windlow_file": "processed/windlow_2021-10.f16",
+   "nino34": -0.46
+  },
+  {
+   "i": 22,
+   "month": "2021-11",
+   "data": "2021-11-15",
+   "vol_file": "processed/dust_2021-11-15_i4.f16",
+   "dep_file": "processed/dep_2021-11-15.f32",
+   "windlow_file": "processed/windlow_2021-11.f16",
+   "nino34": -0.53
+  },
+  {
+   "i": 23,
+   "month": "2021-12",
+   "data": "2021-12-13",
+   "vol_file": "processed/dust_2021-12-13_i4.f16",
+   "dep_file": "processed/dep_2021-12-13.f32",
+   "windlow_file": "processed/windlow_2021-12.f16",
+   "nino34": -0.7
+  },
+  {
+   "i": 24,
+   "month": "2022-01",
+   "data": "2022-01-17",
+   "vol_file": "processed/dust_2022-01-17_i4.f16",
+   "dep_file": "processed/dep_2022-01-17.f32",
+   "windlow_file": "processed/windlow_2022-01.f16",
+   "nino34": -0.64
+  },
+  {
+   "i": 25,
+   "month": "2022-02",
+   "data": "2022-02-14",
+   "vol_file": "processed/dust_2022-02-14_i4.f16",
+   "dep_file": "processed/dep_2022-02-14.f32",
+   "windlow_file": "processed/windlow_2022-02.f16",
+   "nino34": -0.61
+  },
+  {
+   "i": 26,
+   "month": "2022-03",
+   "data": "2022-03-14",
+   "vol_file": "processed/dust_2022-03-14_i4.f16",
+   "dep_file": "processed/dep_2022-03-14.f32",
+   "windlow_file": "processed/windlow_2022-03.f16",
+   "nino34": -0.9
+  },
+  {
+   "i": 27,
+   "month": "2022-04",
+   "data": "2022-04-18",
+   "vol_file": "processed/dust_2022-04-18_i4.f16",
+   "dep_file": "processed/dep_2022-04-18.f32",
+   "windlow_file": "processed/windlow_2022-04.f16",
+   "nino34": -0.95
+  },
+  {
+   "i": 28,
+   "month": "2022-05",
+   "data": "2022-05-23",
+   "vol_file": "processed/dust_2022-05-23_i4.f16",
+   "dep_file": "processed/dep_2022-05-23.f32",
+   "windlow_file": "processed/windlow_2022-05.f16",
+   "nino34": -1.03
+  },
+  {
+   "i": 29,
+   "month": "2022-06",
+   "data": "2022-06-15",
+   "vol_file": "processed/dust_2022-06-15_i4.f16",
+   "dep_file": "processed/dep_2022-06-15.f32",
+   "windlow_file": "processed/windlow_2022-06.f16",
+   "nino34": -0.66
+  },
+  {
+   "i": 30,
+   "month": "2022-07",
+   "data": "2022-07-15",
+   "vol_file": "processed/dust_2022-07-15_i4.f16",
+   "dep_file": "processed/dep_2022-07-15.f32",
+   "windlow_file": "processed/windlow_2022-07.f16",
+   "nino34": -0.64
+  },
+  {
+   "i": 31,
+   "month": "2022-08",
+   "data": "2022-08-15",
+   "vol_file": "processed/dust_2022-08-15_i4.f16",
+   "dep_file": "processed/dep_2022-08-15.f32",
+   "windlow_file": "processed/windlow_2022-08.f16",
+   "nino34": -0.81
+  },
+  {
+   "i": 32,
+   "month": "2022-09",
+   "data": "2022-09-12",
+   "vol_file": "processed/dust_2022-09-12_i4.f16",
+   "dep_file": "processed/dep_2022-09-12.f32",
+   "windlow_file": "processed/windlow_2022-09.f16",
+   "nino34": -0.78
+  },
+  {
+   "i": 33,
+   "month": "2022-10",
+   "data": "2022-10-17",
+   "vol_file": "processed/dust_2022-10-17_i4.f16",
+   "dep_file": "processed/dep_2022-10-17.f32",
+   "windlow_file": "processed/windlow_2022-10.f16",
+   "nino34": -0.52
+  },
+  {
+   "i": 34,
+   "month": "2022-11",
+   "data": "2022-11-14",
+   "vol_file": "processed/dust_2022-11-14_i4.f16",
+   "dep_file": "processed/dep_2022-11-14.f32",
+   "windlow_file": "processed/windlow_2022-11.f16",
+   "nino34": -0.6
+  },
+  {
+   "i": 35,
+   "month": "2022-12",
+   "data": "2022-12-12",
+   "vol_file": "processed/dust_2022-12-12_i4.f16",
+   "dep_file": "processed/dep_2022-12-12.f32",
+   "windlow_file": "processed/windlow_2022-12.f16",
+   "nino34": -0.48
+  },
+  {
+   "i": 36,
+   "month": "2023-01",
+   "data": "2023-01-16",
+   "vol_file": "processed/dust_2023-01-16_i4.f16",
+   "dep_file": "processed/dep_2023-01-16.f32",
+   "windlow_file": "processed/windlow_2023-01.f16",
+   "nino34": -0.47
+  },
+  {
+   "i": 37,
+   "month": "2023-02",
+   "data": "2023-02-13",
+   "vol_file": "processed/dust_2023-02-13_i4.f16",
+   "dep_file": "processed/dep_2023-02-13.f32",
+   "windlow_file": "processed/windlow_2023-02.f16",
+   "nino34": -0.37
+  },
+  {
+   "i": 38,
+   "month": "2023-03",
+   "data": "2023-03-13",
+   "vol_file": "processed/dust_2023-03-13_i4.f16",
+   "dep_file": "processed/dep_2023-03-13.f32",
+   "windlow_file": "processed/windlow_2023-03.f16",
+   "nino34": -0.08
+  },
+  {
+   "i": 39,
+   "month": "2023-04",
+   "data": "2023-04-17",
+   "vol_file": "processed/dust_2023-04-17_i4.f16",
+   "dep_file": "processed/dep_2023-04-17.f32",
+   "windlow_file": "processed/windlow_2023-04.f16",
+   "nino34": 0.13
+  },
+  {
+   "i": 40,
+   "month": "2023-05",
+   "data": "2023-05-15",
+   "vol_file": "processed/dust_2023-05-15_i4.f16",
+   "dep_file": "processed/dep_2023-05-15.f32",
+   "windlow_file": "processed/windlow_2023-05.f16",
+   "nino34": 0.44
+  },
+  {
+   "i": 41,
+   "month": "2023-06",
+   "data": "2023-06-15",
+   "vol_file": "processed/dust_2023-06-15_i4.f16",
+   "dep_file": "processed/dep_2023-06-15.f32",
+   "windlow_file": "processed/windlow_2023-06.f16",
+   "nino34": 0.85
+  },
+  {
+   "i": 42,
+   "month": "2023-07",
+   "data": "2023-07-15",
+   "vol_file": "processed/dust_2023-07-15_i4.f16",
+   "dep_file": "processed/dep_2023-07-15.f32",
+   "windlow_file": "processed/windlow_2023-07.f16",
+   "nino34": 1.0
+  },
+  {
+   "i": 43,
+   "month": "2023-08",
+   "data": "2023-08-15",
+   "vol_file": "processed/dust_2023-08-15_i4.f16",
+   "dep_file": "processed/dep_2023-08-15.f32",
+   "windlow_file": "processed/windlow_2023-08.f16",
+   "nino34": 1.44
+  },
+  {
+   "i": 44,
+   "month": "2023-09",
+   "data": "2023-09-25",
+   "vol_file": "processed/dust_2023-09-25_i4.f16",
+   "dep_file": "processed/dep_2023-09-25.f32",
+   "windlow_file": "processed/windlow_2023-09.f16",
+   "nino34": 1.71
+  },
+  {
+   "i": 45,
+   "month": "2023-10",
+   "data": "2023-10-16",
+   "vol_file": "processed/dust_2023-10-16_i4.f16",
+   "dep_file": "processed/dep_2023-10-16.f32",
+   "windlow_file": "processed/windlow_2023-10.f16",
+   "nino34": 1.92
+  },
+  {
+   "i": 46,
+   "month": "2023-11",
+   "data": "2023-11-13",
+   "vol_file": "processed/dust_2023-11-13_i4.f16",
+   "dep_file": "processed/dep_2023-11-13.f32",
+   "windlow_file": "processed/windlow_2023-11.f16",
+   "nino34": 2.2
+  },
+  {
+   "i": 47,
+   "month": "2023-12",
+   "data": "2023-12-18",
+   "vol_file": "processed/dust_2023-12-18_i4.f16",
+   "dep_file": "processed/dep_2023-12-18.f32",
+   "windlow_file": "processed/windlow_2023-12.f16",
+   "nino34": 2.32
+  },
+  {
+   "i": 48,
+   "month": "2024-01",
+   "data": "2024-01-15",
+   "vol_file": "processed/dust_2024-01-15_i4.f16",
+   "dep_file": "processed/dep_2024-01-15.f32",
+   "windlow_file": "processed/windlow_2024-01.f16",
+   "nino34": 1.97
+  },
+  {
+   "i": 49,
+   "month": "2024-02",
+   "data": "2024-02-12",
+   "vol_file": "processed/dust_2024-02-12_i4.f16",
+   "dep_file": "processed/dep_2024-02-12.f32",
+   "windlow_file": "processed/windlow_2024-02.f16",
+   "nino34": 1.62
+  },
+  {
+   "i": 50,
+   "month": "2024-03",
+   "data": "2024-03-04",
+   "vol_file": "processed/dust_2024-03-04_i4.f16",
+   "dep_file": "processed/dep_2024-03-04.f32",
+   "windlow_file": "processed/windlow_2024-03.f16",
+   "nino34": 1.14
+  },
+  {
+   "i": 51,
+   "month": "2024-04",
+   "data": "2024-04-22",
+   "vol_file": "processed/dust_2024-04-22_i4.f16",
+   "dep_file": "processed/dep_2024-04-22.f32",
+   "windlow_file": "processed/windlow_2024-04.f16",
+   "nino34": 0.77
+  },
+  {
+   "i": 52,
+   "month": "2024-05",
+   "data": "2024-05-13",
+   "vol_file": "processed/dust_2024-05-13_i4.f16",
+   "dep_file": "processed/dep_2024-05-13.f32",
+   "windlow_file": "processed/windlow_2024-05.f16",
+   "nino34": 0.27
+  },
+  {
+   "i": 53,
+   "month": "2024-06",
+   "data": "2024-06-15",
+   "vol_file": "processed/dust_2024-06-15_i4.f16",
+   "dep_file": "processed/dep_2024-06-15.f32",
+   "windlow_file": "processed/windlow_2024-06.f16",
+   "nino34": 0.2
+  },
+  {
+   "i": 54,
+   "month": "2024-07",
+   "data": "2024-07-15",
+   "vol_file": "processed/dust_2024-07-15_i4.f16",
+   "dep_file": "processed/dep_2024-07-15.f32",
+   "windlow_file": "processed/windlow_2024-07.f16",
+   "nino34": 0.15
+  },
+  {
+   "i": 55,
+   "month": "2024-08",
+   "data": "2024-08-15",
+   "vol_file": "processed/dust_2024-08-15_i4.f16",
+   "dep_file": "processed/dep_2024-08-15.f32",
+   "windlow_file": "processed/windlow_2024-08.f16",
+   "nino34": 0.06
+  },
+  {
+   "i": 56,
+   "month": "2024-09",
+   "data": "2024-09-16",
+   "vol_file": "processed/dust_2024-09-16_i4.f16",
+   "dep_file": "processed/dep_2024-09-16.f32",
+   "windlow_file": "processed/windlow_2024-09.f16",
+   "nino34": -0.07
+  },
+  {
+   "i": 57,
+   "month": "2024-10",
+   "data": "2024-10-07",
+   "vol_file": "processed/dust_2024-10-07_i4.f16",
+   "dep_file": "processed/dep_2024-10-07.f32",
+   "windlow_file": "processed/windlow_2024-10.f16",
+   "nino34": 0.02
+  },
+  {
+   "i": 58,
+   "month": "2024-11",
+   "data": "2024-11-25",
+   "vol_file": "processed/dust_2024-11-25_i4.f16",
+   "dep_file": "processed/dep_2024-11-25.f32",
+   "windlow_file": "processed/windlow_2024-11.f16",
+   "nino34": 0.21
+  },
+  {
+   "i": 59,
+   "month": "2024-12",
+   "data": "2024-12-16",
+   "vol_file": "processed/dust_2024-12-16_i4.f16",
+   "dep_file": "processed/dep_2024-12-16.f32",
+   "windlow_file": "processed/windlow_2024-12.f16",
+   "nino34": -0.24
+  },
+  {
+   "i": 60,
+   "month": "2025-01",
+   "data": "2025-01-13",
+   "vol_file": "processed/dust_2025-01-13_i4.f16",
+   "dep_file": "processed/dep_2025-01-13.f32",
+   "windlow_file": "processed/windlow_2025-01.f16",
+   "nino34": -0.53
+  },
+  {
+   "i": 61,
+   "month": "2025-02",
+   "data": "2025-02-17",
+   "vol_file": "processed/dust_2025-02-17_i4.f16",
+   "dep_file": "processed/dep_2025-02-17.f32",
+   "windlow_file": "processed/windlow_2025-02.f16",
+   "nino34": -0.25
+  },
+  {
+   "i": 62,
+   "month": "2025-03",
+   "data": "2025-03-17",
+   "vol_file": "processed/dust_2025-03-17_i4.f16",
+   "dep_file": "processed/dep_2025-03-17.f32",
+   "windlow_file": "processed/windlow_2025-03.f16",
+   "nino34": 0.04
+  },
+  {
+   "i": 63,
+   "month": "2025-04",
+   "data": "2025-04-14",
+   "vol_file": "processed/dust_2025-04-14_i4.f16",
+   "dep_file": "processed/dep_2025-04-14.f32",
+   "windlow_file": "processed/windlow_2025-04.f16",
+   "nino34": -0.21
+  },
+  {
+   "i": 64,
+   "month": "2025-05",
+   "data": "2025-05-12",
+   "vol_file": "processed/dust_2025-05-12_i4.f16",
+   "dep_file": "processed/dep_2025-05-12.f32",
+   "windlow_file": "processed/windlow_2025-05.f16",
+   "nino34": -0.07
+  },
+  {
+   "i": 65,
+   "month": "2025-06",
+   "data": "2025-06-15",
+   "vol_file": "processed/dust_2025-06-15_i4.f16",
+   "dep_file": "processed/dep_2025-06-15.f32",
+   "windlow_file": "processed/windlow_2025-06.f16",
+   "nino34": -0.02
+  }
+ ],
+ "nota": "012.1 masterizada: regua MENSAL constante (scrub uniforme); cor=conc poeira, alt=real, SST=temperatura, dep=nutriente na terra, windlow=alisios.",
+ "leve": {
+  "alt": "32->8",
+  "wind3d": "descartado (mensal cross-fade)",
+  "nota": "versao mobile/Pages"
+ }
+}

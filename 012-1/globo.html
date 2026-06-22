@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>012.1 · A Rota Norte — o respiro dos trópicos (2020→2025)</title>
+<!--
+  012.1 MASTERIZADA (s.51): instrumento que se ESFREGA (scrub) num batimento MENSAL constante.
+    Motor reusado (validado): Cesium (GE/GIBS $0) + overlay three.js (raymarch Beer-Lambert + HG g=0.80 +
+    light-march) + SST figura-fundo + correntes particula-rastro. NOVO: regua mensal (66 meses); scrub
+    protagonista (correntes/vento fluem no scrub); NUTRIENTE na terra (deposicao real, dep_*.f32); ALISIOS
+    (toggle 'v', windlow); TIRA DE CORRELACAO sincronizada (a legenda viva, D33). Cada elemento CANAL ou MOLDURA.
+-->
+<link href="https://unpkg.com/cesium@1.136/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<style>
+  html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#000}
+  #cesiumContainer{position:fixed;inset:0}
+  #overlay{position:fixed;inset:0;pointer-events:none;z-index:2}
+  .cesium-widget-credits,.cesium-viewer-bottom{display:none!important}
+  #hud{position:fixed;left:18px;top:14px;z-index:10;pointer-events:none;user-select:none;
+    font-family:ui-sans-serif,system-ui,Segoe UI,sans-serif;color:#eef2fb;text-shadow:0 1px 4px rgba(0,0,0,.85)}
+  #hud h1{margin:0 0 2px;font-size:16px;font-weight:600;letter-spacing:.3px}
+  #hud p{margin:0;font-size:12px;opacity:.72}
+  #oni{margin-top:4px;font-weight:600;color:#ffd9c2}
+  #legenda{position:fixed;left:18px;top:74px;z-index:10;pointer-events:none;user-select:none;
+    font-family:ui-sans-serif,system-ui,sans-serif;color:#d9e1f2;font-size:11px;opacity:.9;text-shadow:0 1px 4px rgba(0,0,0,.85);max-width:235px}
+  #legenda .row{margin-top:6px}
+  #legenda .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+  #tempo-wrap{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:10;
+    width:min(74vw,860px);text-align:center;user-select:none;
+    font-family:ui-sans-serif,system-ui,sans-serif;color:#d9e1f2;text-shadow:0 1px 4px rgba(0,0,0,.85)}
+  #data{font-size:21px;font-weight:700;letter-spacing:.5px;line-height:1;font-variant-numeric:tabular-nums;color:#eef4ff;margin-bottom:5px}
+  #data small{font-size:12px;font-weight:500;opacity:.65;margin-left:7px}
+  #tira-wrap{position:relative;width:100%;height:120px;cursor:ew-resize;pointer-events:auto}
+  #tira{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:8px;
+    background:rgba(8,14,26,.62);box-shadow:0 2px 14px rgba(0,0,0,.4)}
+  #tlegend{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;margin-top:6px;font-size:11px;opacity:.85}
+  #tlegend span{display:inline-flex;align-items:center}
+  #tlegend i{width:18px;height:3px;border-radius:2px;margin-right:5px;display:inline-block}
+  #ctrls{margin-top:7px}
+  #playpause{cursor:pointer;border:1px solid rgba(150,180,230,.4);pointer-events:auto;background:rgba(8,16,30,.72);color:#cfe0ff;font-size:12px;padding:4px 14px;border-radius:7px}
+  #dica{position:fixed;right:18px;bottom:14px;z-index:10;pointer-events:none;user-select:none;font-family:ui-sans-serif,system-ui,sans-serif;color:#cfe0ff;font-size:11px;opacity:.5;text-shadow:0 1px 4px rgba(0,0,0,.85);text-align:right;line-height:1.5}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;color:#9fb1cc;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;background:#02040a;transition:opacity .6s ease}
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://esm.sh/three@0.180.0", "three/addons/": "https://esm.sh/three@0.180.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+<canvas id="overlay"></canvas>
+<div id="hud"><h1>A Rota Norte · o respiro dos trópicos</h1>
+  <p>012.1 · poeira do Saara + temperatura do mar + correntes + alísios · 2020→2025 · <span id="data-hud">—</span></p>
+  <p id="oni">ONI —</p></div>
+<div id="legenda">
+  <div><b>arraste a tira</b> (embaixo) pra esfregar o tempo e ver as correlações</div>
+  <div class="row"><span class="sw" style="background:linear-gradient(90deg,#d9a052,#c2641f,#8a2913)"></span><b>poeira</b> no ar · cor = concentração</div>
+  <div class="row"><b>mar</b> · anomalia de temperatura
+    <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
+      <span style="font-size:10px;opacity:.65">−3°</span>
+      <span style="flex:1;height:9px;border-radius:3px;background:linear-gradient(90deg,#0d42a0,#2a73bd,#11161f,#c0392b,#7a0a14)"></span>
+      <span style="font-size:10px;opacity:.65">+3°C</span>
+    </div>
+    <div style="font-size:10px;opacity:.6;margin-top:1px">azul = mais frio · vermelho = mais quente que a média</div>
+  </div>
+  <div class="row"><span class="sw" style="background:linear-gradient(90deg,#736015,#59ec6b)"></span><b>nutriente</b> depositado na terra (Amazônia)</div>
+  <div class="row"><span class="sw" style="background:#7fb9e6"></span><b>correntes</b> (c) · <span class="sw" style="background:#ffd98a"></span><b>alísios</b> (v)</div>
+</div>
+<div id="tempo-wrap">
+  <div id="data">—</div>
+  <div id="tira-wrap"><canvas id="tira"></canvas></div>
+  <div id="tlegend">
+    <span><i style="background:#f0a85a"></i>poeira (Atlântico)</span>
+    <span><i style="background:#ff5a8c"></i>temperatura mar (anom.)</span>
+    <span><i style="background:#b07cff"></i>El Niño (ONI)</span>
+    <span><i style="background:#5fd0c0"></i>alísio (Pacífico)</span>
+  </div>
+  <div id="ctrls"><button id="playpause">► tocar</button></div>
+</div>
+<div id="dica">arraste a tira p/ esfregar o tempo · c correntes · v alísios · n nutriente<br>0 mar · 1–4 vivacidade · [ ] brilho poeira · arraste/scroll p/ girar o globo</div>
+<div id="loading">carregando o instrumento…</div>
+
+<script src="https://unpkg.com/cesium@1.136/Build/Cesium/Cesium.js"></script>
+<script type="module">
+import * as THREE from 'three';
+const R_T = 6378137.0;
+
+window.CESIUM_BASE_URL = 'https://unpkg.com/cesium@1.136/Build/Cesium/';
+Cesium.Ion.defaultAccessToken = undefined;
+const gibs = new Cesium.UrlTemplateImageryProvider({
+  url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg',
+  tilingScheme: new Cesium.WebMercatorTilingScheme(), maximumLevel: 8, credit: 'NASA GIBS / Blue Marble' });
+const viewer = new Cesium.Viewer('cesiumContainer', {
+  baseLayer: new Cesium.ImageryLayer(gibs),
+  baseLayerPicker:false, geocoder:false, homeButton:false, sceneModePicker:false, navigationHelpButton:false,
+  animation:false, timeline:false, fullscreenButton:false, infoBox:false, selectionIndicator:false,
+  requestRenderMode:true, maximumRenderTimeChange:Infinity, skyAtmosphere:new Cesium.SkyAtmosphere(),
+  contextOptions:{ webgl:{ powerPreference:'low-power', preserveDrawingBuffer:true } } });
+viewer.scene.globe.enableLighting = true;
+viewer.scene.skyAtmosphere.show = true;
+viewer.scene.globe.showGroundAtmosphere = true;
+const ssc = viewer.scene.screenSpaceCameraController;
+ssc.enableCollisionDetection = true; ssc.minimumZoomDistance = 800;
+viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-40.0, 15.0, 2.9e7) });
+
+// ===================== manifest (MENSAL constante) =====================
+const M = await fetch('manifest_mensal.json').then(r => r.json());
+const [ALT, LAT, LON] = M.shape;            // [32,181,288]
+const [ALTW, LATW, LONW] = M.shape_wind;    // [16,91,144]
+const B = M.bbox, CFG = M.look_cfg, N = M.frames.length, DEP_MAX = M.dep_max;
+const floatLinear = !!viewer.scene.context._gl.getExtension('OES_texture_float_linear');
+
+function makeVol(buf){
+  const tex = new THREE.Data3DTexture(new Uint16Array(buf), LON, LAT, ALT);
+  tex.format = THREE.RedFormat; tex.type = THREE.HalfFloatType;
+  tex.minFilter = tex.magFilter = THREE.LinearFilter;
+  tex.wrapS = THREE.RepeatWrapping; tex.wrapT = tex.wrapR = THREE.ClampToEdgeWrapping;
+  tex.needsUpdate = true; return tex;
+}
+function makeWind(buf){
+  const tex = new THREE.Data3DTexture(new Uint16Array(buf), LONW, LATW, ALTW);
+  tex.format = THREE.RGFormat; tex.type = THREE.HalfFloatType;
+  tex.minFilter = tex.magFilter = THREE.LinearFilter;
+  tex.wrapS = THREE.RepeatWrapping; tex.wrapT = tex.wrapR = THREE.ClampToEdgeWrapping;
+  tex.needsUpdate = true; return tex;
+}
+// VERSAO LEVE (mobile/Pages): vento 3D descartado (mensal = cross-fade, advecao OFF). Dummy zero pro uniforme nao quebrar.
+const WIND_DUMMY = makeWind(new Uint16Array(LONW*LATW*ALTW*2).buffer);
+function makeDep(buf){   // NUTRIENTE: deposicao real [181,288] float32 (CANAL: dose de poeira que cai na terra)
+  const tex = new THREE.DataTexture(new Float32Array(buf), LON, LAT, THREE.RedFormat, THREE.FloatType);
+  tex.minFilter = tex.magFilter = floatLinear ? THREE.LinearFilter : THREE.NearestFilter;
+  tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.ClampToEdgeWrapping; tex.needsUpdate = true; return tex;
+}
+
+// ===================== cache (66 meses cabem todos -> scrub instantaneo) =====================
+const cache = new Map(); const CACHE_MAX = 70; let tS = 0;
+function ensure(i){
+  i = ((i % N) + N) % N;
+  if (cache.has(i)) return cache.get(i);
+  const fr = M.frames[i]; const e = { vol:null, wind:null, dep:null };
+  e.loading = Promise.all([
+    fetch(fr.vol_file).then(r=>r.arrayBuffer()).then(makeVol),
+    fetch(fr.dep_file).then(r=>r.arrayBuffer()).then(makeDep)
+  ]).then(([v,d]) => { e.vol=v; e.wind=WIND_DUMMY; e.dep=d; return e; }).catch(()=>e);
+  cache.set(i, e); evict(); return e;
+}
+function evict(){
+  if (cache.size <= CACHE_MAX) return;
+  const cur = Math.floor(tS);
+  const far = [...cache.keys()].sort((a,b)=>Math.abs(b-cur)-Math.abs(a-cur));
+  while (cache.size > CACHE_MAX){ const k = far.shift(); const e = cache.get(k);
+    if (e.vol) e.vol.dispose(); if (e.wind) e.wind.dispose(); if (e.dep) e.dep.dispose(); cache.delete(k); }
+}
+const loadEl = document.getElementById('loading');
+const e0 = await ensure(0).loading, e1 = await ensure(1).loading;
+
+// --- SST: temperatura real (anomalia mensal da obra 11; R=anomalia ±escala, A=mascara oceano) ---
+const SM = await fetch('sst/manifest.json').then(r=>r.json());
+const SST_SCALE = SM.escala;
+const sstTex = new Array(SM.count).fill(null);
+const sstByMonth = {}; SM.frames.forEach(f => sstByMonth[f.label] = f);
+const _texL = new THREE.TextureLoader();
+SM.frames.forEach(f => _texL.load('sst/anom-'+String(f.idx).padStart(2,'0')+'.png', t => {
+  t.colorSpace = THREE.NoColorSpace; t.minFilter = t.magFilter = THREE.LinearFilter;
+  t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true;
+  sstTex[f.idx] = t; }));
+const _sstDummy = new THREE.DataTexture(new Uint8Array([128,128,0,0]), 1, 1, THREE.RGBAFormat); _sstDummy.needsUpdate = true;
+const _depDummy = makeDep(new Float32Array([0]).buffer);
+const _waterTex = new THREE.TextureLoader().load('https://unpkg.com/three-globe/example/img/earth-water.png');
+_waterTex.colorSpace = THREE.NoColorSpace; _waterTex.wrapS = THREE.RepeatWrapping; _waterTex.wrapT = THREE.ClampToEdgeWrapping;
+_waterTex.minFilter = _waterTex.magFilter = THREE.LinearFilter;
+
+const sunLatLon = (lat, lon) => { const la=THREE.MathUtils.degToRad(lat), lo=THREE.MathUtils.degToRad(lon);
+  return new THREE.Vector3(Math.cos(la)*Math.cos(lo), Math.cos(la)*Math.sin(lo), Math.sin(la)).normalize(); };
+const SUN = sunLatLon(CFG.sun[0], CFG.sun[1]);
+const HC = CFG.exagero * 15000.0 / R_T;
+const MAXC = M.global_max;
+
+const overlay = document.getElementById('overlay');
+const renderer = new THREE.WebGLRenderer({ canvas:overlay, antialias:false, alpha:true, premultipliedAlpha:false, preserveDrawingBuffer:true });
+renderer.setClearColor(0x000000, 0);
+const HI = Math.min(window.devicePixelRatio||1, 2), LO = 0.6;
+renderer.setPixelRatio(HI); renderer.setSize(window.innerWidth, window.innerHeight);
+
+const uniforms = {
+  uVol0:{value:e0.vol}, uVol1:{value:e1.vol}, uWind0:{value:e0.wind}, uWind1:{value:e1.wind},
+  uTween:{value:0.0}, uDt:{value:1.0}, uAdvOn:{value:0.0},   // MENSAL: cross-fade (adveccao de 1 mes por 1 vento e irreal)
+  uCamPos:{value:new THREE.Vector3()}, uRight:{value:new THREE.Vector3()}, uUp:{value:new THREE.Vector3()}, uFwd:{value:new THREE.Vector3()},
+  uTanFov:{value:0.3}, uAspect:{value:1.0}, uSun:{value:SUN}, uHc:{value:HC}, uMaxc:{value:MAXC},
+  uExtinct:{value:CFG.extinct}, uOnset:{value:CFG.onset}, uG:{value:CFG.g},
+  uLat0:{value:B.lat0}, uLat1:{value:B.lat1}, uLon0:{value:B.lon0}, uLon1:{value:B.lon1},
+  uSunCol:{value:new THREE.Vector3().fromArray(CFG.sun_col)}, uSunGain:{value:CFG.sun_gain}, uSunBase:{value:CFG.sun_base},
+  uAmbient:{value:new THREE.Vector3().fromArray(CFG.ambient)},
+  uSteps:{value:72}, uLight:{value:5}, uFar:{value:0.0}, uFrame:{value:0.0},
+  uSST:{value:_sstDummy}, uWater:{value:_waterTex}, uSSTon:{value:1.0}, uSSTgain:{value:0.88}, uWarmGain:{value:1.0}, uSSTscale:{value:SST_SCALE},
+  uScheme:{value:3.0}, uTime:{value:0.0}, uOni:{value:0.0}, uDustGlow:{value:1.6},
+  uCurrOn:{value:1.0}, uCurrGain:{value:0.42}, uDustShadow:{value:1.12}, uDustFloor:{value:0.45}, uNightLighten:{value:0.85},
+  uTrail:{value:null}, uRes:{value:new THREE.Vector2(1,1)},
+  uDep:{value:e0.dep}, uDepMax:{value:DEP_MAX}, uNutOn:{value:1.0}, uNutGain:{value:1.0},
+};
+
+const mat = new THREE.RawShaderMaterial({
+  glslVersion: THREE.GLSL3, transparent:true, depthTest:false, depthWrite:false, blending:THREE.NormalBlending, uniforms,
+  vertexShader:/* glsl */`in vec3 position; out vec2 vNdc; void main(){ vNdc=position.xy; gl_Position=vec4(position.xy,0.0,1.0); }`,
+  fragmentShader:/* glsl */`
+    precision highp float; precision highp sampler3D;
+    in vec2 vNdc; out vec4 frag;
+    uniform sampler3D uVol0, uVol1, uWind0, uWind1;
+    uniform vec3 uCamPos, uRight, uUp, uFwd, uSun, uSunCol, uAmbient;
+    uniform float uTanFov, uAspect, uHc, uMaxc, uExtinct, uOnset, uG;
+    uniform float uLat0, uLat1, uLon0, uLon1, uSunGain, uSunBase, uSteps, uLight, uFar, uFrame;
+    uniform float uTween, uDt, uAdvOn;
+    uniform sampler2D uSST, uWater, uTrail, uDep; uniform vec2 uRes;
+    uniform float uSSTon, uSSTgain, uWarmGain, uSSTscale, uScheme, uTime, uOni, uDustGlow, uCurrOn, uCurrGain, uDustShadow, uDustFloor, uNightLighten, uDepMax, uNutOn, uNutGain;
+    const float R = 1.0; const float DEG = 57.29577951308232; const float REARTH = 6371000.0;
+    const vec3 C0=vec3(0.85,0.63,0.32), C1=vec3(0.84,0.46,0.18), C2=vec3(0.74,0.29,0.12), C3=vec3(0.55,0.16,0.09), C4=vec3(0.34,0.08,0.06);
+    vec3 ramp(float n){
+      if(n<0.18) return mix(C0,C1, n/0.18);
+      if(n<0.45) return mix(C1,C2,(n-0.18)/0.27);
+      if(n<0.72) return mix(C2,C3,(n-0.45)/0.27);
+      return mix(C3,C4,(n-0.72)/0.28); }
+    // SST = anomalia HONESTA (D33): diverging azul(frio)-neutro-vermelho(quente), centrada no zero.
+    vec3 sstDiverge(float a){            // a = anomalia normalizada [-1,+1] (0 = na media climatologica)
+      vec3 neutral=vec3(0.07,0.10,0.16);
+      if(a<0.0){ float t=clamp(-a,0.0,1.0);
+        vec3 cool=mix(neutral, vec3(0.16,0.45,0.74), t);
+        return mix(cool, vec3(0.05,0.26,0.58), smoothstep(0.6,1.0,t)); }
+      float t=clamp(a,0.0,1.0);
+      vec3 warm=mix(neutral, vec3(0.88,0.30,0.16), t);
+      return mix(warm, vec3(0.58,0.04,0.10), smoothstep(0.6,1.0,t)); }
+    float hg(float ct,float g){ return (1.0-g*g)/(12.566370614*pow(1.0+g*g-2.0*g*ct,1.5)); }
+    vec2 sphereT(vec3 O,vec3 D,float rad){ float b=2.0*dot(O,D); float c=dot(O,O)-rad*rad; float disc=b*b-4.0*c;
+      if(disc<0.0) return vec2(1e9,-1e9); float sq=sqrt(disc); return vec2((-b-sq)*0.5,(-b+sq)*0.5); }
+    vec3 toUVW(vec3 P, out float lat){
+      float r=length(P); float altn=(r-R)/uHc;
+      lat=DEG*asin(clamp(P.z/max(r,1e-6),-1.0,1.0));
+      float lon=DEG*atan(P.y,P.x);
+      float u=(lon-uLon0)/(uLon1-uLon0); float v=(lat-uLat0)/(uLat1-uLat0);
+      if(altn<0.0||altn>1.0||v<0.0||v>1.0) return vec3(0.0,0.0,-1.0);
+      return vec3(u,v,altn); }
+    float densAdv(vec3 P){
+      float lat; vec3 uvw=toUVW(P,lat); if(uvw.z<0.0) return 0.0;
+      if(uAdvOn<0.5) return mix(texture(uVol0,uvw).r, texture(uVol1,uvw).r, uTween);
+      float coslat=max(cos(radians(lat)),0.2);
+      float lonSpan=uLon1-uLon0, latSpan=uLat1-uLat0;
+      vec2 w0=texture(uWind0,uvw).rg, w1=texture(uWind1,uvw).rg;
+      float t0=uTween*uDt, t1=(1.0-uTween)*uDt;
+      vec2 d0uv=vec2((w0.x*t0/(REARTH*coslat))*DEG/lonSpan,(w0.y*t0/REARTH)*DEG/latSpan);
+      vec2 d1uv=vec2((w1.x*t1/(REARTH*coslat))*DEG/lonSpan,(w1.y*t1/REARTH)*DEG/latSpan);
+      float dd0=texture(uVol0,vec3(uvw.xy-d0uv,uvw.z)).r;
+      float dd1=texture(uVol1,vec3(uvw.xy+d1uv,uvw.z)).r;
+      return mix(dd0,dd1,uTween); }
+    float hash12(vec2 p){ vec3 p3=fract(vec3(p.xyx)*0.1031); p3+=dot(p3,p3.yzx+33.33); return fract((p3.x+p3.y)*p3.z); }
+    void main(){
+      vec3 O=uCamPos;
+      vec3 D=normalize(uFwd + vNdc.x*uAspect*uTanFov*uRight + vNdc.y*uTanFov*uUp);
+      vec2 tco=sphereT(O,D,R+uHc); vec2 tsu=sphereT(O,D,R);
+      bool hitSurf=(tsu.y>tsu.x)&&(tsu.x>0.0); bool hitShell=(tco.y>tco.x);
+      vec3 colAcc=vec3(0.0); float Tr=1.0;
+      if(hitShell){
+        float tNear=max(tco.x,0.0);
+        float tFar = hitSurf ? min(tco.y,tsu.x) : tco.y;
+        if(tFar>tNear){
+          float steps=uSteps; float dt=(tFar-tNear)/steps;
+          float jit=hash12(gl_FragCoord.xy+uFrame*7.13); float t=tNear+jit*dt;
+          float phase=hg(dot(D,uSun),uG); float lstep=uHc/uLight;
+          for(int i=0;i<256;i++){
+            if(float(i)>=steps) break;
+            vec3 P=O+t*D; float dens=densAdv(P); float nrm=clamp(dens/uMaxc,0.0,1.0);
+            float sig = nrm<uOnset ? 0.0 : dens*uExtinct;
+            float acc=0.0; vec3 Pl=P;
+            for(int l=0;l<16;l++){ if(float(l)>=uLight) break; Pl+=uSun*lstep; acc+=densAdv(Pl)*uExtinct*lstep; }
+            float shadow=exp(-acc);
+            float gain=uSunGain*(1.0+1.8*uFar); float farLift=0.40*uFar;
+            vec3 lit=uAmbient + uSunCol*(shadow*phase*gain + uSunBase + farLift);
+            lit = max(lit, vec3(uDustFloor));
+            float a=1.0-exp(-sig*dt);
+            colAcc += (Tr*a)*(ramp(clamp(pow(nrm,0.48)*1.12,0.0,1.0))*lit)*uDustGlow; Tr*=exp(-sig*dt); t+=dt;
+            if(Tr<0.004) break;
+          }
+        }
+      }
+      // --- superficie: SST no mar (CANAL temperatura) + NUTRIENTE na terra (CANAL deposicao) ---
+      vec3 seaRGB=vec3(0.0); float seaA=0.0; vec3 nutRGB=vec3(0.0); float nutA=0.0;
+      if(hitSurf){
+        vec3 Ps=O+tsu.x*D; float rs=length(Ps);
+        float latS=DEG*asin(clamp(Ps.z/max(rs,1e-6),-1.0,1.0));
+        float lonS=DEG*atan(Ps.y,Ps.x);
+        vec2 suv = vec2((lonS+180.0)/360.0,(latS+90.0)/180.0);
+        float water = texture(uWater, suv).r;
+        float coast = smoothstep(0.35,0.62, water);
+        float sun = max(dot(normalize(Ps), uSun), 0.0)*0.35 + 0.7;
+        if(uSSTon>0.5){
+          vec4 s=texture(uSST, suv); float dataok = smoothstep(0.25,0.75, s.a);
+          if(coast*dataok > 0.01){
+            float anom = clamp((s.r-0.5)*2.0, -1.0, 1.0);   // anomalia assinada: ±escala (= ±3 graus C)
+            vec3 base = sstDiverge(anom);
+            if(uCurrOn>0.5){ vec3 tr = texture(uTrail, gl_FragCoord.xy/uRes).rgb; base += tr * uCurrGain; }
+            seaRGB = base * sun;
+            // FIGURA-FUNDO honesto: mar na media fica QUIETO (deixa o oceano-base aparecer); so a anomalia tinge.
+            float emph = smoothstep(0.05, 0.55, abs(anom));
+            float viv = 0.55 + 0.15*uScheme;                // teclas 1-4 = vivacidade da anomalia
+            seaA = uSSTgain * coast * dataok * clamp((0.12 + 0.88*emph)*viv, 0.0, 1.0);
+          }
+        }
+        if(uNutOn>0.5){                                  // NUTRIENTE: a poeira que CAI fertiliza a terra (Amazonia)
+          float land = 1.0 - coast;
+          float depN = clamp(texture(uDep, suv).r / uDepMax, 0.0, 1.0);
+          float g = pow(depN, 0.55);
+          nutRGB = mix(vec3(0.45,0.38,0.12), vec3(0.30,0.92,0.42), depN) * g * (0.5+0.5*sun) * uNutGain;
+          nutA = land * smoothstep(0.03, 0.22, depN);
+        }
+      }
+      float aP=1.0-Tr; vec3 cP=colAcc/max(aP,1e-4);
+      float a2=2.51,b2=0.03,cc=2.43,d2=0.59,e2=0.14;
+      cP=clamp(cP*(a2*cP+b2)/(cP*(cc*cP+d2)+e2),0.0,1.0); cP=pow(cP,vec3(1.0/2.2));
+      if(hitSurf){ float surfSun=max(dot(normalize(O+tsu.x*D), uSun),0.0);
+        float night=1.0-smoothstep(0.0,0.28,surfSun);
+        cP=mix(cP, mix(cP, vec3(0.96,0.90,0.84), 0.8), night*uNightLighten); }
+      float scrim = smoothstep(0.02, 0.28, aP) * uDustShadow;
+      float lum = dot(seaRGB, vec3(0.299,0.587,0.114));
+      vec3 seaUnder = mix(seaRGB, vec3(lum)*0.22, scrim);
+      vec3 bg = vec3(0.02,0.03,0.05)*scrim + nutRGB*nutA*(1.0-0.6*scrim);  // terra: scrim escuro + brilho do nutriente (a poeira escurece um pouco por cima)
+      float bgA = max(scrim, nutA);
+      float seaW = seaA*(1.0-aP);
+      vec3 pc = seaUnder*seaW + bg*(1.0-seaW); float pa = seaW + bgA*(1.0-seaW);
+      pc = cP*aP + pc*(1.0-aP);          pa = aP + pa*(1.0-aP);
+      if(pa<0.003) discard;
+      frag=vec4(pc/max(pa,1e-4), pa);
+    }`,
+});
+const scene = new THREE.Scene();
+const tri = new THREE.Mesh(new THREE.PlaneGeometry(2,2), mat); tri.frustumCulled=false; scene.add(tri);
+const ortho = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+
+// ===================== FLUXO: correntes (mar) <-> alisios (vento), particula-rastro =====================
+let flowMode='curr', flowF=null, flowW=0, flowH=0, flowBox=null, flowGain=3.0;
+let currPeriods=[], windPeriods=[];
+const _mIdx = s => { const a=s.slice(0,7).split('-'); return (+a[0])*12+(+a[1]); };
+async function _decode(path){ const ha=new Uint16Array(await fetch(path).then(r=>r.arrayBuffer()));
+  const a=new Float32Array(ha.length); for(let i=0;i<ha.length;i++) a[i]=THREE.DataUtils.fromHalfFloat(ha[i]); return a; }
+let currBox=[-180,179.83,-80,90], currW=360, currH=180;
+try{ const sm=await fetch('processed/currents_series.json').then(r=>r.json());
+  currW=sm.w; currH=sm.h; currBox=[sm.lon0,sm.lon1,sm.lat0,sm.lat1];
+  for(const fr of sm.frames){ try{ currPeriods.push({m:_mIdx(fr.date), arr:await _decode('processed/'+fr.file)}); }catch(e){} }
+  currPeriods.sort((a,b)=>a.m-b.m);
+}catch(e){}
+const windBox=[-180,177.5,-90,90], windW=LONW, windH=LATW;     // windlow [91,144,2]
+for(const fr of M.frames){ if(fr.windlow_file){ try{ windPeriods.push({m:_mIdx(fr.month), arr:await _decode(fr.windlow_file)}); }catch(e){} } }
+windPeriods.sort((a,b)=>a.m-b.m);
+function setFlowMonth(lab){ const t=_mIdx(lab); const set=flowMode==='wind'?windPeriods:currPeriods;
+  if(!set.length){ flowF=null; return; } let best=set[0],bd=9e9; for(const p of set){ const d=Math.abs(p.m-t); if(d<bd){bd=d;best=p;} } flowF=best.arr;
+  if(flowMode==='wind'){ flowW=windW; flowH=windH; flowBox=windBox; flowGain=0.26; } else { flowW=currW; flowH=currH; flowBox=currBox; flowGain=3.0; } }
+function sampleFlow(lon,lat){ if(!flowF) return [0,0];
+  let fx=(lon-flowBox[0])/(flowBox[1]-flowBox[0])*(flowW-1), fy=(lat-flowBox[2])/(flowBox[3]-flowBox[2])*(flowH-1);
+  fx=Math.max(0,Math.min(flowW-1.001,fx)); fy=Math.max(0,Math.min(flowH-1.001,fy));
+  const x0=fx|0,y0=fy|0,x1=Math.min(x0+1,flowW-1),y1=Math.min(y0+1,flowH-1),tx=fx-x0,ty=fy-y0;
+  const g=(x,y,c)=>flowF[(y*flowW+x)*2+c];
+  return [ (g(x0,y0,0)*(1-tx)+g(x1,y0,0)*tx)*(1-ty)+(g(x0,y1,0)*(1-tx)+g(x1,y1,0)*tx)*ty,
+           (g(x0,y0,1)*(1-tx)+g(x1,y0,1)*tx)*(1-ty)+(g(x0,y1,1)*(1-tx)+g(x1,y1,1)*tx)*ty ]; }
+const NP=1600, pLon=new Float32Array(NP), pLat=new Float32Array(NP), pAge=new Float32Array(NP), pMax=new Float32Array(NP);
+function respawn(k){ pLon[k]=-180+Math.random()*360; pLat[k]=-72+Math.random()*150; pAge[k]=0; pMax[k]=45+Math.random()*95; }
+for(let k=0;k<NP;k++){ respawn(k); pAge[k]=Math.random()*pMax[k]; }
+const pPos=new Float32Array(NP*3), pAlpha=new Float32Array(NP);
+const pGeom=new THREE.BufferGeometry();
+pGeom.setAttribute('position', new THREE.BufferAttribute(pPos,3));
+pGeom.setAttribute('aA', new THREE.BufferAttribute(pAlpha,1));
+const pMat=new THREE.ShaderMaterial({ transparent:true, depthTest:false, depthWrite:false, blending:THREE.AdditiveBlending,
+  uniforms:{ uCam:{value:new THREE.Vector3()}, uCol:{value:new THREE.Vector3(0.50,0.78,0.95)} },
+  vertexShader:`attribute float aA; varying float vA; uniform vec3 uCam;
+    void main(){ vec3 N=normalize(position); vec3 toC=normalize(uCam-position);
+      if(dot(N,toC)<0.06){ gl_Position=vec4(2.0,2.0,2.0,1.0); vA=0.0; return; }
+      vA=aA; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); gl_PointSize=1.35; }`,
+  fragmentShader:`varying float vA; uniform vec3 uCol; void main(){ if(vA<=0.0) discard; gl_FragColor=vec4(uCol*vA,1.0); }` });
+const pScene=new THREE.Scene(); const pPoints=new THREE.Points(pGeom,pMat); pPoints.frustumCulled=false; pScene.add(pPoints);
+const pcam=new THREE.PerspectiveCamera(); pcam.matrixAutoUpdate=false;
+function mkTrail(){ return new THREE.WebGLRenderTarget(Math.max(2,window.innerWidth|0), Math.max(2,window.innerHeight|0),
+  {depthBuffer:false, minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter}); }
+let trailA=mkTrail(), trailB=mkTrail(), clearTrail=true;
+const fadeScene=new THREE.Scene(), fadeCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const fadeMat=new THREE.ShaderMaterial({ depthTest:false, uniforms:{ uPrev:{value:null}, uFade:{value:0.90} },
+  vertexShader:`varying vec2 vU; void main(){ vU=position.xy*0.5+0.5; gl_Position=vec4(position.xy,0.0,1.0); }`,
+  fragmentShader:`varying vec2 vU; uniform sampler2D uPrev; uniform float uFade; void main(){ gl_FragColor=texture2D(uPrev,vU)*uFade; }` });
+fadeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), fadeMat));
+viewer.camera.moveStart.addEventListener(()=>{ clearTrail=true; });
+const FLOW_SPEED=0.65;
+function renderCurrents(){
+  if(!flowF || uniforms.uCurrOn.value<0.5){ uniforms.uTrail.value=trailA.texture; return; }
+  if(!(playing || scrub)){ uniforms.uTrail.value=trailA.texture; return; }   // so flui no play OU scrub (esfregar = vivo); idle congela
+  for(let k=0;k<NP;k++){
+    let [u,v]=sampleFlow(pLon[k],pLat[k]); u*=flowGain; v*=flowGain; const sp=Math.hypot(u,v);
+    if(pAge[k]>=pMax[k] || sp<0.015 || pLat[k]>89 || pLat[k]<-79){ respawn(k); continue; }
+    const cl=Math.max(Math.cos(pLat[k]*Math.PI/180),0.25);
+    pLon[k]+=u*FLOW_SPEED/cl; pLat[k]+=v*FLOW_SPEED; pAge[k]+=1;
+    if(pLon[k]>180)pLon[k]-=360; else if(pLon[k]<-180)pLon[k]+=360;
+    const la=pLat[k]*Math.PI/180, lo=pLon[k]*Math.PI/180, c=Math.cos(la);
+    pPos[k*3]=R_T*c*Math.cos(lo); pPos[k*3+1]=R_T*c*Math.sin(lo); pPos[k*3+2]=R_T*Math.sin(la);
+    pAlpha[k]=Math.min(pAge[k]/10,1.0)*Math.min((pMax[k]-pAge[k])/12,1.0)*Math.min(sp*2.5,1.0)*0.6;
+  }
+  pGeom.attributes.position.needsUpdate=true; pGeom.attributes.aA.needsUpdate=true;
+  const cam=viewer.camera;
+  pcam.projectionMatrix.fromArray(Cesium.Matrix4.toArray(cam.frustum.projectionMatrix));
+  pcam.matrixWorld.fromArray(Cesium.Matrix4.toArray(cam.inverseViewMatrix));
+  pcam.matrixWorldInverse.copy(pcam.matrixWorld).invert();
+  pMat.uniforms.uCam.value.set(cam.positionWC.x,cam.positionWC.y,cam.positionWC.z);
+  const pr=renderer.autoClear;
+  if(clearTrail){ renderer.setRenderTarget(trailA); renderer.setClearColor(0x000000,1); renderer.clear();
+    renderer.setRenderTarget(trailB); renderer.clear(); clearTrail=false; }
+  fadeMat.uniforms.uPrev.value=trailA.texture;
+  renderer.autoClear=true; renderer.setRenderTarget(trailB); renderer.render(fadeScene,fadeCam);
+  renderer.autoClear=false; renderer.render(pScene,pcam);
+  renderer.autoClear=pr; renderer.setRenderTarget(null);
+  uniforms.uTrail.value=trailB.texture;
+  const t=trailA; trailA=trailB; trailB=t;
+}
+
+const _c = new Cesium.Cartesian3(); let fcount=0;
+function syncCam(){
+  const cam = viewer.camera;
+  Cesium.Cartesian3.divideByScalar(cam.positionWC, R_T, _c);
+  uniforms.uCamPos.value.set(_c.x,_c.y,_c.z);
+  uniforms.uFwd.value.set(cam.directionWC.x,cam.directionWC.y,cam.directionWC.z);
+  uniforms.uRight.value.set(cam.rightWC.x,cam.rightWC.y,cam.rightWC.z);
+  uniforms.uUp.value.set(cam.upWC.x,cam.upWC.y,cam.upWC.z);
+  uniforms.uTanFov.value = Math.tan(viewer.camera.frustum.fovy/2);
+  uniforms.uAspect.value = window.innerWidth/window.innerHeight;
+  const dist = Cesium.Cartesian3.magnitude(cam.positionWC)/R_T;
+  uniforms.uFar.value = THREE.MathUtils.clamp((dist-1.05)/(2.6-1.05),0.0,1.0);
+  uniforms.uFrame.value = (fcount++ % 64);
+  uniforms.uRes.value.set(renderer.domElement.width, renderer.domElement.height);
+}
+let moving=false, playing=false, scrub=false;
+viewer.camera.moveStart.addEventListener(()=>{ moving=true; applyQ(); });
+viewer.camera.moveEnd.addEventListener(()=>{ moving=false; applyQ(); });
+function applyQ(){ const m=moving||playing||scrub; renderer.setPixelRatio(m?LO:HI);
+  renderer.setSize(window.innerWidth,window.innerHeight); uniforms.uSteps.value=m?48:72; uniforms.uLight.value=m?4:5; }
+viewer.scene.postRender.addEventListener(()=>{ syncCam(); renderCurrents(); renderer.render(scene,ortho); });
+viewer.scene.preRender.addEventListener(()=>{ const cam=viewer.camera;
+  const h=Math.max(cam.positionCartographic.height,1.0); const dip=Math.acos(R_T/(R_T+h));
+  const pitchMax=-dip-Cesium.Math.toRadians(0.3);
+  if(cam.pitch>pitchMax) cam.setView({ orientation:{ heading:cam.heading, pitch:pitchMax, roll:cam.roll } }); });
+
+// ===================== tempo MENSAL + ONI =====================
+const dataEl=document.getElementById('data'), dataHud=document.getElementById('data-hud'), pp=document.getElementById('playpause');
+const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const rotulo=(ym)=>{ const [y,m]=ym.split('-'); return `${MES[+m-1]} ${y}`; };
+let curMonth=null; const oniEl=document.getElementById('oni');
+function oniLabel(v){ const s=(v>=0?'+':'')+v.toFixed(2); let st='neutro'; if(v>=0.5)st='El Niño'; else if(v<=-0.5)st='La Niña'; return `ONI ${s} °C · ${st}`; }
+function setMonth(lab){ const fm=sstByMonth[lab]; if(fm){ const t=sstTex[fm.idx];
+    if(t && uniforms.uSST.value!==t){ uniforms.uSST.value=t; } uniforms.uOni.value=fm.nino34;
+    if(lab!==curMonth){ oniEl.textContent=oniLabel(fm.nino34); } }
+  setFlowMonth(lab); curMonth=lab; }
+let curIdx=-1;
+function aplica(ts){
+  tS = ((ts%N)+N)%N;
+  const i=Math.floor(tS), frac=tS-i, j=(i+1)%N;
+  for(let k=-1;k<=2;k++) ensure(i+k);
+  const ei=cache.get(i), ej=cache.get(j);
+  if(ei&&ei.vol&&ej&&ej.vol){
+    uniforms.uVol0.value=ei.vol; uniforms.uVol1.value=ej.vol;
+    uniforms.uWind0.value=ei.wind; uniforms.uWind1.value=ej.wind;
+    uniforms.uDep.value=ei.dep||_depDummy;
+    uniforms.uTween.value=frac;
+    if(i!==curIdx){ curIdx=i; const fr=M.frames[i]; dataEl.innerHTML=rotulo(fr.month); dataHud.textContent=fr.month;
+      setMonth(fr.month); drawTira(); }
+  }
+}
+const setPP=()=>{ pp.textContent = playing?'❚❚ pausar':'► tocar'; };
+
+// ===================== TIRA DE CORRELACAO (a legenda viva, D33) =====================
+const IDX = await fetch('indices.json').then(r=>r.json());
+const tira=document.getElementById('tira'), tctx=tira.getContext('2d');
+const SERIES=[ {k:'dust_atl',c:'#f0a85a'}, {k:'sst_atl',c:'#ff5a8c'}, {k:'oni',c:'#b07cff'}, {k:'trade_pac',c:'#5fd0c0'} ];
+const norm={}; SERIES.forEach(s=>{ const a=IDX[s.k]; const mn=Math.min(...a), mx=Math.max(...a); norm[s.k]={mn,mx,d:(mx-mn)||1}; });
+let TW=10, TH=10;
+const godzI = IDX.months.indexOf('2020-06');
+function resizeTira(){ const r=tira.getBoundingClientRect(); const dpr=Math.min(window.devicePixelRatio||1,2);
+  TW=Math.max(2,r.width|0); TH=Math.max(2,r.height|0); tira.width=TW*dpr; tira.height=TH*dpr; tctx.setTransform(dpr,0,0,dpr,0,0); drawTira(); }
+function xAt(i){ return 8 + (TW-16)*i/(N-1); }
+function drawTira(){
+  if(!tctx) return; tctx.clearRect(0,0,TW,TH);
+  const pad=10, h=TH-2*pad;
+  // anos (moldura)
+  tctx.font='10px ui-sans-serif,system-ui'; tctx.textAlign='center';
+  for(let i=0;i<IDX.months.length;i++){ const m=IDX.months[i]; if(m.endsWith('-01')){ const x=xAt(i);
+    tctx.strokeStyle='rgba(150,180,230,.13)'; tctx.beginPath(); tctx.moveTo(x,pad); tctx.lineTo(x,TH-pad); tctx.stroke();
+    tctx.fillStyle='rgba(190,205,235,.45)'; tctx.fillText(m.slice(0,4), x, TH-1); } }
+  // janela Godzilla (moldura declarada)
+  if(godzI>=0){ tctx.fillStyle='rgba(255,90,60,.13)'; const x=xAt(godzI); tctx.fillRect(x-3,pad,6,h); }
+  // linha do zero pra ONI/SST (anomalia) — referencia honesta
+  // curvas (CANAL)
+  for(const s of SERIES){ const a=IDX[s.k], nm=norm[s.k];
+    tctx.strokeStyle=s.c; tctx.lineWidth=1.8; tctx.beginPath();
+    for(let i=0;i<a.length;i++){ const y=pad + h*(1-(a[i]-nm.mn)/nm.d); const x=xAt(i);
+      if(i===0) tctx.moveTo(x,y); else tctx.lineTo(x,y); }
+    tctx.stroke(); }
+  // cursor (posicao do tempo)
+  const cx=xAt(tS); tctx.strokeStyle='rgba(255,255,255,.9)'; tctx.lineWidth=1.5;
+  tctx.beginPath(); tctx.moveTo(cx,2); tctx.lineTo(cx,TH-2); tctx.stroke();
+  tctx.fillStyle='#fff'; tctx.beginPath(); tctx.arc(cx,pad,3.2,0,7); tctx.fill();
+}
+function seekTira(ev){ const r=tira.getBoundingClientRect(); let f=(ev.clientX-r.left-8)/(r.width-16);
+  f=Math.min(Math.max(f,0),1); aplica(f*(N-1)); drawTira(); viewer.scene.requestRender(); }
+tira.addEventListener('pointerdown', e=>{ scrub=true; playing=false; setPP(); applyQ(); seekTira(e);
+  try{tira.setPointerCapture(e.pointerId);}catch(_){ } });
+tira.addEventListener('pointermove', e=>{ if(scrub) seekTira(e); });
+window.addEventListener('pointerup', ()=>{ if(scrub){ scrub=false; applyQ(); } });
+pp.addEventListener('click', ()=>{ playing=!playing; if(playing) last=null; setPP(); applyQ(); viewer.scene.requestRender(); });
+
+aplica(0); setPP(); resizeTira();
+
+const VEL=1.1; let last=null, lastR=0;
+(function tick(now){
+  requestAnimationFrame(tick);
+  if(now - lastR < 32) return;
+  const dt = last===null ? 0 : Math.min((now-last)/1000, 0.1); last=now; lastR=now;
+  if(playing && !scrub){ aplica(tS+dt*VEL); drawTira(); }
+  if(playing || scrub){ uniforms.uTime.value = now*0.001; viewer.scene.requestRender(); }
+})(performance.now());
+window.addEventListener('resize', ()=>{ renderer.setSize(window.innerWidth,window.innerHeight); uniforms.uAspect.value=window.innerWidth/window.innerHeight;
+  trailA.setSize(window.innerWidth,window.innerHeight); trailB.setSize(window.innerWidth,window.innerHeight); clearTrail=true; resizeTira(); viewer.scene.requestRender(); });
+
+function setLook(i){ uniforms.uScheme.value=i; viewer.scene.requestRender(); }
+window.setLook=setLook;
+window.addEventListener('keydown', e=>{
+  if(e.key>='1'&&e.key<='4'){ setLook((+e.key)-1); }
+  else if(e.key==='0'){ uniforms.uSSTon.value=uniforms.uSSTon.value>0.5?0.0:1.0; }
+  else if(e.key==='-'){ uniforms.uSSTgain.value=Math.max(0.2,uniforms.uSSTgain.value-0.1); }
+  else if(e.key==='='||e.key==='+'){ uniforms.uSSTgain.value=Math.min(1.0,uniforms.uSSTgain.value+0.1); }
+  else if(e.key==='['){ uniforms.uDustGlow.value=Math.max(0.6,uniforms.uDustGlow.value-0.2); }
+  else if(e.key===']'){ uniforms.uDustGlow.value=Math.min(3.5,uniforms.uDustGlow.value+0.2); }
+  else if(e.key==='n'||e.key==='N'){ uniforms.uNutOn.value=uniforms.uNutOn.value>0.5?0.0:1.0; }
+  else if(e.key==='c'||e.key==='C'){ if(flowMode!=='curr'){ flowMode='curr'; pMat.uniforms.uCol.value.set(0.50,0.78,0.95); clearTrail=true; setFlowMonth(curMonth); } uniforms.uCurrOn.value=1.0; }
+  else if(e.key==='v'||e.key==='V'){ if(flowMode!=='wind'){ flowMode='wind'; pMat.uniforms.uCol.value.set(1.0,0.85,0.5); clearTrail=true; setFlowMonth(curMonth); } uniforms.uCurrOn.value=1.0; }
+  else return;
+  viewer.scene.requestRender();
+});
+setLook(3);
+
+window.__amostra = { ready:true, frames:N, maxc:MAXC, hc:HC, cadencia:M.cadencia, dep_max:DEP_MAX, currN:currPeriods.length, windN:windPeriods.length };
+window.__ctl = {
+  async setFrame(i){ aplica(i); for(let k=0;k<20;k++){ const ii=Math.floor(((i%N)+N)%N); const e=cache.get(ii); if(e&&e.vol){ aplica(i); break; } await new Promise(r=>setTimeout(r,120)); } drawTira(); },
+  view(lon,lat,alt){ viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(lon,lat,alt) }); },
+  fit(w,h){ renderer.setPixelRatio(1); renderer.setSize(w,h,false); const cc=document.getElementById('cesiumContainer'); cc.style.width=w+'px'; cc.style.height=h+'px'; viewer.resize(); resizeTira(); },
+  shot(){ viewer.scene.render(); syncCam(); renderer.render(scene,ortho); },
+  cob(){ const gl=renderer.getContext(); const w=gl.drawingBufferWidth,h=gl.drawingBufferHeight; const px=new Uint8Array(w*h*4); gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,px); let cov=0,ocre=0,azul=0,verm=0,verde=0; for(let i=0;i<px.length;i+=4){const r=px[i],g=px[i+1],b=px[i+2],a=px[i+3]; if(a>12){cov++; if(r>g&&g>=b&&r>70)ocre++; else if(b>r+12)azul++; else if(r>b+25&&r>g)verm++; else if(g>r+18&&g>b+10)verde++;}} return {w,h,pct:+(100*cov/(w*h)).toFixed(1),ocre,azul,verm,verde}; },
+  state(){ return {frame:curIdx, month:M.frames[curIdx]?.month, flow:flowMode, nut:uniforms.uNutOn.value, sst:uniforms.uSSTon.value}; },
+};
+(function hide(){ loadEl.style.opacity='0'; setTimeout(()=>loadEl.remove(),700); })();
+applyQ();
+</script>
+</body>
+</html>
