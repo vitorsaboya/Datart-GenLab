@@ -17,6 +17,8 @@
     justify-content: flex-start;
     padding: 22px 12px 40px;
     user-select: none;
+    width: 100%;
+    overflow-x: hidden;
   }
   h1 {
     font-size: clamp(24px, 5vw, 44px);
@@ -71,8 +73,10 @@
     border-radius: 18px;
     background: rgba(255,255,255,.04);
     box-shadow: 0 10px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.08);
+    max-width: 100%;
   }
-  canvas { display: block; border-radius: 10px; background: #101038; }
+  /* a tela do jogo encolhe pra caber em qualquer celular, mantendo a proporção */
+  canvas { display: block; border-radius: 10px; background: #101038; max-width: 100%; height: auto; }
 
   #overlay {
     position: absolute; inset: 12px;
