@@ -200,6 +200,27 @@
   #placarVazio { margin: 6px 0; }
   #menu { max-width: none; }
 
+  /* ---------- PAINEL DO ADMINISTRADOR ---------- */
+  #painelAdmin {
+    display: none;
+    grid-column: 1 / -1;
+    background: rgba(255,190,120,.08);
+    border: 1px solid rgba(255,190,120,.28);
+    border-radius: 16px; padding: 16px 18px;
+  }
+  #painelAdmin h2 { font-size: 20px; margin-bottom: 4px; }
+  #adminLista { list-style: none; margin-top: 12px; display: grid; gap: 8px; }
+  #adminLista li {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: rgba(255,255,255,.05); padding: 8px 12px; border-radius: 10px; font-size: 16px;
+  }
+  #adminLista li.vazioAdmin { opacity: .6; justify-content: center; }
+  #adminLista button.apagar {
+    font-size: 14px; padding: 7px 16px; border-radius: 10px;
+    background: linear-gradient(180deg,#ff8a8a,#c23a3a); color: #2a0606; box-shadow: 0 3px 0 #821d1d;
+  }
+  #btnApagarEu { font-size: 14px; }
+
   @media (max-width: 720px) {
     #home { grid-template-columns: 1fr; }
     #menu { grid-template-columns: 1fr 1fr; }
@@ -230,11 +251,18 @@
   <!-- BARRA DO JOGADOR (quando logado) -->
   <div id="topbar">
     <span id="ola"></span>
+    <button class="ghost" id="btnApagarEu">Apagar meu perfil</button>
     <button class="ghost" id="btnSair">Sair</button>
   </div>
 
   <!-- PÁGINA INICIAL: PLACAR + MENU -->
   <div id="home">
+    <!-- painel só do administrador -->
+    <div id="painelAdmin">
+      <h2>🔧 Administrador</h2>
+      <p class="loginDesc">Aqui você apaga o perfil de quem esqueceu a senha ou precisa recomeçar.</p>
+      <ul id="adminLista"></ul>
+    </div>
     <div id="placar">
       <h2>🏆 Placar</h2>
       <ol id="placarLista"></ol>
@@ -330,11 +358,13 @@ function mostrarMenu() {
   escolhasEl.classList.remove('ativo');
   setasEl.style.display = '';
   subtitulo.textContent = 'Escolha um jogo pra começar!';
-  renderPlacar();
   mostrarTela('home');
+  atualizarHome();
+  iniciarPollHome();
 }
 
 function abrirJogo(nome) {
+  pararPollHome();
   overlay.classList.remove('show');
   // bandeiras usa botões de escolha; os outros usam as setas
   const usaSetas = nome !== 'bandeiras';
@@ -378,66 +408,123 @@ document.querySelectorAll('.controles button').forEach(b => {
 });
 
 // ===================== CONTAS + PLACAR =====================
-// "Nuvem" = o lugar onde os dados ficam guardados.
-// HOJE: a memória do próprio navegador de cada criança (localStorage).
-// AMANHÃ (o "plugue" pro placar virar compartilhado entre todos os amigos):
-//   basta trocar estas DUAS funções por um banco de dados na nuvem (ex.: Firebase)
-//   e o resto do jogo continua igualzinho. Por isso tudo passa só por aqui.
+// ===== CONFIGURAÇÃO DA NUVEM =====
+// Cole aqui o endereço do banco na nuvem (Firebase Realtime Database) pra o placar
+// virar COMPARTILHADO entre todos os amigos. Enquanto estiver vazio (""), cada
+// aparelho guarda os dados só pra ele (modo de teste, sem nuvem).
+// Ex.: const NUVEM_URL = "https://jogos-benjamin-default-rtdb.firebaseio.com";
+const NUVEM_URL = "";
+
+// ===== ADMINISTRADOR =====
+// Quem entrar com este apelido e esta senha vira ADMIN (pode apagar qualquer perfil,
+// útil quando alguém esquece a senha). TROQUE a senha por uma sua e não conte pra ninguém.
+const ADMIN_APELIDO = "Admin";
+const ADMIN_SENHA   = "chave-mestra";
+
+// "Nuvem" = o único lugar que fala com o armazenamento. Se NUVEM_URL estiver
+// preenchido, usa o banco na nuvem (compartilhado); senão, a memória local do aparelho.
 const Nuvem = {
-  ler()       { try { return JSON.parse(localStorage.getItem('benjogos') || '{}'); } catch(e){ return {}; } },
-  gravar(obj) { localStorage.setItem('benjogos', JSON.stringify(obj)); }
+  base() { return NUVEM_URL.replace(/\/$/, ''); },
+  async lerJogadores() {
+    if (NUVEM_URL) {
+      try { const r = await fetch(this.base() + '/jogadores.json'); return (await r.json()) || {}; }
+      catch(e) { return {}; }
+    }
+    try { return JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}'); } catch(e) { return {}; }
+  },
+  async lerJogador(chave) {
+    if (NUVEM_URL) {
+      try { const r = await fetch(this.base() + '/jogadores/' + encodeURIComponent(chave) + '.json'); return (await r.json()) || null; }
+      catch(e) { return null; }
+    }
+    const all = JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}'); return all[chave] || null;
+  },
+  async gravarJogador(chave, dados) {
+    if (NUVEM_URL) {
+      await fetch(this.base() + '/jogadores/' + encodeURIComponent(chave) + '.json',
+        { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(dados) });
+      return;
+    }
+    const all = JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}');
+    all[chave] = dados; localStorage.setItem('benjogos_jogadores', JSON.stringify(all));
+  },
+  async apagarJogador(chave) {
+    if (NUVEM_URL) {
+      await fetch(this.base() + '/jogadores/' + encodeURIComponent(chave) + '.json', { method:'DELETE' });
+      return;
+    }
+    const all = JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}');
+    delete all[chave]; localStorage.setItem('benjogos_jogadores', JSON.stringify(all));
+  }
 };
 
-let usuario = null;  // apelido (em minúsculo) do jogador logado
+// quem está logado (a sessão fica sempre no próprio aparelho)
+let usuario = null;     // chave (apelido minúsculo) do jogador; null se for admin
+let ehAdmin = false;
+let apelidoExibicao = '';
+function lerSessao()   { try { return JSON.parse(localStorage.getItem('benjogos_sessao') || 'null'); } catch(e){ return null; } }
+function gravarSessao(s){ localStorage.setItem('benjogos_sessao', JSON.stringify(s)); }
+function limparSessao(){ localStorage.removeItem('benjogos_sessao'); }
 
-function bancoJogadores()   { const d = Nuvem.ler(); return d.jogadores || {}; }
-function salvarJogadores(j) { const d = Nuvem.ler(); d.jogadores = j; Nuvem.gravar(d); }
+function ehNomeAdmin(nome){ return nome.trim().toLowerCase() === ADMIN_APELIDO.toLowerCase(); }
 
-function cadastrar(apelido, senha) {
+async function cadastrar(apelido, senha) {
   apelido = apelido.trim();
   if (apelido.length < 2) return 'Escolha um apelido com pelo menos 2 letras.';
   if (senha.length  < 2)  return 'Escolha uma senha-secreta com pelo menos 2 letras.';
+  if (ehNomeAdmin(apelido)) return 'Esse apelido é reservado. Escolha outro.';
   const chave = apelido.toLowerCase();
-  const js = bancoJogadores();
-  if (js[chave]) return 'Esse apelido já existe. Entre, ou escolha outro.';
-  js[chave] = { apelido, senha, pontos: { labirinto:0, cobrinha:0, frutas:0, bandeiras:0 } };
-  salvarJogadores(js);
+  if (await Nuvem.lerJogador(chave)) return 'Esse apelido já existe. Entre, ou escolha outro.';
+  await Nuvem.gravarJogador(chave, { apelido, senha, pontos: { labirinto:0, cobrinha:0, frutas:0, bandeiras:0 } });
   return null;
 }
 
-function entrar(apelido, senha) {
+async function entrar(apelido, senha) {
+  // login do administrador
+  if (ehNomeAdmin(apelido)) {
+    if (senha !== ADMIN_SENHA) return 'Senha de administrador errada.';
+    usuario = null; ehAdmin = true; apelidoExibicao = ADMIN_APELIDO;
+    gravarSessao({ admin: true });
+    return null;
+  }
   const chave = apelido.trim().toLowerCase();
-  const js = bancoJogadores();
-  if (!js[chave]) return 'Esse apelido não existe. Crie uma conta nova.';
-  if (js[chave].senha !== senha) return 'Senha-secreta errada. Tenta de novo.';
-  usuario = chave;
-  const d = Nuvem.ler(); d.sessao = chave; Nuvem.gravar(d);
+  const j = await Nuvem.lerJogador(chave);
+  if (!j) return 'Esse apelido não existe. Crie uma conta nova.';
+  if (j.senha !== senha) return 'Senha-secreta errada. Tenta de novo.';
+  usuario = chave; ehAdmin = false; apelidoExibicao = j.apelido;
+  gravarSessao({ chave });
   return null;
 }
 
 function sair() {
-  usuario = null;
-  const d = Nuvem.ler(); delete d.sessao; Nuvem.gravar(d);
-  document.getElementById('inApelido').value = '';
-  document.getElementById('inSenha').value = '';
+  pararPollHome();
+  usuario = null; ehAdmin = false; apelidoExibicao = '';
+  limparSessao();
+  inApelido.value = ''; inSenha.value = '';
   mostrarTela('login');
 }
 
 function totalDe(p) { p = p || {}; return (p.labirinto||0)+(p.cobrinha||0)+(p.frutas||0)+(p.bandeiras||0); }
 
 // guarda só o MELHOR resultado do jogador atual em cada jogo
-function registrarPontuacao(jogo, valor) {
-  if (!usuario) return;
-  const js = bancoJogadores();
-  const j = js[usuario]; if (!j) return;
+async function registrarPontuacao(jogo, valor) {
+  if (!usuario) return;  // admin não pontua
+  const j = await Nuvem.lerJogador(usuario);
+  if (!j) return;
   if (!j.pontos) j.pontos = {};
-  if ((j.pontos[jogo]||0) < valor) { j.pontos[jogo] = valor; salvarJogadores(js); }
+  if ((j.pontos[jogo]||0) < valor) { j.pontos[jogo] = valor; await Nuvem.gravarJogador(usuario, j); }
 }
 
 function escapar(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-function renderPlacar() {
-  const js = bancoJogadores();
+// lê a nuvem UMA vez e redesenha o placar + o painel de admin
+async function atualizarHome() {
+  const js = await Nuvem.lerJogadores();
+  renderPlacar(js);
+  renderAdmin(js);
+}
+
+function renderPlacar(js) {
   const lista = Object.keys(js)
     .map(k => ({ chave:k, apelido: js[k].apelido, total: totalDe(js[k].pontos) }))
     .filter(x => x.total > 0)
@@ -456,22 +543,68 @@ function renderPlacar() {
   });
 }
 
+// painel só do admin: lista todos os perfis com botão de apagar
+function renderAdmin(js) {
+  const painel = document.getElementById('painelAdmin');
+  if (!ehAdmin) { painel.style.display = 'none'; return; }
+  painel.style.display = 'block';
+  const ul = document.getElementById('adminLista');
+  ul.innerHTML = '';
+  const chaves = Object.keys(js).sort();
+  if (!chaves.length) { ul.innerHTML = '<li class="vazioAdmin">Nenhum perfil cadastrado ainda.</li>'; return; }
+  chaves.forEach(k => {
+    const li = document.createElement('li');
+    li.innerHTML = '<span>'+escapar(js[k].apelido)+' <small style="opacity:.6">('+totalDe(js[k].pontos)+' pts)</small></span>';
+    const b = document.createElement('button');
+    b.className = 'apagar'; b.textContent = 'Apagar';
+    b.onclick = () => apagarPerfilAdmin(k, js[k].apelido);
+    li.appendChild(b);
+    ul.appendChild(li);
+  });
+}
+
+// jogador apaga o PRÓPRIO perfil
+async function apagarMeuPerfil() {
+  if (!usuario) return;
+  if (!confirm('Tem certeza? Isto apaga o seu perfil e os seus pontos pra sempre.')) return;
+  await Nuvem.apagarJogador(usuario);
+  sair();
+}
+
+// admin apaga o perfil de QUALQUER pessoa
+async function apagarPerfilAdmin(chave, apelido) {
+  if (!ehAdmin) return;
+  if (!confirm('Apagar o perfil de "'+apelido+'"? Não dá pra desfazer.')) return;
+  await Nuvem.apagarJogador(chave);
+  atualizarHome();
+}
+
+// fica olhando a nuvem de tempos em tempos, pra ver os pontos dos outros chegarem
+let pollHome = null;
+function iniciarPollHome(){ pararPollHome(); pollHome = setInterval(atualizarHome, 5000); }
+function pararPollHome(){ if (pollHome) { clearInterval(pollHome); pollHome = null; } }
+
 // ----- botões da tela de login -----
-function tentarEntrar() {
-  const erro = entrar(inApelido.value, inSenha.value);
+async function tentarEntrar() {
+  loginErro.textContent = 'Entrando...';
+  const erro = await entrar(inApelido.value, inSenha.value);
   if (erro) { loginErro.textContent = erro; return; }
   aposLogin();
 }
-function tentarCadastrar() {
-  const a = inApelido.value, s = inSenha.value;
-  const erro = cadastrar(a, s);
+async function tentarCadastrar() {
+  loginErro.textContent = 'Criando conta...';
+  const erro = await cadastrar(inApelido.value, inSenha.value);
   if (erro) { loginErro.textContent = erro; return; }
-  entrar(a, s); aposLogin();
+  await entrar(inApelido.value, inSenha.value);
+  aposLogin();
 }
 function aposLogin() {
   loginErro.textContent = '';
   inSenha.value = '';
-  document.getElementById('ola').innerHTML = 'Olá, <b>'+escapar(bancoJogadores()[usuario].apelido)+'</b>!';
+  document.getElementById('ola').innerHTML = ehAdmin
+    ? '🔧 <b>Administrador</b>'
+    : 'Olá, <b>'+escapar(apelidoExibicao)+'</b>!';
+  document.getElementById('btnApagarEu').style.display = ehAdmin ? 'none' : '';
   mostrarMenu();
 }
 const inApelido = document.getElementById('inApelido');
@@ -480,16 +613,26 @@ const loginErro = document.getElementById('loginErro');
 document.getElementById('btnEntrar').addEventListener('click', tentarEntrar);
 document.getElementById('btnCadastrar').addEventListener('click', tentarCadastrar);
 document.getElementById('btnSair').addEventListener('click', sair);
+document.getElementById('btnApagarEu').addEventListener('click', apagarMeuPerfil);
 [inApelido, inSenha].forEach(el =>
   el.addEventListener('keydown', e => { if (e.key === 'Enter') tentarEntrar(); }));
 
-// ----- início: a criança já estava logada? -----
-function iniciar() {
-  const d = Nuvem.ler();
-  if (d.sessao && bancoJogadores()[d.sessao]) {
-    usuario = d.sessao;
-    document.getElementById('ola').innerHTML = 'Olá, <b>'+escapar(bancoJogadores()[usuario].apelido)+'</b>!';
+// ----- início: já tinha alguém logado neste aparelho? -----
+async function iniciar() {
+  const s = lerSessao();
+  if (s && s.admin) {
+    ehAdmin = true; usuario = null; apelidoExibicao = ADMIN_APELIDO;
+    document.getElementById('ola').innerHTML = '🔧 <b>Administrador</b>';
+    document.getElementById('btnApagarEu').style.display = 'none';
     mostrarMenu();
+  } else if (s && s.chave) {
+    const j = await Nuvem.lerJogador(s.chave);
+    if (j) {
+      usuario = s.chave; ehAdmin = false; apelidoExibicao = j.apelido;
+      document.getElementById('ola').innerHTML = 'Olá, <b>'+escapar(j.apelido)+'</b>!';
+      document.getElementById('btnApagarEu').style.display = '';
+      mostrarMenu();
+    } else { limparSessao(); mostrarTela('login'); }
   } else {
     mostrarTela('login');
   }
