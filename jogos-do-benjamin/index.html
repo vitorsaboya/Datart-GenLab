@@ -408,55 +408,110 @@ document.querySelectorAll('.controles button').forEach(b => {
 });
 
 // ===================== CONTAS + PLACAR =====================
-// ===== CONFIGURAÇÃO DA NUVEM =====
-// Cole aqui o endereço do banco na nuvem (Firebase Realtime Database) pra o placar
-// virar COMPARTILHADO entre todos os amigos. Enquanto estiver vazio (""), cada
-// aparelho guarda os dados só pra ele (modo de teste, sem nuvem).
-// Ex.: const NUVEM_URL = "https://jogos-benjamin-default-rtdb.firebaseio.com";
-const NUVEM_URL = "";
+// ===== NUVEM COMPARTILHADA (ntfy.sh, $0, sem cadastro) =====
+// Todos os amigos usam o MESMO "canal" (tópico). Cada aparelho guarda o que sabe na
+// memória local E "fofoca" pros outros pelo canal; todo mundo junta tudo, pegando sempre
+// o MAIOR ponto de cada jogador. Assim o placar fica compartilhado sem ninguém criar conta.
+// (Obs.: o ntfy guarda mensagens por ~12h; por isso cada aparelho re-publica o que sabe,
+//  mantendo o placar vivo enquanto a turma está jogando.)
+const NUVEM_LIGADA = true;
+const TOPICO = "datart-jogos-benjamin-arcade-k7m2x9p4";   // canal único da turma (todos os amigos compartilham este)
+const NTFY   = "https://ntfy.sh/" + TOPICO;
+const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras'];
+
+// --- memória local do aparelho ---
+function _lerLocal()    { try { return JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}'); } catch(e){ return {}; } }
+function _gravarLocal(o){ localStorage.setItem('benjogos_jogadores', JSON.stringify(o)); }
+function _lerTumbas()   { try { return JSON.parse(localStorage.getItem('benjogos_tumbas') || '{}'); } catch(e){ return {}; } }
+function _gravarTumbas(o){ localStorage.setItem('benjogos_tumbas', JSON.stringify(o)); }
+
+// junta dois conjuntos de jogadores: une todos, pega o MAIOR ponto de cada jogo,
+// e nos dados do perfil (apelido/senha) mantém o mais recente (pelo carimbo de tempo "t")
+function _mesclar(a, b) {
+  const out = Object.assign({}, a);
+  for (const k in b) {
+    if (!out[k]) { out[k] = b[k]; continue; }
+    const A = out[k], B = b[k], pontos = {};
+    for (const g of JOGOSIDS) pontos[g] = Math.max((A.pontos||{})[g]||0, (B.pontos||{})[g]||0);
+    const novo = (B.t||0) > (A.t||0) ? B : A;
+    out[k] = { apelido: novo.apelido, senha: novo.senha, pontos, t: Math.max(A.t||0, B.t||0) };
+  }
+  return out;
+}
+// remove os jogadores apagados (lápides), respeitando o tempo (se o perfil é mais novo que
+// a lápide, ele "ressuscitou" — ex.: recadastro com o mesmo apelido — e fica)
+function _semTumbas(jog, tum) {
+  const out = {};
+  for (const k in jog) { if (!(tum[k] && (jog[k].t||0) <= tum[k])) out[k] = jog[k]; }
+  return out;
+}
+
+// "Nuvem" = o único lugar que o resto do jogo usa pra ler/gravar jogadores.
+const Nuvem = {
+  async lerJogadores()   { return _semTumbas(_lerLocal(), _lerTumbas()); },
+  async lerJogador(chave){ return (await this.lerJogadores())[chave] || null; },
+  async gravarJogador(chave, dados) {
+    dados.t = Date.now();
+    const all = _lerLocal(); all[chave] = dados; _gravarLocal(all);
+    const tum = _lerTumbas(); if (tum[chave]) { delete tum[chave]; _gravarTumbas(tum); } // recadastro limpa a lápide
+    publicar();
+  },
+  async apagarJogador(chave) {
+    const all = _lerLocal(); delete all[chave]; _gravarLocal(all);
+    const tum = _lerTumbas(); tum[chave] = Date.now(); _gravarTumbas(tum);
+    publicar();
+  }
+};
+
+// publica o que este aparelho sabe pro canal (com leve atraso pra agrupar)
+let _pubTimer = null;
+function publicar() {
+  if (!NUVEM_LIGADA) return;
+  if (_pubTimer) return;
+  _pubTimer = setTimeout(async () => {
+    _pubTimer = null;
+    try {
+      await fetch(NTFY, { method:'POST', body: JSON.stringify({ jogadores: _lerLocal(), tumbas: _lerTumbas() }) });
+    } catch(e) {}
+  }, 400);
+}
+
+// lê o canal, junta o que os outros sabem na memória local e redesenha o placar
+let _sincronizando = false;
+async function sincronizar() {
+  if (!NUVEM_LIGADA || _sincronizando) return;
+  _sincronizando = true;
+  try {
+    const r = await fetch(NTFY + "/json?poll=1&since=all");
+    const txt = await r.text();
+    let local = _lerLocal(), tum = _lerTumbas(), mudou = false;
+    txt.split('\n').forEach(linha => {
+      linha = linha.trim(); if (!linha) return;
+      let o; try { o = JSON.parse(linha); } catch(e){ return; }
+      if (o.event !== 'message' || !o.message) return;
+      let m; try { m = JSON.parse(o.message); } catch(e){ return; }
+      if (m && m.jogadores) { local = _mesclar(local, m.jogadores); mudou = true; }
+      if (m && m.tumbas) for (const k in m.tumbas) { if ((tum[k]||0) < m.tumbas[k]) { tum[k] = m.tumbas[k]; mudou = true; } }
+    });
+    if (mudou) { _gravarLocal(local); _gravarTumbas(tum); }
+    if (homeEl.style.display === 'grid') atualizarHome();
+  } catch(e) {
+  } finally { _sincronizando = false; }
+}
+
+// liga o "rádio" que fica sincronizando de tempos em tempos (sempre, mesmo no login,
+// pra um amigo conseguir entrar numa conta criada em outro aparelho)
+let _syncTimer = null;
+function ligarSync() {
+  if (!NUVEM_LIGADA || _syncTimer) return;
+  _syncTimer = setInterval(sincronizar, 4000);
+}
 
 // ===== ADMINISTRADOR =====
 // Quem entrar com este apelido e esta senha vira ADMIN (pode apagar qualquer perfil,
 // útil quando alguém esquece a senha). TROQUE a senha por uma sua e não conte pra ninguém.
 const ADMIN_APELIDO = "Admin";
 const ADMIN_SENHA   = "chave-mestra";
-
-// "Nuvem" = o único lugar que fala com o armazenamento. Se NUVEM_URL estiver
-// preenchido, usa o banco na nuvem (compartilhado); senão, a memória local do aparelho.
-const Nuvem = {
-  base() { return NUVEM_URL.replace(/\/$/, ''); },
-  async lerJogadores() {
-    if (NUVEM_URL) {
-      try { const r = await fetch(this.base() + '/jogadores.json'); return (await r.json()) || {}; }
-      catch(e) { return {}; }
-    }
-    try { return JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}'); } catch(e) { return {}; }
-  },
-  async lerJogador(chave) {
-    if (NUVEM_URL) {
-      try { const r = await fetch(this.base() + '/jogadores/' + encodeURIComponent(chave) + '.json'); return (await r.json()) || null; }
-      catch(e) { return null; }
-    }
-    const all = JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}'); return all[chave] || null;
-  },
-  async gravarJogador(chave, dados) {
-    if (NUVEM_URL) {
-      await fetch(this.base() + '/jogadores/' + encodeURIComponent(chave) + '.json',
-        { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(dados) });
-      return;
-    }
-    const all = JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}');
-    all[chave] = dados; localStorage.setItem('benjogos_jogadores', JSON.stringify(all));
-  },
-  async apagarJogador(chave) {
-    if (NUVEM_URL) {
-      await fetch(this.base() + '/jogadores/' + encodeURIComponent(chave) + '.json', { method:'DELETE' });
-      return;
-    }
-    const all = JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}');
-    delete all[chave]; localStorage.setItem('benjogos_jogadores', JSON.stringify(all));
-  }
-};
 
 // quem está logado (a sessão fica sempre no próprio aparelho)
 let usuario = null;     // chave (apelido minúsculo) do jogador; null se for admin
@@ -579,20 +634,21 @@ async function apagarPerfilAdmin(chave, apelido) {
   atualizarHome();
 }
 
-// fica olhando a nuvem de tempos em tempos, pra ver os pontos dos outros chegarem
-let pollHome = null;
-function iniciarPollHome(){ pararPollHome(); pollHome = setInterval(atualizarHome, 5000); }
-function pararPollHome(){ if (pollHome) { clearInterval(pollHome); pollHome = null; } }
+// a sincronização contínua com a nuvem é o _syncTimer global (ligado no início).
+function iniciarPollHome(){ sincronizar(); }  // ao abrir a home, puxa a nuvem na hora
+function pararPollHome(){}                      // o rádio global continua sozinho
 
 // ----- botões da tela de login -----
 async function tentarEntrar() {
   loginErro.textContent = 'Entrando...';
+  await sincronizar();   // busca contas criadas em outros aparelhos antes de checar
   const erro = await entrar(inApelido.value, inSenha.value);
   if (erro) { loginErro.textContent = erro; return; }
   aposLogin();
 }
 async function tentarCadastrar() {
   loginErro.textContent = 'Criando conta...';
+  await sincronizar();   // pra não criar um apelido que já existe em outro aparelho
   const erro = await cadastrar(inApelido.value, inSenha.value);
   if (erro) { loginErro.textContent = erro; return; }
   await entrar(inApelido.value, inSenha.value);
@@ -619,6 +675,8 @@ document.getElementById('btnApagarEu').addEventListener('click', apagarMeuPerfil
 
 // ----- início: já tinha alguém logado neste aparelho? -----
 async function iniciar() {
+  ligarSync();          // liga o rádio que sincroniza com a nuvem
+  await sincronizar();  // puxa o estado atual antes de decidir a tela
   const s = lerSessao();
   if (s && s.admin) {
     ehAdmin = true; usuario = null; apelidoExibicao = ADMIN_APELIDO;
