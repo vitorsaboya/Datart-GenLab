@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arcade do Pinguim</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    font-family: "Comic Sans MS", "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(circle at 50% 0%, #2a2a5e 0%, #14143a 60%, #0a0a22 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 22px 12px 40px;
+    user-select: none;
+  }
+  h1 {
+    font-size: clamp(24px, 5vw, 44px);
+    text-shadow: 0 0 14px #6cf, 0 0 28px #6cf;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  .sub { opacity: .75; margin: 6px 0 20px; font-size: 16px; text-align: center; }
+
+  /* ---------- MENU ---------- */
+  #menu {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    width: 100%;
+    max-width: 760px;
+  }
+  .card {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px;
+    padding: 26px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s, background .12s;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    background: rgba(120,210,255,.12);
+    box-shadow: 0 14px 30px rgba(0,0,0,.45);
+  }
+  .card .ico { font-size: 56px; display: block; margin-bottom: 10px; }
+  .card .nome { font-size: 20px; font-weight: bold; }
+  .card .desc { font-size: 13px; opacity: .7; margin-top: 6px; line-height: 1.4; }
+
+  /* ---------- TELA DE JOGO ---------- */
+  #jogo { display: none; flex-direction: column; align-items: center; width: 100%; }
+  #jogo.ativo { display: flex; }
+  #barra {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #barra .info { font-size: 18px; }
+  #barra .info b { color: #ffe14d; }
+  #wrap {
+    position: relative;
+    padding: 12px;
+    border-radius: 18px;
+    background: rgba(255,255,255,.04);
+    box-shadow: 0 10px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+  canvas { display: block; border-radius: 10px; background: #101038; }
+
+  #overlay {
+    position: absolute; inset: 12px;
+    border-radius: 10px;
+    background: rgba(10,10,34,.86);
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; text-align: center;
+    animation: pop .35s ease;
+  }
+  #overlay.show { display: flex; }
+  #overlay h2 { font-size: 32px; text-shadow: 0 0 16px #ffe14d; }
+  #overlay p { font-size: 18px; opacity: .9; }
+
+  button {
+    font-family: inherit; font-size: 17px;
+    padding: 9px 20px; border: none; border-radius: 12px;
+    background: linear-gradient(180deg, #6cf, #38a);
+    color: #04122a; font-weight: bold; cursor: pointer;
+    box-shadow: 0 4px 0 #1d5c82; transition: transform .05s;
+  }
+  button.ghost { background: rgba(255,255,255,.12); color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+  button:active { transform: translateY(3px); box-shadow: 0 1px 0 #1d5c82; }
+
+  .controles {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    grid-template-rows: repeat(2, 60px);
+    gap: 8px;
+  }
+  .controles button { font-size: 26px; padding: 0; border-radius: 14px; }
+  .c-cima  { grid-column: 2; grid-row: 1; }
+  .c-esq   { grid-column: 1; grid-row: 2; }
+  .c-baixo { grid-column: 2; grid-row: 2; }
+  .c-dir   { grid-column: 3; grid-row: 2; }
+
+  #dica { margin-top: 12px; font-size: 14px; opacity: .7; text-align: center; line-height: 1.5; }
+
+  #escolhas {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+    width: 100%;
+    max-width: 460px;
+  }
+  #escolhas.ativo { display: grid; }
+  #escolhas button {
+    font-size: 17px; padding: 14px 10px; border-radius: 14px;
+    background: rgba(255,255,255,.1); color: #fff;
+    box-shadow: 0 4px 0 rgba(0,0,0,.3);
+  }
+  #escolhas button.certo  { background: linear-gradient(180deg,#7be88a,#36a04a); color:#04220c; box-shadow:0 4px 0 #1d6c33; }
+  #escolhas button.errado { background: linear-gradient(180deg,#ff8a8a,#c23a3a); color:#2a0606; box-shadow:0 4px 0 #821d1d; }
+
+  @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* ---------- LOGIN ---------- */
+  #login { display: none; width: 100%; max-width: 380px; }
+  .painel {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px;
+    padding: 26px 22px;
+    text-align: center;
+    box-shadow: 0 14px 40px rgba(0,0,0,.4);
+  }
+  .painel h2 { font-size: 24px; margin-bottom: 6px; }
+  .loginDesc { font-size: 14px; opacity: .75; margin-bottom: 16px; line-height: 1.4; }
+  .painel input {
+    width: 100%; font-family: inherit; font-size: 17px;
+    padding: 12px 14px; margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,.18); border-radius: 12px;
+    background: rgba(0,0,0,.25); color: #fff;
+  }
+  .painel input:focus { outline: 2px solid #6cf; }
+  .loginBtns { display: flex; gap: 10px; margin-top: 6px; }
+  .loginBtns button { flex: 1; }
+  #loginErro { color: #ff9a9a; font-size: 14px; min-height: 18px; margin-bottom: 4px; }
+  .aviso { font-size: 12px; opacity: .55; margin-top: 16px; line-height: 1.4; }
+
+  /* ---------- BARRA DO JOGADOR ---------- */
+  #topbar {
+    display: none; align-items: center; gap: 14px;
+    width: 100%; max-width: 900px;
+    justify-content: flex-end; margin-bottom: 14px;
+  }
+  #ola { font-size: 16px; opacity: .9; }
+  #ola b { color: #ffe14d; }
+
+  /* ---------- HOME: PLACAR + MENU ---------- */
+  #home {
+    display: none;
+    grid-template-columns: 290px 1fr;
+    gap: 20px; width: 100%; max-width: 900px;
+    align-items: start;
+  }
+  #placar {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px; padding: 18px 16px;
+  }
+  #placar h2 { font-size: 22px; margin-bottom: 12px; text-align: center; }
+  #placarLista { list-style: none; counter-reset: pos; }
+  #placarLista li {
+    counter-increment: pos;
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 8px; border-radius: 10px;
+    font-size: 16px;
+  }
+  #placarLista li:nth-child(odd) { background: rgba(255,255,255,.04); }
+  #placarLista li::before {
+    content: counter(pos); font-weight: bold; color: #9cc8ff;
+    min-width: 22px; text-align: center;
+  }
+  #placarLista li.eu { background: rgba(120,210,255,.18); }
+  #placarLista li .nome2 { flex: 1; }
+  #placarLista li .pts { color: #ffe14d; font-weight: bold; }
+  #placarLista li.topo::before { content: "🥇"; }
+  #placarVazio { margin: 6px 0; }
+  #menu { max-width: none; }
+
+  @media (max-width: 720px) {
+    #home { grid-template-columns: 1fr; }
+    #menu { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) { #menu { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <h1 id="titulo">🎮 Arcade do Pinguim</h1>
+  <div class="sub" id="subtitulo">Escolha um jogo pra começar!</div>
+
+  <!-- TELA DE LOGIN / CADASTRO -->
+  <div id="login">
+    <div class="painel">
+      <h2 id="loginTitulo">Entre pra jogar!</h2>
+      <p class="loginDesc">Escolha um apelido e uma senha-secreta de brincadeira.</p>
+      <input id="inApelido" maxlength="14" placeholder="Seu apelido (ex.: Benja)" autocomplete="off">
+      <input id="inSenha" type="password" maxlength="20" placeholder="Senha-secreta (de brincadeira)">
+      <div id="loginErro"></div>
+      <div class="loginBtns">
+        <button id="btnEntrar">Entrar</button>
+        <button id="btnCadastrar" class="ghost">Criar conta nova</button>
+      </div>
+      <p class="aviso">Segurança: nunca use sua senha de verdade da vida aqui. Isto é só um jogo.</p>
+    </div>
+  </div>
+
+  <!-- BARRA DO JOGADOR (quando logado) -->
+  <div id="topbar">
+    <span id="ola"></span>
+    <button class="ghost" id="btnSair">Sair</button>
+  </div>
+
+  <!-- PÁGINA INICIAL: PLACAR + MENU -->
+  <div id="home">
+    <div id="placar">
+      <h2>🏆 Placar</h2>
+      <ol id="placarLista"></ol>
+      <p id="placarVazio" class="loginDesc">Ninguém pontuou ainda. Joga pra aparecer aqui!</p>
+    </div>
+
+    <!-- MENU -->
+    <div id="menu">
+      <div class="card" data-jogo="labirinto">
+        <span class="ico">🐧</span>
+        <div class="nome">Labirinto</div>
+        <div class="desc">Leve o pinguim até a estrela. Cada fase, um labirinto novo.</div>
+      </div>
+      <div class="card" data-jogo="cobrinha">
+        <span class="ico">🐍</span>
+        <div class="nome">Cobrinha</div>
+        <div class="desc">Coma as maçãs e cresça. Não bata no rabo!</div>
+      </div>
+      <div class="card" data-jogo="frutas">
+        <span class="ico">🧺</span>
+        <div class="nome">Pega-Frutas</div>
+        <div class="desc">Pegue as frutas que caem e desvie das bombas.</div>
+      </div>
+      <div class="card" data-jogo="bandeiras">
+        <span class="ico">🚩</span>
+        <div class="nome">Bandeiras</div>
+        <div class="desc">Adivinhe o país. A cada acerto, a bandeira se esconde mais!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE JOGO -->
+  <div id="jogo">
+    <div id="barra">
+      <button class="ghost" id="btnVoltar">⬅ Menu</button>
+      <span class="info" id="info1"></span>
+      <span class="info" id="info2"></span>
+    </div>
+    <div id="wrap">
+      <canvas id="tela" width="480" height="480"></canvas>
+      <div id="overlay">
+        <h2 id="ovTitulo"></h2>
+        <p id="ovTexto"></p>
+        <button id="btnAcao"></button>
+      </div>
+    </div>
+    <div class="controles" id="setas">
+      <button class="c-cima"  data-dir="cima">⬆️</button>
+      <button class="c-esq"   data-dir="esq">⬅️</button>
+      <button class="c-baixo" data-dir="baixo">⬇️</button>
+      <button class="c-dir"   data-dir="dir">➡️</button>
+    </div>
+    <div id="escolhas"></div>
+    <div id="dica"></div>
+  </div>
+
+<script>
+// ===================== INFRAESTRUTURA =====================
+const canvas = document.getElementById('tela');
+const ctx = canvas.getContext('2d');
+const menuEl = document.getElementById('menu');
+const jogoEl = document.getElementById('jogo');
+const overlay = document.getElementById('overlay');
+const info1 = document.getElementById('info1');
+const info2 = document.getElementById('info2');
+const dicaEl = document.getElementById('dica');
+const subtitulo = document.getElementById('subtitulo');
+const setasEl = document.getElementById('setas');
+const escolhasEl = document.getElementById('escolhas');
+const loginEl = document.getElementById('login');
+const topbarEl = document.getElementById('topbar');
+const homeEl = document.getElementById('home');
+
+let jogoAtual = null;   // objeto do jogo ativo
+let raf = null;         // id do loop de animação
+
+function pararLoop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+
+// troca a tela visível (login / home / jogo)
+function mostrarTela(t) {
+  loginEl.style.display  = (t === 'login') ? 'block' : 'none';
+  topbarEl.style.display = (t === 'login') ? 'none'  : 'flex';
+  homeEl.style.display   = (t === 'home')  ? 'grid'  : 'none';
+  subtitulo.style.display = (t === 'home') ? 'block' : 'none';
+  jogoEl.classList.toggle('ativo', t === 'jogo');
+}
+
+function mostrarMenu() {
+  pararLoop();
+  if (jogoAtual && jogoAtual.parar) jogoAtual.parar();
+  jogoAtual = null;
+  overlay.classList.remove('show');
+  escolhasEl.classList.remove('ativo');
+  setasEl.style.display = '';
+  subtitulo.textContent = 'Escolha um jogo pra começar!';
+  renderPlacar();
+  mostrarTela('home');
+}
+
+function abrirJogo(nome) {
+  overlay.classList.remove('show');
+  // bandeiras usa botões de escolha; os outros usam as setas
+  const usaSetas = nome !== 'bandeiras';
+  setasEl.style.display = usaSetas ? '' : 'none';
+  escolhasEl.classList.toggle('ativo', !usaSetas);
+  if (nome === 'labirinto') jogoAtual = Labirinto();
+  if (nome === 'cobrinha')  jogoAtual = Cobrinha();
+  if (nome === 'frutas')    jogoAtual = Frutas();
+  if (nome === 'bandeiras') jogoAtual = Bandeiras();
+  mostrarTela('jogo');
+}
+
+function mostrarOverlay(titulo, texto, rotuloBotao, aoClicar) {
+  document.getElementById('ovTitulo').textContent = titulo;
+  document.getElementById('ovTexto').textContent = texto;
+  const b = document.getElementById('btnAcao');
+  b.textContent = rotuloBotao;
+  b.onclick = aoClicar;
+  overlay.classList.add('show');
+}
+
+// liga os cards do menu
+document.querySelectorAll('.card').forEach(c => {
+  c.addEventListener('click', () => abrirJogo(c.dataset.jogo));
+});
+document.getElementById('btnVoltar').addEventListener('click', mostrarMenu);
+
+// roteia as setas pro jogo ativo
+function dispararDir(dir) { if (jogoAtual && jogoAtual.dir) jogoAtual.dir(dir); }
+window.addEventListener('keydown', (e) => {
+  // se o dedo está num campo de texto, deixa digitar em paz
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  const mapa = {
+    ArrowUp:'cima', ArrowDown:'baixo', ArrowLeft:'esq', ArrowRight:'dir',
+    w:'cima', s:'baixo', a:'esq', d:'dir', W:'cima', S:'baixo', A:'esq', D:'dir'
+  };
+  if (mapa[e.key]) { e.preventDefault(); dispararDir(mapa[e.key]); }
+});
+document.querySelectorAll('.controles button').forEach(b => {
+  b.addEventListener('click', () => dispararDir(b.dataset.dir));
+});
+
+// ===================== CONTAS + PLACAR =====================
+// "Nuvem" = o lugar onde os dados ficam guardados.
+// HOJE: a memória do próprio navegador de cada criança (localStorage).
+// AMANHÃ (o "plugue" pro placar virar compartilhado entre todos os amigos):
+//   basta trocar estas DUAS funções por um banco de dados na nuvem (ex.: Firebase)
+//   e o resto do jogo continua igualzinho. Por isso tudo passa só por aqui.
+const Nuvem = {
+  ler()       { try { return JSON.parse(localStorage.getItem('benjogos') || '{}'); } catch(e){ return {}; } },
+  gravar(obj) { localStorage.setItem('benjogos', JSON.stringify(obj)); }
+};
+
+let usuario = null;  // apelido (em minúsculo) do jogador logado
+
+function bancoJogadores()   { const d = Nuvem.ler(); return d.jogadores || {}; }
+function salvarJogadores(j) { const d = Nuvem.ler(); d.jogadores = j; Nuvem.gravar(d); }
+
+function cadastrar(apelido, senha) {
+  apelido = apelido.trim();
+  if (apelido.length < 2) return 'Escolha um apelido com pelo menos 2 letras.';
+  if (senha.length  < 2)  return 'Escolha uma senha-secreta com pelo menos 2 letras.';
+  const chave = apelido.toLowerCase();
+  const js = bancoJogadores();
+  if (js[chave]) return 'Esse apelido já existe. Entre, ou escolha outro.';
+  js[chave] = { apelido, senha, pontos: { labirinto:0, cobrinha:0, frutas:0, bandeiras:0 } };
+  salvarJogadores(js);
+  return null;
+}
+
+function entrar(apelido, senha) {
+  const chave = apelido.trim().toLowerCase();
+  const js = bancoJogadores();
+  if (!js[chave]) return 'Esse apelido não existe. Crie uma conta nova.';
+  if (js[chave].senha !== senha) return 'Senha-secreta errada. Tenta de novo.';
+  usuario = chave;
+  const d = Nuvem.ler(); d.sessao = chave; Nuvem.gravar(d);
+  return null;
+}
+
+function sair() {
+  usuario = null;
+  const d = Nuvem.ler(); delete d.sessao; Nuvem.gravar(d);
+  document.getElementById('inApelido').value = '';
+  document.getElementById('inSenha').value = '';
+  mostrarTela('login');
+}
+
+function totalDe(p) { p = p || {}; return (p.labirinto||0)+(p.cobrinha||0)+(p.frutas||0)+(p.bandeiras||0); }
+
+// guarda só o MELHOR resultado do jogador atual em cada jogo
+function registrarPontuacao(jogo, valor) {
+  if (!usuario) return;
+  const js = bancoJogadores();
+  const j = js[usuario]; if (!j) return;
+  if (!j.pontos) j.pontos = {};
+  if ((j.pontos[jogo]||0) < valor) { j.pontos[jogo] = valor; salvarJogadores(js); }
+}
+
+function escapar(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function renderPlacar() {
+  const js = bancoJogadores();
+  const lista = Object.keys(js)
+    .map(k => ({ chave:k, apelido: js[k].apelido, total: totalDe(js[k].pontos) }))
+    .filter(x => x.total > 0)
+    .sort((a,b) => b.total - a.total);
+  const ol = document.getElementById('placarLista');
+  const vazio = document.getElementById('placarVazio');
+  ol.innerHTML = '';
+  if (!lista.length) { vazio.style.display = 'block'; return; }
+  vazio.style.display = 'none';
+  lista.forEach((x, i) => {
+    const li = document.createElement('li');
+    if (i === 0) li.classList.add('topo');
+    if (x.chave === usuario) li.classList.add('eu');
+    li.innerHTML = '<span class="nome2">'+escapar(x.apelido)+'</span><span class="pts">'+x.total+'</span>';
+    ol.appendChild(li);
+  });
+}
+
+// ----- botões da tela de login -----
+function tentarEntrar() {
+  const erro = entrar(inApelido.value, inSenha.value);
+  if (erro) { loginErro.textContent = erro; return; }
+  aposLogin();
+}
+function tentarCadastrar() {
+  const a = inApelido.value, s = inSenha.value;
+  const erro = cadastrar(a, s);
+  if (erro) { loginErro.textContent = erro; return; }
+  entrar(a, s); aposLogin();
+}
+function aposLogin() {
+  loginErro.textContent = '';
+  inSenha.value = '';
+  document.getElementById('ola').innerHTML = 'Olá, <b>'+escapar(bancoJogadores()[usuario].apelido)+'</b>!';
+  mostrarMenu();
+}
+const inApelido = document.getElementById('inApelido');
+const inSenha   = document.getElementById('inSenha');
+const loginErro = document.getElementById('loginErro');
+document.getElementById('btnEntrar').addEventListener('click', tentarEntrar);
+document.getElementById('btnCadastrar').addEventListener('click', tentarCadastrar);
+document.getElementById('btnSair').addEventListener('click', sair);
+[inApelido, inSenha].forEach(el =>
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') tentarEntrar(); }));
+
+// ----- início: a criança já estava logada? -----
+function iniciar() {
+  const d = Nuvem.ler();
+  if (d.sessao && bancoJogadores()[d.sessao]) {
+    usuario = d.sessao;
+    document.getElementById('ola').innerHTML = 'Olá, <b>'+escapar(bancoJogadores()[usuario].apelido)+'</b>!';
+    mostrarMenu();
+  } else {
+    mostrarTela('login');
+  }
+}
+
+// ===================== JOGO 1: LABIRINTO =====================
+function Labirinto() {
+  const HEROI = "🐧", ESTRELA = "⭐";
+  let fase = 1, passos = 0, cols, rows, cell, grid, player, saida, venceu;
+  let flocos, ultimoT;   // neve caindo no fundo
+
+  function criar() {
+    const tam = Math.min(8 + (fase - 1) * 2, 22);
+    cols = rows = tam;
+    cell = Math.floor(480 / tam);
+    canvas.width = canvas.height = cell * tam;
+
+    grid = [];
+    for (let y = 0; y < rows; y++) {
+      grid[y] = [];
+      for (let x = 0; x < cols; x++)
+        grid[y][x] = { cima:true, baixo:true, esq:true, dir:true, visit:false };
+    }
+    const pilha = []; let cx = 0, cy = 0;
+    grid[0][0].visit = true; pilha.push([0,0]);
+    while (pilha.length) {
+      [cx, cy] = pilha[pilha.length - 1];
+      const viz = [];
+      if (cy>0      && !grid[cy-1][cx].visit) viz.push(['cima',cx,cy-1]);
+      if (cy<rows-1 && !grid[cy+1][cx].visit) viz.push(['baixo',cx,cy+1]);
+      if (cx>0      && !grid[cy][cx-1].visit) viz.push(['esq',cx-1,cy]);
+      if (cx<cols-1 && !grid[cy][cx+1].visit) viz.push(['dir',cx+1,cy]);
+      if (!viz.length) { pilha.pop(); continue; }
+      const [d, nx, ny] = viz[Math.floor(Math.random()*viz.length)];
+      if (d==='cima')  { grid[cy][cx].cima=false;  grid[ny][nx].baixo=false; }
+      if (d==='baixo') { grid[cy][cx].baixo=false; grid[ny][nx].cima=false; }
+      if (d==='esq')   { grid[cy][cx].esq=false;   grid[ny][nx].dir=false; }
+      if (d==='dir')   { grid[cy][cx].dir=false;   grid[ny][nx].esq=false; }
+      grid[ny][nx].visit = true; pilha.push([nx,ny]);
+    }
+    player = { x:0, y:0 }; saida = { x:cols-1, y:rows-1 };
+    venceu = false; passos = 0;
+    // gera os flocos de neve do fundo
+    const Wc = canvas.width, Hc = canvas.height;
+    flocos = [];
+    for (let i=0;i<55;i++) flocos.push({
+      x: Math.random()*Wc, y: Math.random()*Hc,
+      r: 1 + Math.random()*2.2, vel: 18 + Math.random()*40,
+      drift: -12 + Math.random()*24, a: .5 + Math.random()*.5
+    });
+    ultimoT = null;
+    atualizarInfo(); overlay.classList.remove('show');
+    desenhar(); pararLoop(); raf = requestAnimationFrame(loop);
+  }
+
+  function loop(ts) {
+    if (ultimoT === null) ultimoT = ts;
+    const dt = Math.min(ts - ultimoT, 100); ultimoT = ts;
+    const W = canvas.width, H = canvas.height;
+    flocos.forEach(f => {
+      f.y += f.vel * dt / 1000;
+      f.x += f.drift * dt / 1000;
+      if (f.y > H + f.r) { f.y = -f.r; f.x = Math.random()*W; }
+      if (f.x < -5) f.x = W + 5; else if (f.x > W + 5) f.x = -5;
+    });
+    desenhar();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function atualizarInfo() {
+    info1.innerHTML = 'Fase: <b>' + fase + '</b>';
+    info2.innerHTML = 'Passos: <b>' + passos + '</b>';
+    dicaEl.innerHTML = 'Use as <b>setas</b> pra levar o 🐧 até a ⭐';
+  }
+
+  function desenhar() {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#101038'; ctx.fillRect(0,0,W,H);
+    // neve caindo no fundo (atrás das paredes)
+    if (flocos) {
+      ctx.fillStyle = '#ffffff';
+      flocos.forEach(f => {
+        ctx.globalAlpha = f.a;
+        ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    }
+    // paredes geladas: gradiente azul-gelo + leve brilho
+    const gelo = ctx.createLinearGradient(0,0,0,H);
+    gelo.addColorStop(0, '#e6f6ff'); gelo.addColorStop(1, '#79c7ff');
+    ctx.strokeStyle = gelo;
+    ctx.lineWidth = Math.max(2, cell*0.12); ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(140,210,255,.55)'; ctx.shadowBlur = 6;
+    for (let y=0;y<rows;y++) for (let x=0;x<cols;x++) {
+      const c = grid[y][x], px = x*cell, py = y*cell;
+      ctx.beginPath();
+      if (c.cima)  { ctx.moveTo(px,py);        ctx.lineTo(px+cell,py); }
+      if (c.baixo) { ctx.moveTo(px,py+cell);   ctx.lineTo(px+cell,py+cell); }
+      if (c.esq)   { ctx.moveTo(px,py);        ctx.lineTo(px,py+cell); }
+      if (c.dir)   { ctx.moveTo(px+cell,py);   ctx.lineTo(px+cell,py+cell); }
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    desenharNeve();
+    ctx.font = (cell*0.7)+'px serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(ESTRELA, saida.x*cell+cell/2, saida.y*cell+cell/2);
+    ctx.fillText(HEROI,   player.x*cell+cell/2, player.y*cell+cell/2);
+  }
+
+  // camada de neve acumulada no chão (parte de baixo), com montinhos suaves
+  function desenharNeve() {
+    const W = canvas.width, H = canvas.height;
+    const alturaNeve = Math.max(12, cell * 0.4);
+    const passo = 26, base = H - alturaNeve;
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    ctx.lineTo(0, base);
+    // topo ondulado: montinhos de neve
+    for (let x = 0; x <= W; x += passo) {
+      const onda = base - 5 * Math.sin(x * 0.9);   // deterministico, nao treme
+      ctx.quadraticCurveTo(x + passo/2, onda - 6, x + passo, base - 3 * Math.cos(x));
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fillStyle = '#eef6ff';
+    ctx.shadowColor = 'rgba(150,200,255,.5)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = -2;
+    ctx.fill();
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    // brilhinhos na neve
+    ctx.fillStyle = 'rgba(255,255,255,.9)';
+    for (let x = 14; x < W; x += 60) {
+      ctx.beginPath();
+      ctx.arc(x, H - alturaNeve*0.45, 2, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function dir(d) {
+    if (venceu) return;
+    const c = grid[player.y][player.x]; let m = false;
+    if (d==='cima'  && !c.cima)  { player.y--; m=true; }
+    if (d==='baixo' && !c.baixo) { player.y++; m=true; }
+    if (d==='esq'   && !c.esq)   { player.x--; m=true; }
+    if (d==='dir'   && !c.dir)   { player.x++; m=true; }
+    if (m) {
+      passos++; atualizarInfo(); desenhar();
+      if (player.x===saida.x && player.y===saida.y) {
+        venceu = true;
+        registrarPontuacao('labirinto', fase);  // pontos = fase alcançada
+        mostrarOverlay('🎉 Venceu!', 'Fase '+fase+' em '+passos+' passos!',
+          'Próxima fase ➜', () => { fase++; criar(); });
+      }
+    }
+  }
+
+  criar();
+  return { dir, parar(){ pararLoop(); } };
+}
+
+// ===================== JOGO 2: COBRINHA =====================
+function Cobrinha() {
+  const N = 18, cell = 480 / N;
+  canvas.width = canvas.height = 480;
+  let cobra, dirAtual, prox, comida, pontos, vivo, tick, acumulado, ultimo, comecou;
+
+  function reset() {
+    cobra = [{x:4,y:9},{x:3,y:9},{x:2,y:9}];
+    dirAtual = {x:1,y:0}; prox = {x:1,y:0};
+    pontos = 0; vivo = true; tick = 130; acumulado = 0; ultimo = null; comecou = false;
+    novaComida();
+    info1.innerHTML = 'Pontos: <b>0</b>';
+    info2.innerHTML = '';
+    dicaEl.innerHTML = 'Aperte uma <b>seta</b> pra a 🐍 começar a andar e comer as 🍎';
+    overlay.classList.remove('show');
+    raf = requestAnimationFrame(loop);
+  }
+
+  function novaComida() {
+    do {
+      comida = { x: Math.floor(Math.random()*N), y: Math.floor(Math.random()*N) };
+    } while (cobra.some(s => s.x===comida.x && s.y===comida.y));
+  }
+
+  function dir(d) {
+    comecou = true;  // a cobra só anda depois da 1a seta
+    if (d==='cima'  && dirAtual.y!==1)  prox = {x:0,y:-1};
+    if (d==='baixo' && dirAtual.y!==-1) prox = {x:0,y:1};
+    if (d==='esq'   && dirAtual.x!==1)  prox = {x:-1,y:0};
+    if (d==='dir'   && dirAtual.x!==-1) prox = {x:1,y:0};
+  }
+
+  function passo() {
+    dirAtual = prox;
+    const cabeca = { x: cobra[0].x + dirAtual.x, y: cobra[0].y + dirAtual.y };
+    // bateu na parede ou em si mesma?
+    if (cabeca.x<0 || cabeca.y<0 || cabeca.x>=N || cabeca.y>=N ||
+        cobra.some(s => s.x===cabeca.x && s.y===cabeca.y)) {
+      vivo = false;
+      registrarPontuacao('cobrinha', pontos);
+      mostrarOverlay('Fim de jogo!', 'Você fez '+pontos+' pontos!',
+        '↻ Jogar de novo', reset);
+      return;
+    }
+    cobra.unshift(cabeca);
+    if (cabeca.x===comida.x && cabeca.y===comida.y) {
+      pontos++; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>';
+      if (tick > 70) tick -= 4;   // acelera um pouco
+      novaComida();
+    } else {
+      cobra.pop();
+    }
+  }
+
+  function desenhar() {
+    ctx.fillStyle = '#101038'; ctx.fillRect(0,0,480,480);
+    // grade leve
+    ctx.strokeStyle = 'rgba(255,255,255,.04)';
+    for (let i=0;i<=N;i++){ ctx.beginPath(); ctx.moveTo(i*cell,0); ctx.lineTo(i*cell,480); ctx.stroke();
+                            ctx.beginPath(); ctx.moveTo(0,i*cell); ctx.lineTo(480,i*cell); ctx.stroke(); }
+    // comida
+    ctx.font = (cell*0.85)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🍎', comida.x*cell+cell/2, comida.y*cell+cell/2);
+    // cobra
+    cobra.forEach((s,i) => {
+      ctx.fillStyle = i===0 ? '#9cff6b' : '#5fd04a';
+      const px=s.x*cell, py=s.y*cell, r=6;
+      ctx.beginPath();
+      ctx.roundRect(px+1, py+1, cell-2, cell-2, r);
+      ctx.fill();
+    });
+    // olhinhos na cabeça
+    const h = cobra[0];
+    ctx.fillStyle = '#04122a';
+    const hx=h.x*cell, hy=h.y*cell;
+    ctx.beginPath(); ctx.arc(hx+cell*0.35, hy+cell*0.35, cell*0.08, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(hx+cell*0.65, hy+cell*0.35, cell*0.08, 0, 7); ctx.fill();
+  }
+
+  function loop(ts) {
+    if (!vivo) return;
+    if (ultimo === null) ultimo = ts;
+    acumulado += Math.min(ts - ultimo, 200); ultimo = ts;  // limita saltos do relógio
+    if (comecou) while (acumulado >= tick) { passo(); acumulado -= tick; if (!vivo) break; }
+    else acumulado = 0;  // parada na largada ate a 1a seta
+    desenhar();
+    raf = requestAnimationFrame(loop);
+  }
+
+  reset();
+  return { dir, parar(){ vivo = false; pararLoop(); } };
+}
+
+// ===================== JOGO 3: PEGA-FRUTAS =====================
+function Frutas() {
+  const W = 480, H = 480;
+  canvas.width = W; canvas.height = H;
+  const FRUTAS = ['🍎','🍊','🍓','🍌','🍇','🍑'];
+  let cesto, itens, pontos, vidas, vivo, geraTimer, ultimo, velMov;
+
+  function reset() {
+    cesto = { x: W/2, w: 70 };
+    itens = []; pontos = 0; vidas = 3; vivo = true;
+    geraTimer = 0; ultimo = null; velMov = 0;
+    info1.innerHTML = 'Pontos: <b>0</b>';
+    info2.innerHTML = 'Vidas: <b>❤️❤️❤️</b>';
+    dicaEl.innerHTML = 'Mova o 🧺 com as <b>setas</b>. Pegue frutas, fuja das 💣';
+    overlay.classList.remove('show');
+    raf = requestAnimationFrame(loop);
+  }
+
+  function dir(d) {
+    if (d==='esq') velMov = -1;
+    if (d==='dir') velMov = 1;
+  }
+
+  function gerarItem() {
+    const bomba = Math.random() < 0.18;
+    itens.push({
+      x: 30 + Math.random()*(W-60),
+      y: -20,
+      v: 2 + Math.random()*2 + pontos*0.02,
+      bomba,
+      emoji: bomba ? '💣' : FRUTAS[Math.floor(Math.random()*FRUTAS.length)]
+    });
+  }
+
+  function atualizarVidas() {
+    info2.innerHTML = 'Vidas: <b>' + '❤️'.repeat(vidas) + '</b>';
+  }
+
+  function loop(ts) {
+    if (!vivo) return;
+    if (ultimo === null) ultimo = ts;
+    const dt = Math.min(ts - ultimo, 200); ultimo = ts;  // limita saltos do relógio
+
+    // move cesto (com inércia suave) e freia
+    cesto.x += velMov * 7;
+    velMov *= 0.85;
+    cesto.x = Math.max(cesto.w/2, Math.min(W - cesto.w/2, cesto.x));
+
+    // gera frutas
+    geraTimer += dt;
+    if (geraTimer > 700) { gerarItem(); geraTimer = 0; }
+
+    // move itens e checa colisão
+    const cy = H - 40;
+    for (let i = itens.length - 1; i >= 0; i--) {
+      const it = itens[i];
+      it.y += it.v;
+      const pego = it.y > cy - 24 && it.y < cy + 24 &&
+                   Math.abs(it.x - cesto.x) < cesto.w/2 + 12;
+      if (pego) {
+        if (it.bomba) { vidas--; atualizarVidas(); }
+        else { pontos++; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>'; }
+        itens.splice(i,1);
+        if (vidas <= 0) return fimDeJogo();
+        continue;
+      }
+      if (it.y > H + 20) {
+        // deixou cair uma fruta boa? sem penalidade, só some
+        itens.splice(i,1);
+      }
+    }
+
+    desenhar(cy);
+    raf = requestAnimationFrame(loop);
+  }
+
+  function desenhar(cy) {
+    ctx.fillStyle = '#101038'; ctx.fillRect(0,0,W,H);
+    ctx.font = '30px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    itens.forEach(it => ctx.fillText(it.emoji, it.x, it.y));
+    // cesto
+    ctx.font = '46px serif';
+    ctx.fillText('🧺', cesto.x, cy);
+  }
+
+  function fimDeJogo() {
+    vivo = false;
+    registrarPontuacao('frutas', pontos);
+    mostrarOverlay('Fim de jogo!', 'Você pegou '+pontos+' frutas!',
+      '↻ Jogar de novo', reset);
+  }
+
+  reset();
+  return { dir, parar(){ vivo = false; pararLoop(); } };
+}
+
+// ===================== JOGO 4: BANDEIRAS =====================
+function Bandeiras() {
+  const PAISES = [
+    {c:'br',n:'Brasil'}, {c:'ar',n:'Argentina'}, {c:'us',n:'Estados Unidos'},
+    {c:'ca',n:'Canadá'}, {c:'mx',n:'México'}, {c:'fr',n:'França'},
+    {c:'de',n:'Alemanha'}, {c:'it',n:'Itália'}, {c:'es',n:'Espanha'},
+    {c:'pt',n:'Portugal'}, {c:'gb',n:'Reino Unido'}, {c:'jp',n:'Japão'},
+    {c:'cn',n:'China'}, {c:'kr',n:'Coreia do Sul'}, {c:'in',n:'Índia'},
+    {c:'au',n:'Austrália'}, {c:'ru',n:'Rússia'}, {c:'za',n:'África do Sul'},
+    {c:'eg',n:'Egito'}, {c:'ng',n:'Nigéria'}, {c:'gr',n:'Grécia'},
+    {c:'ch',n:'Suíça'}, {c:'se',n:'Suécia'}, {c:'no',n:'Noruega'},
+    {c:'nl',n:'Holanda'}, {c:'be',n:'Bélgica'}, {c:'ie',n:'Irlanda'},
+    {c:'tr',n:'Turquia'}, {c:'cl',n:'Chile'}, {c:'pe',n:'Peru'},
+    {c:'co',n:'Colômbia'}, {c:'uy',n:'Uruguai'}, {c:'jm',n:'Jamaica'},
+    {c:'cu',n:'Cuba'}, {c:'gt',n:'Guatemala'}, {c:'ph',n:'Filipinas'},
+    {c:'th',n:'Tailândia'}, {c:'vn',n:'Vietnã'}, {c:'id',n:'Indonésia'},
+    {c:'sa',n:'Arábia Saudita'}, {c:'il',n:'Israel'}
+  ];
+  const W = 480, H = 360;
+  canvas.width = W; canvas.height = H;
+  const imgs = {};
+  let pontos, nivel, vidas, alvo, janelas, flagRect, opcoes, travado, revelado;
+
+  function carregar() {
+    dicaEl.textContent = 'Carregando bandeiras...';
+    escolhasEl.innerHTML = '';
+    ctx.fillStyle = '#0a0a22'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#7ad7ff'; ctx.font = '20px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Carregando bandeiras...', W/2, H/2);
+    const ps = PAISES.map(p => new Promise(res => {
+      const im = new Image();
+      im.onload = () => { imgs[p.c] = im; res(); };
+      im.onerror = res;
+      im.src = 'bandeiras/' + p.c + '.png';
+    }));
+    Promise.all(ps).then(() => { pontos=0; nivel=0; vidas=3; atualizar(); novaRodada(); });
+  }
+
+  function atualizar() {
+    info1.innerHTML = 'Pontos: <b>'+pontos+'</b>';
+    info2.innerHTML = 'Vidas: <b>'+'❤️'.repeat(vidas)+'</b>';
+  }
+
+  function aleatorio(excluir) {
+    let p; do { p = PAISES[Math.floor(Math.random()*PAISES.length)]; }
+    while (excluir && p.c === excluir);
+    return p;
+  }
+
+  function embaralhar(a) {
+    a = a.slice();
+    for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+
+  function calcRect(img) {
+    const m = 28, maxW = W-m*2, maxH = H-m*2;
+    const e = Math.min(maxW/img.width, maxH/img.height);
+    const w = img.width*e, h = img.height*e;
+    return { x:(W-w)/2, y:(H-h)/2, w, h };
+  }
+
+  function novaRodada() {
+    travado = false; revelado = false;
+    alvo = aleatorio(alvo ? alvo.c : null);
+    flagRect = calcRect(imgs[alvo.c]);
+    // quanto maior o nível, MENOS e MENORES janelinhas (mais escondida)
+    const nJanelas = Math.max(1, 6 - Math.floor(nivel/2));
+    const raio = Math.max(16, 46 - nivel*3);
+    janelas = [];
+    for (let i=0;i<nJanelas;i++) {
+      janelas.push({
+        x: flagRect.x + raio + Math.random()*(flagRect.w - raio*2),
+        y: flagRect.y + raio + Math.random()*(flagRect.h - raio*2),
+        r: raio
+      });
+    }
+    const usados = new Set([alvo.c]); const opts = [alvo];
+    while (opts.length < 4) { const d = aleatorio(null); if (!usados.has(d.c)) { usados.add(d.c); opts.push(d); } }
+    opcoes = embaralhar(opts);
+    dicaEl.innerHTML = 'Nível <b>'+(nivel+1)+'</b> — que país é esse?';
+    desenhar(); montarBotoes();
+  }
+
+  function desenhar() {
+    const img = imgs[alvo.c];
+    ctx.fillStyle = '#0a0a22'; ctx.fillRect(0,0,W,H);
+    if (revelado) {
+      ctx.drawImage(img, flagRect.x, flagRect.y, flagRect.w, flagRect.h);
+    } else {
+      janelas.forEach(j => {
+        ctx.save();
+        ctx.beginPath(); ctx.arc(j.x, j.y, j.r, 0, Math.PI*2); ctx.clip();
+        ctx.drawImage(img, flagRect.x, flagRect.y, flagRect.w, flagRect.h);
+        ctx.restore();
+        ctx.beginPath(); ctx.arc(j.x, j.y, j.r, 0, Math.PI*2);
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(120,215,255,.85)'; ctx.stroke();
+      });
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 2;
+    ctx.strokeRect(flagRect.x, flagRect.y, flagRect.w, flagRect.h);
+  }
+
+  function montarBotoes() {
+    escolhasEl.innerHTML = '';
+    opcoes.forEach(p => {
+      const b = document.createElement('button');
+      b.textContent = p.n;
+      b.onclick = () => responder(p, b);
+      escolhasEl.appendChild(b);
+    });
+  }
+
+  function responder(p, btn) {
+    if (travado) return;
+    travado = true;
+    const acertou = p.c === alvo.c;
+    if (acertou) { btn.classList.add('certo'); pontos++; nivel++; }
+    else {
+      btn.classList.add('errado'); vidas--;
+      [...escolhasEl.children].forEach(b => { if (b.textContent === alvo.n) b.classList.add('certo'); });
+    }
+    atualizar();
+    revelado = true; desenhar();
+    dicaEl.innerHTML = acertou ? 'Acertou! 🎉' : 'Era a bandeira de <b>'+alvo.n+'</b>';
+    setTimeout(() => { if (vidas <= 0) fimDeJogo(); else novaRodada(); }, acertou ? 900 : 1500);
+  }
+
+  function fimDeJogo() {
+    escolhasEl.innerHTML = '';
+    registrarPontuacao('bandeiras', pontos);
+    mostrarOverlay('Fim de jogo!', 'Você acertou '+pontos+' bandeiras!',
+      '↻ Jogar de novo', () => {
+        overlay.classList.remove('show');
+        pontos=0; nivel=0; vidas=3; atualizar(); novaRodada();
+      });
+  }
+
+  carregar();
+  return { dir(){}, parar(){ pararLoop(); } };
+}
+
+// suporte a roundRect em navegadores antigos
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+    this.beginPath();
+    this.moveTo(x+r,y);
+    this.arcTo(x+w,y,x+w,y+h,r);
+    this.arcTo(x+w,y+h,x,y+h,r);
+    this.arcTo(x,y+h,x,y,r);
+    this.arcTo(x,y,x+w,y,r);
+    this.closePath();
+    return this;
+  };
+}
+
+// liga a chave: mostra login ou a página inicial
+iniciar();
+</script>
+</body>
+</html>
