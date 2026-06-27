@@ -576,10 +576,15 @@ async function sincronizar() {
 
 // liga o "rádio" que fica sincronizando de tempos em tempos (sempre, mesmo no login,
 // pra um amigo conseguir entrar numa conta criada em outro aparelho)
-let _syncTimer = null;
+let _syncTimer = null, _bat = 0;
 function ligarSync() {
   if (!NUVEM_LIGADA || _syncTimer) return;
-  _syncTimer = setInterval(sincronizar, 10000);   // 10s: leve pro limite grátis do ntfy
+  _syncTimer = setInterval(() => {
+    sincronizar();
+    // a cada ~60s, reanuncia as contas que este aparelho conhece, pra elas NÃO
+    // expirarem do canal (assim um login criado aqui não é "esquecido" pelos outros)
+    if ((++_bat) % 6 === 0 && Object.keys(_lerLocal()).length) publicar();
+  }, 10000);   // 10s: leve pro limite grátis do ntfy
 }
 
 // ===== ADMINISTRADOR =====
@@ -719,7 +724,13 @@ function syncRapido(){ return Promise.race([sincronizar(), new Promise(r=>setTim
 async function tentarEntrar() {
   loginErro.textContent = 'Entrando...';
   await syncRapido();   // tenta buscar contas de outros aparelhos, mas sem pendurar
-  const erro = await entrar(inApelido.value, inSenha.value);
+  let erro = await entrar(inApelido.value, inSenha.value);
+  if (erro && /não existe/.test(erro)) {
+    // talvez a conta exista no canal mas ainda não chegou aqui: busca a fundo e tenta 1x mais
+    loginErro.textContent = 'Procurando seu perfil...';
+    await sincronizar();
+    erro = await entrar(inApelido.value, inSenha.value);
+  }
   if (erro) { loginErro.textContent = erro; return; }
   aposLogin();
 }
