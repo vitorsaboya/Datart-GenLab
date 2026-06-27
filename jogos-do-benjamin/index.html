@@ -541,7 +541,7 @@ function publicar() {
     try {
       await fetch(NTFY, { method:'POST', body: JSON.stringify({ jogadores: _lerLocal(), tumbas: _lerTumbas() }) });
     } catch(e) {}
-  }, 400);
+  }, 1500);   // agrupa publicações: mais leve pro limite grátis do ntfy
 }
 
 // lê o canal, junta o que os outros sabem na memória local e redesenha o placar
@@ -572,7 +572,7 @@ async function sincronizar() {
 let _syncTimer = null;
 function ligarSync() {
   if (!NUVEM_LIGADA || _syncTimer) return;
-  _syncTimer = setInterval(sincronizar, 4000);
+  _syncTimer = setInterval(sincronizar, 10000);   // 10s: leve pro limite grátis do ntfy
 }
 
 // ===== ADMINISTRADOR =====
