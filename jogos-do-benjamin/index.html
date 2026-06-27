@@ -474,62 +474,17 @@ document.querySelectorAll('.controles button').forEach(b => {
 });
 
 // ===================== CONTAS + PLACAR =====================
-// ===== NUVEM COMPARTILHADA (ntfy.sh, $0, sem cadastro) =====
-// Todos os amigos usam o MESMO "canal" (tópico). Cada aparelho guarda o que sabe na
-// memória local E "fofoca" pros outros pelo canal; todo mundo junta tudo, pegando sempre
-// o MAIOR ponto de cada jogador. Assim o placar fica compartilhado sem ninguém criar conta.
-// (Obs.: o ntfy guarda mensagens por ~12h; por isso cada aparelho re-publica o que sabe,
-//  mantendo o placar vivo enquanto a turma está jogando.)
-const NUVEM_LIGADA = true;
-// LIMPEZA (v2): canal e memória novos = placar zerado pra todos. Bumpe esta versão
-// sempre que quiser fazer uma "limpa" geral (abandona o canal e a memória antigos).
-const TOPICO = "datart-jogos-benjamin-arcade-v2-r7w3";   // canal único da turma (todos os amigos compartilham este)
-const NTFY   = "https://ntfy.sh/" + TOPICO;
+// ===== NUVEM (Firebase Realtime Database, $0, DURÁVEL) =====
+// O placar e as contas vivem num banco de verdade do Google: NÃO expira e NÃO tem
+// o limite de requisições que travava o ntfy. O resto do jogo fala só com "Nuvem".
+// Cada conta é um nó em /jogadores/<apelido>. Pra "limpar" tudo: apagar /jogadores
+// no console do Firebase (ou trocar a URL abaixo por outro banco).
+const FIREBASE_URL = "https://jogos-benjamin-default-rtdb.firebaseio.com";
 const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas','capivara'];
 
-// --- memória local do aparelho ---
+// cache local do aparelho (pra mostrar algo na hora e aguentar uma quedinha de rede)
 function _lerLocal()    { try { return JSON.parse(localStorage.getItem('benjogos_v2_jogadores') || '{}'); } catch(e){ return {}; } }
 function _gravarLocal(o){ localStorage.setItem('benjogos_v2_jogadores', JSON.stringify(o)); }
-function _lerTumbas()   { try { return JSON.parse(localStorage.getItem('benjogos_v2_tumbas') || '{}'); } catch(e){ return {}; } }
-function _gravarTumbas(o){ localStorage.setItem('benjogos_v2_tumbas', JSON.stringify(o)); }
-
-// junta dois conjuntos de jogadores: une todos, pega o MAIOR ponto de cada jogo,
-// e nos dados do perfil (apelido/senha) mantém o mais recente (pelo carimbo de tempo "t")
-function _mesclar(a, b) {
-  const out = Object.assign({}, a);
-  for (const k in b) {
-    if (!out[k]) { out[k] = b[k]; continue; }
-    const A = out[k], B = b[k], pontos = {};
-    for (const g of JOGOSIDS) pontos[g] = Math.max((A.pontos||{})[g]||0, (B.pontos||{})[g]||0);
-    const novo = (B.t||0) > (A.t||0) ? B : A;
-    out[k] = { apelido: novo.apelido, senha: novo.senha, pontos, t: Math.max(A.t||0, B.t||0) };
-  }
-  return out;
-}
-// remove os jogadores apagados (lápides), respeitando o tempo (se o perfil é mais novo que
-// a lápide, ele "ressuscitou" — ex.: recadastro com o mesmo apelido — e fica)
-function _semTumbas(jog, tum) {
-  const out = {};
-  for (const k in jog) { if (!(tum[k] && (jog[k].t||0) <= tum[k])) out[k] = jog[k]; }
-  return out;
-}
-
-// "Nuvem" = o único lugar que o resto do jogo usa pra ler/gravar jogadores.
-const Nuvem = {
-  async lerJogadores()   { return _semTumbas(_lerLocal(), _lerTumbas()); },
-  async lerJogador(chave){ return (await this.lerJogadores())[chave] || null; },
-  async gravarJogador(chave, dados) {
-    dados.t = Date.now();
-    const all = _lerLocal(); all[chave] = dados; _gravarLocal(all);
-    const tum = _lerTumbas(); if (tum[chave]) { delete tum[chave]; _gravarTumbas(tum); } // recadastro limpa a lápide
-    publicar();
-  },
-  async apagarJogador(chave) {
-    const all = _lerLocal(); delete all[chave]; _gravarLocal(all);
-    const tum = _lerTumbas(); tum[chave] = Date.now(); _gravarTumbas(tum);
-    publicar();
-  }
-};
 
 // fetch com tempo-limite: a nuvem NUNCA pode pendurar a tela
 function fetchTO(url, opts, ms) {
@@ -537,54 +492,56 @@ function fetchTO(url, opts, ms) {
   const to = setTimeout(() => ctl.abort(), ms);
   return fetch(url, Object.assign({}, opts, { signal: ctl.signal })).finally(() => clearTimeout(to));
 }
+function temNuvem(){ return !!FIREBASE_URL; }
+function fbURL(p){ return FIREBASE_URL.replace(/\/$/, '') + '/jogadores' + p + '.json'; }
 
-// publica o que este aparelho sabe pro canal (com leve atraso pra agrupar)
-let _pubTimer = null;
-function publicar() {
-  if (!NUVEM_LIGADA) return;
-  if (_pubTimer) return;
-  _pubTimer = setTimeout(async () => {
-    _pubTimer = null;
-    try {
-      await fetchTO(NTFY, { method:'POST', body: JSON.stringify({ jogadores: _lerLocal(), tumbas: _lerTumbas() }) }, 5000);
-    } catch(e) {}
-  }, 1500);   // agrupa publicações: mais leve pro limite grátis do ntfy
-}
+// "Nuvem" = o único lugar que o resto do jogo usa pra ler/gravar jogadores.
+const Nuvem = {
+  async lerJogadores() {
+    if (temNuvem()) {
+      try {
+        const r = await fetchTO(fbURL(''), {}, 6000);
+        const j = await r.json();
+        const obj = (j && typeof j === 'object') ? j : {};
+        _gravarLocal(obj);   // atualiza o cache local
+        return obj;
+      } catch(e) { return _lerLocal(); }   // offline: usa o último conhecido
+    }
+    return _lerLocal();
+  },
+  async lerJogador(chave) {
+    if (temNuvem()) {
+      try { const r = await fetchTO(fbURL('/' + encodeURIComponent(chave)), {}, 6000); return (await r.json()) || null; }
+      catch(e) { return _lerLocal()[chave] || null; }
+    }
+    return _lerLocal()[chave] || null;
+  },
+  async gravarJogador(chave, dados) {
+    const all = _lerLocal(); all[chave] = dados; _gravarLocal(all);   // cache na hora
+    if (temNuvem()) {
+      try { await fetchTO(fbURL('/' + encodeURIComponent(chave)), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(dados) }, 6000); } catch(e) {}
+    }
+  },
+  async apagarJogador(chave) {
+    const all = _lerLocal(); delete all[chave]; _gravarLocal(all);
+    if (temNuvem()) {
+      try { await fetchTO(fbURL('/' + encodeURIComponent(chave)), { method:'DELETE' }, 6000); } catch(e) {}
+    }
+  }
+};
 
-// lê o canal, junta o que os outros sabem na memória local e redesenha o placar
-let _sincronizando = false;
+// lê o banco de tempos em tempos e redesenha o placar (só quando está na home)
+let _puxando = false;
 async function sincronizar() {
-  if (!NUVEM_LIGADA || _sincronizando) return;
-  _sincronizando = true;
-  try {
-    const r = await fetchTO(NTFY + "/json?poll=1&since=all", {}, 4000);
-    const txt = await r.text();
-    let local = _lerLocal(), tum = _lerTumbas(), mudou = false;
-    txt.split('\n').forEach(linha => {
-      linha = linha.trim(); if (!linha) return;
-      let o; try { o = JSON.parse(linha); } catch(e){ return; }
-      if (o.event !== 'message' || !o.message) return;
-      let m; try { m = JSON.parse(o.message); } catch(e){ return; }
-      if (m && m.jogadores) { local = _mesclar(local, m.jogadores); mudou = true; }
-      if (m && m.tumbas) for (const k in m.tumbas) { if ((tum[k]||0) < m.tumbas[k]) { tum[k] = m.tumbas[k]; mudou = true; } }
-    });
-    if (mudou) { _gravarLocal(local); _gravarTumbas(tum); }
-    if (homeEl.style.display === 'grid') atualizarHome();
-  } catch(e) {
-  } finally { _sincronizando = false; }
+  if (!temNuvem() || _puxando) return;
+  if (homeEl.style.display !== 'grid') return;
+  _puxando = true;
+  try { await atualizarHome(); } catch(e) {} finally { _puxando = false; }
 }
-
-// liga o "rádio" que fica sincronizando de tempos em tempos (sempre, mesmo no login,
-// pra um amigo conseguir entrar numa conta criada em outro aparelho)
-let _syncTimer = null, _bat = 0;
+let _syncTimer = null;
 function ligarSync() {
-  if (!NUVEM_LIGADA || _syncTimer) return;
-  _syncTimer = setInterval(() => {
-    sincronizar();
-    // a cada ~60s, reanuncia as contas que este aparelho conhece, pra elas NÃO
-    // expirarem do canal (assim um login criado aqui não é "esquecido" pelos outros)
-    if ((++_bat) % 6 === 0 && Object.keys(_lerLocal()).length) publicar();
-  }, 10000);   // 10s: leve pro limite grátis do ntfy
+  if (!temNuvem() || _syncTimer) return;
+  _syncTimer = setInterval(sincronizar, 6000);   // 6s: o Firebase aguenta tranquilo
 }
 
 // ===== ADMINISTRADOR =====
@@ -641,10 +598,10 @@ function sair() {
 
 function totalDe(p) { p = p || {}; let s = 0; for (const g of JOGOSIDS) s += (p[g]||0); return s; }
 
-// guarda só o MELHOR resultado do jogador atual em cada jogo
+// guarda só o MELHOR resultado do jogador atual em cada jogo (lê do cache local p/ ser leve)
 async function registrarPontuacao(jogo, valor) {
   if (!usuario) return;  // admin não pontua
-  const j = await Nuvem.lerJogador(usuario);
+  const j = _lerLocal()[usuario];
   if (!j) return;
   if (!j.pontos) j.pontos = {};
   if ((j.pontos[jogo]||0) < valor) { j.pontos[jogo] = valor; await Nuvem.gravarJogador(usuario, j); }
@@ -719,24 +676,14 @@ function iniciarPollHome(){ sincronizar(); }  // ao abrir a home, puxa a nuvem n
 function pararPollHome(){}                      // o rádio global continua sozinho
 
 // ----- botões da tela de login -----
-// melhor-esforço de sincronizar, mas NUNCA trava o login (máx ~1.5s)
-function syncRapido(){ return Promise.race([sincronizar(), new Promise(r=>setTimeout(r,1500))]); }
 async function tentarEntrar() {
   loginErro.textContent = 'Entrando...';
-  await syncRapido();   // tenta buscar contas de outros aparelhos, mas sem pendurar
-  let erro = await entrar(inApelido.value, inSenha.value);
-  if (erro && /não existe/.test(erro)) {
-    // talvez a conta exista no canal mas ainda não chegou aqui: busca a fundo e tenta 1x mais
-    loginErro.textContent = 'Procurando seu perfil...';
-    await sincronizar();
-    erro = await entrar(inApelido.value, inSenha.value);
-  }
+  const erro = await entrar(inApelido.value, inSenha.value);   // lê a conta direto do Firebase
   if (erro) { loginErro.textContent = erro; return; }
   aposLogin();
 }
 async function tentarCadastrar() {
   loginErro.textContent = 'Criando conta...';
-  await syncRapido();   // tenta evitar apelido repetido, mas sem pendurar
   const erro = await cadastrar(inApelido.value, inSenha.value);
   if (erro) { loginErro.textContent = erro; return; }
   await entrar(inApelido.value, inSenha.value);
@@ -772,13 +719,12 @@ async function iniciar() {
     document.getElementById('btnApagarEu').style.display = 'none';
     mostrarMenu();
   } else if (s && s.chave) {
-    const j = await Nuvem.lerJogador(s.chave);
-    if (j) {
-      usuario = s.chave; ehAdmin = false; apelidoExibicao = j.apelido;
-      document.getElementById('ola').innerHTML = 'Olá, <b>'+escapar(j.apelido)+'</b>!';
-      document.getElementById('btnApagarEu').style.display = '';
-      mostrarMenu();
-    } else { limparSessao(); mostrarTela('login'); }
+    // restaura na hora pelo cache (sem esperar a nuvem); o placar se atualiza no fundo
+    const j = _lerLocal()[s.chave] || {};
+    usuario = s.chave; ehAdmin = false; apelidoExibicao = j.apelido || s.chave;
+    document.getElementById('ola').innerHTML = 'Olá, <b>'+escapar(apelidoExibicao)+'</b>!';
+    document.getElementById('btnApagarEu').style.display = '';
+    mostrarMenu();
   } else {
     mostrarTela('login');
   }
