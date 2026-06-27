@@ -481,15 +481,17 @@ document.querySelectorAll('.controles button').forEach(b => {
 // (Obs.: o ntfy guarda mensagens por ~12h; por isso cada aparelho re-publica o que sabe,
 //  mantendo o placar vivo enquanto a turma está jogando.)
 const NUVEM_LIGADA = true;
-const TOPICO = "datart-jogos-benjamin-arcade-k7m2x9p4";   // canal único da turma (todos os amigos compartilham este)
+// LIMPEZA (v2): canal e memória novos = placar zerado pra todos. Bumpe esta versão
+// sempre que quiser fazer uma "limpa" geral (abandona o canal e a memória antigos).
+const TOPICO = "datart-jogos-benjamin-arcade-v2-r7w3";   // canal único da turma (todos os amigos compartilham este)
 const NTFY   = "https://ntfy.sh/" + TOPICO;
 const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas','capivara'];
 
 // --- memória local do aparelho ---
-function _lerLocal()    { try { return JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}'); } catch(e){ return {}; } }
-function _gravarLocal(o){ localStorage.setItem('benjogos_jogadores', JSON.stringify(o)); }
-function _lerTumbas()   { try { return JSON.parse(localStorage.getItem('benjogos_tumbas') || '{}'); } catch(e){ return {}; } }
-function _gravarTumbas(o){ localStorage.setItem('benjogos_tumbas', JSON.stringify(o)); }
+function _lerLocal()    { try { return JSON.parse(localStorage.getItem('benjogos_v2_jogadores') || '{}'); } catch(e){ return {}; } }
+function _gravarLocal(o){ localStorage.setItem('benjogos_v2_jogadores', JSON.stringify(o)); }
+function _lerTumbas()   { try { return JSON.parse(localStorage.getItem('benjogos_v2_tumbas') || '{}'); } catch(e){ return {}; } }
+function _gravarTumbas(o){ localStorage.setItem('benjogos_v2_tumbas', JSON.stringify(o)); }
 
 // junta dois conjuntos de jogadores: une todos, pega o MAIOR ponto de cada jogo,
 // e nos dados do perfil (apelido/senha) mantém o mais recente (pelo carimbo de tempo "t")
@@ -583,9 +585,9 @@ const ADMIN_SENHA   = "chave-mestra";
 let usuario = null;     // chave (apelido minúsculo) do jogador; null se for admin
 let ehAdmin = false;
 let apelidoExibicao = '';
-function lerSessao()   { try { return JSON.parse(localStorage.getItem('benjogos_sessao') || 'null'); } catch(e){ return null; } }
-function gravarSessao(s){ localStorage.setItem('benjogos_sessao', JSON.stringify(s)); }
-function limparSessao(){ localStorage.removeItem('benjogos_sessao'); }
+function lerSessao()   { try { return JSON.parse(localStorage.getItem('benjogos_v2_sessao') || 'null'); } catch(e){ return null; } }
+function gravarSessao(s){ localStorage.setItem('benjogos_v2_sessao', JSON.stringify(s)); }
+function limparSessao(){ localStorage.removeItem('benjogos_v2_sessao'); }
 
 function ehNomeAdmin(nome){ return nome.trim().toLowerCase() === ADMIN_APELIDO.toLowerCase(); }
 
