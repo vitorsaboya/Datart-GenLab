@@ -482,6 +482,51 @@ document.querySelectorAll('.controles button').forEach(b => {
 const FIREBASE_URL = "https://jogos-benjamin-default-rtdb.firebaseio.com";
 const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas','capivara'];
 
+// lista-mestra de países (código da bandeira + nome + capital) — serve Bandeiras E Capitais
+const PAISES_MASTER = [
+  {c:'br',n:'Brasil',cap:'Brasília'},{c:'ar',n:'Argentina',cap:'Buenos Aires'},
+  {c:'us',n:'Estados Unidos',cap:'Washington'},{c:'ca',n:'Canadá',cap:'Ottawa'},
+  {c:'mx',n:'México',cap:'Cidade do México'},{c:'fr',n:'França',cap:'Paris'},
+  {c:'de',n:'Alemanha',cap:'Berlim'},{c:'it',n:'Itália',cap:'Roma'},
+  {c:'es',n:'Espanha',cap:'Madri'},{c:'pt',n:'Portugal',cap:'Lisboa'},
+  {c:'gb',n:'Reino Unido',cap:'Londres'},{c:'jp',n:'Japão',cap:'Tóquio'},
+  {c:'cn',n:'China',cap:'Pequim'},{c:'kr',n:'Coreia do Sul',cap:'Seul'},
+  {c:'in',n:'Índia',cap:'Nova Déli'},{c:'au',n:'Austrália',cap:'Camberra'},
+  {c:'ru',n:'Rússia',cap:'Moscou'},{c:'za',n:'África do Sul',cap:'Pretória'},
+  {c:'eg',n:'Egito',cap:'Cairo'},{c:'ng',n:'Nigéria',cap:'Abuja'},
+  {c:'gr',n:'Grécia',cap:'Atenas'},{c:'ch',n:'Suíça',cap:'Berna'},
+  {c:'se',n:'Suécia',cap:'Estocolmo'},{c:'no',n:'Noruega',cap:'Oslo'},
+  {c:'nl',n:'Holanda',cap:'Amsterdã'},{c:'be',n:'Bélgica',cap:'Bruxelas'},
+  {c:'ie',n:'Irlanda',cap:'Dublin'},{c:'tr',n:'Turquia',cap:'Ancara'},
+  {c:'cl',n:'Chile',cap:'Santiago'},{c:'pe',n:'Peru',cap:'Lima'},
+  {c:'co',n:'Colômbia',cap:'Bogotá'},{c:'uy',n:'Uruguai',cap:'Montevidéu'},
+  {c:'jm',n:'Jamaica',cap:'Kingston'},{c:'cu',n:'Cuba',cap:'Havana'},
+  {c:'gt',n:'Guatemala',cap:'Cidade da Guatemala'},{c:'ph',n:'Filipinas',cap:'Manila'},
+  {c:'th',n:'Tailândia',cap:'Bangcoc'},{c:'vn',n:'Vietnã',cap:'Hanói'},
+  {c:'id',n:'Indonésia',cap:'Jacarta'},{c:'sa',n:'Arábia Saudita',cap:'Riad'},
+  {c:'il',n:'Israel',cap:'Jerusalém'},{c:'pl',n:'Polônia',cap:'Varsóvia'},
+  {c:'ua',n:'Ucrânia',cap:'Kiev'},{c:'ro',n:'Romênia',cap:'Bucareste'},
+  {c:'hu',n:'Hungria',cap:'Budapeste'},{c:'at',n:'Áustria',cap:'Viena'},
+  {c:'dk',n:'Dinamarca',cap:'Copenhague'},{c:'fi',n:'Finlândia',cap:'Helsinque'},
+  {c:'cz',n:'Tchéquia',cap:'Praga'},{c:'sk',n:'Eslováquia',cap:'Bratislava'},
+  {c:'bg',n:'Bulgária',cap:'Sófia'},{c:'hr',n:'Croácia',cap:'Zagreb'},
+  {c:'rs',n:'Sérvia',cap:'Belgrado'},{c:'is',n:'Islândia',cap:'Reykjavik'},
+  {c:'ma',n:'Marrocos',cap:'Rabat'},{c:'dz',n:'Argélia',cap:'Argel'},
+  {c:'ke',n:'Quênia',cap:'Nairóbi'},{c:'et',n:'Etiópia',cap:'Adis Abeba'},
+  {c:'gh',n:'Gana',cap:'Acra'},{c:'sn',n:'Senegal',cap:'Dacar'},
+  {c:'tz',n:'Tanzânia',cap:'Dodoma'},{c:'ao',n:'Angola',cap:'Luanda'},
+  {c:'ae',n:'Emirados Árabes',cap:'Abu Dhabi'},{c:'qa',n:'Catar',cap:'Doha'},
+  {c:'ir',n:'Irã',cap:'Teerã'},{c:'iq',n:'Iraque',cap:'Bagdá'},
+  {c:'pk',n:'Paquistão',cap:'Islamabad'},{c:'bd',n:'Bangladesh',cap:'Daca'},
+  {c:'lk',n:'Sri Lanka',cap:'Colombo'},{c:'my',n:'Malásia',cap:'Kuala Lumpur'},
+  {c:'sg',n:'Singapura',cap:'Singapura'},{c:'kp',n:'Coreia do Norte',cap:'Pyongyang'},
+  {c:'mn',n:'Mongólia',cap:'Ulan Bator'},{c:'nz',n:'Nova Zelândia',cap:'Wellington'},
+  {c:'ec',n:'Equador',cap:'Quito'},{c:'bo',n:'Bolívia',cap:'La Paz'},
+  {c:'py',n:'Paraguai',cap:'Assunção'},{c:'ve',n:'Venezuela',cap:'Caracas'},
+  {c:'cr',n:'Costa Rica',cap:'San José'},{c:'pa',n:'Panamá',cap:'Cidade do Panamá'},
+  {c:'do',n:'República Dominicana',cap:'Santo Domingo'}
+];
+
 // cache local do aparelho (pra mostrar algo na hora e aguentar uma quedinha de rede)
 function _lerLocal()    { try { return JSON.parse(localStorage.getItem('benjogos_v2_jogadores') || '{}'); } catch(e){ return {}; } }
 function _gravarLocal(o){ localStorage.setItem('benjogos_v2_jogadores', JSON.stringify(o)); }
@@ -734,11 +779,11 @@ async function iniciar() {
 function Labirinto() {
   usarSetas();
   const HEROI = "🐧", ESTRELA = "⭐";
-  let fase = 1, passos = 0, cols, rows, cell, grid, player, saida, venceu;
+  let fase = 1, passos = 0, cols, rows, cell, grid, player, saida, venceu, perdeu, comecou, tempoRestante;
   let flocos, ultimoT;   // neve caindo no fundo
 
   function criar() {
-    const tam = Math.min(8 + (fase - 1) * 2, 22);
+    const tam = Math.min(8 + (fase - 1) * 2, 30);   // cresce até 30x30 (era 22)
     cols = rows = tam;
     cell = Math.floor(480 / tam);
     canvas.width = canvas.height = cell * tam;
@@ -767,7 +812,9 @@ function Labirinto() {
       grid[ny][nx].visit = true; pilha.push([nx,ny]);
     }
     player = { x:0, y:0 }; saida = { x:cols-1, y:rows-1 };
-    venceu = false; passos = 0;
+    venceu = false; perdeu = false; comecou = false; passos = 0;
+    // tempo aperta por fase: maze cresce mas o relógio quase não, fica MUITO difícil lá em cima
+    tempoRestante = Math.max(8, Math.round(tam * 0.6 * Math.max(1.2, 2.8 - fase*0.15))) * 1000;
     // gera os flocos de neve do fundo
     const Wc = canvas.width, Hc = canvas.height;
     flocos = [];
@@ -791,14 +838,25 @@ function Labirinto() {
       if (f.y > H + f.r) { f.y = -f.r; f.x = Math.random()*W; }
       if (f.x < -5) f.x = W + 5; else if (f.x > W + 5) f.x = -5;
     });
+    // o relógio só corre depois do 1º movimento (dá tempo de olhar o labirinto)
+    if (comecou && !venceu && !perdeu) {
+      tempoRestante -= dt;
+      if (tempoRestante <= 0) { tempoRestante = 0; perder(); }
+      mostrarTempo();
+    }
     desenhar();
     raf = requestAnimationFrame(loop);
   }
 
+  function mostrarTempo(){ info2.innerHTML = 'Tempo: <b>'+Math.ceil(Math.max(0,tempoRestante)/1000)+'s</b>'; }
   function atualizarInfo() {
     info1.innerHTML = 'Fase: <b>' + fase + '</b>';
-    info2.innerHTML = 'Passos: <b>' + passos + '</b>';
-    dicaEl.innerHTML = 'Use as <b>setas</b> pra levar o 🐧 até a ⭐';
+    mostrarTempo();
+    dicaEl.innerHTML = 'Leve o 🐧 até a ⭐ antes do <b>tempo</b> acabar!';
+  }
+  function perder() {
+    perdeu = true;
+    mostrarOverlay('⏰ Tempo esgotado!', 'Você chegou na fase '+fase+'!', '↻ Jogar de novo', () => { fase = 1; criar(); });
   }
 
   function desenhar() {
@@ -866,17 +924,18 @@ function Labirinto() {
   }
 
   function dir(d) {
-    if (venceu) return;
+    if (venceu || perdeu) return;
+    comecou = true;   // começa o relógio
     const c = grid[player.y][player.x]; let m = false;
     if (d==='cima'  && !c.cima)  { player.y--; m=true; }
     if (d==='baixo' && !c.baixo) { player.y++; m=true; }
     if (d==='esq'   && !c.esq)   { player.x--; m=true; }
     if (d==='dir'   && !c.dir)   { player.x++; m=true; }
     if (m) {
-      passos++; atualizarInfo(); desenhar();
+      passos++; desenhar();
       if (player.x===saida.x && player.y===saida.y) {
         venceu = true;
-        registrarPontuacao('labirinto', fase*12);  // 12 pontos por fase vencida
+        registrarPontuacao('labirinto', fase*15);  // 15 pontos por fase vencida (salva na hora)
         mostrarOverlay('🎉 Venceu!', 'Fase '+fase+' em '+passos+' passos!',
           'Próxima fase ➜', () => { fase++; criar(); });
       }
@@ -1082,22 +1141,7 @@ function Frutas() {
 // ===================== JOGO 4: BANDEIRAS =====================
 function Bandeiras() {
   usarEscolhas();
-  const PAISES = [
-    {c:'br',n:'Brasil'}, {c:'ar',n:'Argentina'}, {c:'us',n:'Estados Unidos'},
-    {c:'ca',n:'Canadá'}, {c:'mx',n:'México'}, {c:'fr',n:'França'},
-    {c:'de',n:'Alemanha'}, {c:'it',n:'Itália'}, {c:'es',n:'Espanha'},
-    {c:'pt',n:'Portugal'}, {c:'gb',n:'Reino Unido'}, {c:'jp',n:'Japão'},
-    {c:'cn',n:'China'}, {c:'kr',n:'Coreia do Sul'}, {c:'in',n:'Índia'},
-    {c:'au',n:'Austrália'}, {c:'ru',n:'Rússia'}, {c:'za',n:'África do Sul'},
-    {c:'eg',n:'Egito'}, {c:'ng',n:'Nigéria'}, {c:'gr',n:'Grécia'},
-    {c:'ch',n:'Suíça'}, {c:'se',n:'Suécia'}, {c:'no',n:'Noruega'},
-    {c:'nl',n:'Holanda'}, {c:'be',n:'Bélgica'}, {c:'ie',n:'Irlanda'},
-    {c:'tr',n:'Turquia'}, {c:'cl',n:'Chile'}, {c:'pe',n:'Peru'},
-    {c:'co',n:'Colômbia'}, {c:'uy',n:'Uruguai'}, {c:'jm',n:'Jamaica'},
-    {c:'cu',n:'Cuba'}, {c:'gt',n:'Guatemala'}, {c:'ph',n:'Filipinas'},
-    {c:'th',n:'Tailândia'}, {c:'vn',n:'Vietnã'}, {c:'id',n:'Indonésia'},
-    {c:'sa',n:'Arábia Saudita'}, {c:'il',n:'Israel'}
-  ];
+  const PAISES = PAISES_MASTER;   // base ~80 bandeiras (lista-mestra)
   const W = 480, H = 360;
   canvas.width = W; canvas.height = H;
   const imgs = {};
@@ -1198,7 +1242,7 @@ function Bandeiras() {
     if (travado) return;
     travado = true;
     const acertou = p.c === alvo.c;
-    if (acertou) { btn.classList.add('certo'); acertos++; pontos += 10; nivel++; registrarPontuacao('bandeiras', pontos); }
+    if (acertou) { btn.classList.add('certo'); acertos++; pontos += 8; nivel++; registrarPontuacao('bandeiras', pontos); }
     else {
       btn.classList.add('errado'); vidas--;
       [...escolhasEl.children].forEach(b => { if (b.textContent === alvo.n) b.classList.add('certo'); });
@@ -1240,10 +1284,10 @@ function Canhao() {
   document.getElementById('cFogo').onclick = atirar;
 
   function novoAlvo(){
-    const w = Math.max(22, 46 - acertos*3);          // encolhe a cada acerto
-    const xMin = Math.min(W-w-30, 170 + acertos*6);  // vai ficando mais longe
+    const w = Math.max(18, 44 - acertos*4);          // encolhe rápido (mín. bem pequeno)
+    const xMin = Math.min(W-w-28, 180 + acertos*8);  // afasta rápido
     alvo = { x: xMin + Math.random()*(W-xMin-w-12), w, h: 50 };
-    vento = acertos >= 4 ? (Math.random()*0.10 - 0.05) : 0;   // vento a partir do 5º alvo
+    vento = acertos >= 2 ? (Math.random()*0.14 - 0.07) * (1 + acertos*0.05) : 0;  // vento forte a partir do 3º
   }
   function atualizar(){
     info1.innerHTML='Pontos: <b>'+pontos+'</b>'; info2.innerHTML='Tiros: <b>'+'🔴'.repeat(vidas)+'</b>';
@@ -1263,12 +1307,13 @@ function Canhao() {
     raf = requestAnimationFrame(loop);
   }
   function acertou(){
-    voando=false; acertos++; pontos+=10; registrarPontuacao('canhao',pontos); novoAlvo(); atualizar();
-    mostrarOverlay('🎯 Acertou!','+10 pontos! Total: '+pontos,'Próximo alvo ➜', ()=>{ overlay.classList.remove('show'); desenhar(); });
+    voando=false; acertos++; const ganho = 6 + acertos*2; pontos += ganho;   // 8, 10, 12, 14...
+    registrarPontuacao('canhao',pontos); novoAlvo(); atualizar();
+    mostrarOverlay('🎯 Acertou!','+'+ganho+' pontos! Total: '+pontos,'Próximo alvo ➜', ()=>{ overlay.classList.remove('show'); desenhar(); });
   }
   function errou(){
     voando=false; vidas--; atualizar(); desenhar();
-    if (vidas<=0) mostrarOverlay('Fim de jogo!','Você acertou '+acertos+' alvos ('+pontos+' pontos)!','↻ Jogar de novo', ()=>{ overlay.classList.remove('show'); recomecar(); });
+    if (vidas<=0) { registrarPontuacao('canhao',pontos); mostrarOverlay('Fim de jogo!','Você acertou '+acertos+' alvos ('+pontos+' pontos)!','↻ Jogar de novo', ()=>{ overlay.classList.remove('show'); recomecar(); }); }
     else dicaEl.innerHTML='Errou! Restam <b>'+vidas+'</b> tiro(s). Mude o ângulo ou a força.';
   }
   function desenhar(){
@@ -1341,23 +1386,7 @@ function Minado() {
 // ===================== JOGO 7: CAPITAIS =====================
 function Capitais() {
   usarEscolhas();
-  const PAISES = [
-    {n:'Brasil',cap:'Brasília',c:'br'},{n:'Argentina',cap:'Buenos Aires',c:'ar'},
-    {n:'Estados Unidos',cap:'Washington',c:'us'},{n:'França',cap:'Paris',c:'fr'},
-    {n:'Itália',cap:'Roma',c:'it'},{n:'Espanha',cap:'Madri',c:'es'},
-    {n:'Portugal',cap:'Lisboa',c:'pt'},{n:'Reino Unido',cap:'Londres',c:'gb'},
-    {n:'Alemanha',cap:'Berlim',c:'de'},{n:'Japão',cap:'Tóquio',c:'jp'},
-    {n:'China',cap:'Pequim',c:'cn'},{n:'Rússia',cap:'Moscou',c:'ru'},
-    {n:'Canadá',cap:'Ottawa',c:'ca'},{n:'México',cap:'Cidade do México',c:'mx'},
-    {n:'Egito',cap:'Cairo',c:'eg'},{n:'Grécia',cap:'Atenas',c:'gr'},
-    {n:'Austrália',cap:'Camberra',c:'au'},{n:'Índia',cap:'Nova Déli',c:'in'},
-    {n:'Chile',cap:'Santiago',c:'cl'},{n:'Peru',cap:'Lima',c:'pe'},
-    {n:'Colômbia',cap:'Bogotá',c:'co'},{n:'Uruguai',cap:'Montevidéu',c:'uy'},
-    {n:'Cuba',cap:'Havana',c:'cu'},{n:'Noruega',cap:'Oslo',c:'no'},
-    {n:'Suécia',cap:'Estocolmo',c:'se'},{n:'Holanda',cap:'Amsterdã',c:'nl'},
-    {n:'Irlanda',cap:'Dublin',c:'ie'},{n:'Turquia',cap:'Ancara',c:'tr'},
-    {n:'África do Sul',cap:'Pretória',c:'za'},{n:'Tailândia',cap:'Bangcoc',c:'th'}
-  ];
+  const PAISES = PAISES_MASTER;   // base ~80 países (lista-mestra)
   const W=480,H=300; canvas.width=W; canvas.height=H;
   let pontos=0, acertos=0, vidas=3, alvo=null, img=null, travado=false;
   function atualizar(){ info1.innerHTML='Pontos: <b>'+pontos+'</b>'; info2.innerHTML='Vidas: <b>'+'❤️'.repeat(vidas)+'</b>'; }
@@ -1394,13 +1423,18 @@ function Cores() {
   usarExtra();
   const W=480,H=300; canvas.width=W; canvas.height=H;
   const RECEITAS = [
-    {nome:'Laranja', cor:'#ff8c1a', rec:['vermelho','amarelo']},
-    {nome:'Verde',   cor:'#3fbf3f', rec:['azul','amarelo']},
-    {nome:'Roxo',    cor:'#9b3fd1', rec:['vermelho','azul']},
-    {nome:'Marrom',  cor:'#7a4a1e', rec:['vermelho','azul','amarelo']}
+    {nome:'Laranja',      cor:'#ff8c1a', rec:['vermelho','amarelo']},
+    {nome:'Verde',        cor:'#3fbf3f', rec:['azul','amarelo']},
+    {nome:'Roxo',         cor:'#9b3fd1', rec:['vermelho','azul']},
+    {nome:'Marrom',       cor:'#7a4a1e', rec:['vermelho','azul','amarelo']},
+    {nome:'Verde-limão',  cor:'#aadf2a', rec:['amarelo','amarelo','azul']},
+    {nome:'Verde-escuro', cor:'#2f6b27', rec:['azul','azul','amarelo']},
+    {nome:'Vinho',        cor:'#7a2233', rec:['vermelho','vermelho','azul']},
+    {nome:'Anil',         cor:'#3a3ab0', rec:['azul','azul','vermelho']},
+    {nome:'Pêssego',      cor:'#ffb066', rec:['vermelho','amarelo','amarelo']}
   ];
   const PRIM = { vermelho:'#e23b3b', azul:'#2f6bd6', amarelo:'#f2d020' };
-  let pontos=0, resolvidas=0, alvo=null, escolha=[]; const META=6;
+  let pontos=0, resolvidas=0, vidas=3, alvo=null, escolha=[];
   ctrlExtra.innerHTML =
     '<div class="botoes">'+
       '<button class="corbtn" data-cor="vermelho" style="background:#e23b3b"></button>'+
@@ -1413,8 +1447,8 @@ function Cores() {
   document.getElementById('cLimpar').onclick = () => { escolha=[]; amostra(); };
   document.getElementById('cCheck').onclick = checar;
 
-  function nova(){ alvo=RECEITAS[Math.floor(Math.random()*RECEITAS.length)]; escolha=[]; amostra(); info2.innerHTML='Cor: <b>'+(resolvidas+1)+'/'+META+'</b>'; dicaEl.innerHTML='Misture as primárias pra formar <b>'+alvo.nome+'</b>'; desenhar(); }
-  function add(c){ if(escolha.length>=3) return; escolha.push(c); amostra(); }
+  function nova(){ alvo=RECEITAS[Math.floor(Math.random()*RECEITAS.length)]; escolha=[]; amostra(); info2.innerHTML='Vidas: <b>'+'❤️'.repeat(vidas)+'</b>'; dicaEl.innerHTML='Misture pra formar <b>'+alvo.nome+'</b> (a quantidade importa!)'; desenhar(); }
+  function add(c){ if(escolha.length>=4) return; escolha.push(c); amostra(); }
   function mistura(){ if(!escolha.length) return '#101038'; let r=0,g=0,b=0; escolha.forEach(c=>{ const h=PRIM[c]; r+=parseInt(h.substr(1,2),16); g+=parseInt(h.substr(3,2),16); b+=parseInt(h.substr(5,2),16); }); const n=escolha.length; return 'rgb('+Math.round(r/n)+','+Math.round(g/n)+','+Math.round(b/n)+')'; }
   function amostra(){ const el=document.getElementById('cAmostra'); if(el) el.style.background=mistura(); }
   function desenhar(){
@@ -1424,11 +1458,15 @@ function Cores() {
     ctx.fillStyle='#fff'; ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('Faça a cor: '+alvo.nome, W/2, H-32);
   }
   function checar(){
-    const set=[...new Set(escolha)].sort().join(','), certo=[...new Set(alvo.rec)].sort().join(',');
-    if(set===certo){ resolvidas++; pontos+=10; registrarPontuacao('cores',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>';
-      if(resolvidas>=META) mostrarOverlay('🎨 Fim!', 'Você fez '+pontos+' pontos misturando cores!', '↻ Jogar de novo', ()=>{ overlay.classList.remove('show'); pontos=0; resolvidas=0; info1.innerHTML='Pontos: <b>0</b>'; nova(); });
-      else mostrarOverlay('🎨 Acertou!', alvo.rec.join(' + ')+' = '+alvo.nome, 'Próxima cor ➜', ()=>{ overlay.classList.remove('show'); nova(); }); }
-    else dicaEl.innerHTML='Ainda não... tente outra mistura pra <b>'+alvo.nome+'</b>';
+    // compara a mistura EXATA (com quantidade): ordena os dois e junta
+    const mix=escolha.slice().sort().join(','), certo=alvo.rec.slice().sort().join(',');
+    if(mix===certo){ resolvidas++; pontos+=10; registrarPontuacao('cores',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>';
+      mostrarOverlay('🎨 Acertou!', alvo.rec.join(' + ')+' = '+alvo.nome, 'Próxima cor ➜', ()=>{ overlay.classList.remove('show'); nova(); }); }
+    else {
+      vidas--; info2.innerHTML='Vidas: <b>'+'❤️'.repeat(vidas)+'</b>';
+      if(vidas<=0){ registrarPontuacao('cores',pontos); mostrarOverlay('🎨 Fim de jogo!','Você fez '+pontos+' pontos!','↻ Jogar de novo',()=>{ overlay.classList.remove('show'); pontos=0; resolvidas=0; vidas=3; info1.innerHTML='Pontos: <b>0</b>'; nova(); }); }
+      else dicaEl.innerHTML='Não é essa mistura... tente de novo pra <b>'+alvo.nome+'</b>';
+    }
   }
   info1.innerHTML='Pontos: <b>0</b>'; nova();
   return { dir(){}, parar(){ pararLoop(); } };
@@ -1437,23 +1475,30 @@ function Cores() {
 // ===================== JOGO 9: LINHA DO TEMPO =====================
 function Tempo() {
   usarEscolhas();
-  const W=480,H=220; canvas.width=W; canvas.height=H;
+  const W=480,H=260; canvas.width=W; canvas.height=H;
   const POOL = [
-    {n:'Descoberta do fogo', t:-400000},{n:'Invenção da roda', t:-3500},
-    {n:'Invenção da escrita', t:-3200},{n:'Pirâmides do Egito', t:-2500},
-    {n:'Descobrimento do Brasil', t:1500},{n:'Primeiro automóvel', t:1886},
-    {n:'Primeiro avião', t:1903},{n:'Primeiro computador', t:1945},
-    {n:'Homem na Lua', t:1969},{n:'Primeiro celular', t:1973},{n:'Internet popular', t:1995}
+    {n:'Descoberta do fogo', t:-400000},{n:'Pinturas nas cavernas', t:-30000},
+    {n:'Invenção da roda', t:-3500},{n:'Invenção da escrita', t:-3200},
+    {n:'Pirâmides do Egito', t:-2500},{n:'Muralha da China', t:-214},
+    {n:'Nascimento de Cristo', t:0},{n:'Queda do Império Romano', t:476},
+    {n:'Vikings exploram o mar', t:800},{n:'Invenção da imprensa', t:1450},
+    {n:'Descobrimento da América', t:1492},{n:'Descobrimento do Brasil', t:1500},
+    {n:'Telescópio de Galileu', t:1609},{n:'Independência do Brasil', t:1822},
+    {n:'Invenção do telefone', t:1876},{n:'Primeiro automóvel', t:1886},
+    {n:'Invenção do cinema', t:1895},{n:'Primeiro avião', t:1903},
+    {n:'Primeira televisão', t:1927},{n:'Primeiro computador', t:1945},
+    {n:'Homem na Lua', t:1969},{n:'Primeiro celular', t:1973},
+    {n:'Internet popular', t:1995},{n:'Primeiro iPhone', t:2007}
   ];
   let pontos=0, itens=[], escolhidos=[];
   function emb(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-  function nova(){ itens=emb(POOL).slice(0,4); escolhidos=[]; dicaEl.innerHTML='Toque do <b>mais antigo</b> ao <b>mais novo</b>'; montar(); desenhar(); }
+  function nova(){ const n=Math.min(6, 4+Math.floor((pontos/15)/2)); itens=emb(POOL).slice(0,n); escolhidos=[]; dicaEl.innerHTML='Ordene os <b>'+n+'</b> do <b>mais antigo</b> ao <b>mais novo</b>'; montar(); desenhar(); }
   function montar(){ escolhasEl.innerHTML=''; itens.forEach(it=>{ const b=document.createElement('button'); b.textContent=it.n; b.onclick=()=>escolher(it,b); escolhasEl.appendChild(b); }); }
   function escolher(it,btn){ if(btn.disabled) return; btn.disabled=true; btn.style.opacity=.45; btn.textContent=(escolhidos.length+1)+'. '+it.n; escolhidos.push(it); desenhar(); if(escolhidos.length===itens.length) checar(); }
   function checar(){
     const ok = escolhidos.every((it,i)=> i===0 || escolhidos[i-1].t<=it.t);
     if(ok){ pontos+=15; registrarPontuacao('tempo',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>'; mostrarOverlay('⏳ Certo!','+15 pontos! Sequência: '+pontos,'Próxima ➜',()=>{ overlay.classList.remove('show'); nova(); }); }
-    else { const certo=itens.slice().sort((a,b)=>a.t-b.t).map(x=>x.n).join('  →  ');
+    else { registrarPontuacao('tempo',pontos); const certo=itens.slice().sort((a,b)=>a.t-b.t).map(x=>x.n).join('  →  ');
       mostrarOverlay('Fim de jogo!','A ordem certa: '+certo+'  ·  Você fez '+pontos+' pontos','↻ Jogar de novo',()=>{ overlay.classList.remove('show'); pontos=0; info1.innerHTML='Pontos: <b>0</b>'; nova(); }); }
   }
   function desenhar(){
@@ -1476,25 +1521,41 @@ function Charadas() {
     {q:'O que fica MAIOR quanto mais você tira dele?', op:['Um balão','Um buraco','Uma caixa'], a:1, e:'Quanto mais terra você tira, maior o buraco fica!'},
     {q:'Um trem elétrico vai para o norte. Para onde vai a fumaça?', op:['Para o sul','Para o norte','Trem elétrico não solta fumaça'], a:2, e:'Trem elétrico não tem fumaça!'},
     {q:'Numa corrida, você ultrapassa o 2º colocado. Em que lugar você fica?', op:['1º lugar','2º lugar','3º lugar'], a:1, e:'Você toma o lugar dele: fica em 2º!'},
-    {q:'Tem cidades mas não casas, rios mas não água, florestas mas não árvores. O que é?', op:['Um sonho','Um mapa','Um livro'], a:1, e:'Um mapa! Mostra tudo, mas é só desenho.'}
+    {q:'Tem cidades mas não casas, rios mas não água, florestas mas não árvores. O que é?', op:['Um sonho','Um mapa','Um livro'], a:1, e:'Um mapa! Mostra tudo, mas é só desenho.'},
+    {q:'O pai do Pedro tem 5 filhos: Lalá, Lelé, Lili, Loló e...?', op:['Lulu','Pedro','Lalá'], a:1, e:'O quinto filho é o Pedro — afinal, é o pai DELE!'},
+    {q:'O que tem dentes mas não morde?', op:['O cachorro','O pente','O leão'], a:1, e:'O pente tem dentes, mas não morde ninguém!'},
+    {q:'O que anda com os pés na cabeça?', op:['O palhaço','O piolho','O chapéu'], a:1, e:'O piolho! Ele anda na cabeça, com os pezinhos dele.'},
+    {q:'Você tinha 3 maçãs e tirou 2. Com quantas você ficou?', op:['1','2','3'], a:1, e:'Você TIROU 2 pra você, então ficou COM as 2!'},
+    {q:'O que é, o que é: quanto mais seca, mais molhada fica?', op:['A esponja','A toalha','A roupa'], a:1, e:'A toalha! Quanto mais ela te seca, mais molhada ela fica.'},
+    {q:'O que fica bem no meio do mundo?', op:['A letra U','A Terra','O mar'], a:0, e:'A letra "U" fica no meio da palavra mUndo!'},
+    {q:'Um avião caiu bem na fronteira de dois países. Onde enterram os sobreviventes?', op:['No 1º país','No 2º país','Não se enterra sobreviventes'], a:2, e:'Sobreviventes estão VIVOS! Não se enterra quem sobreviveu.'},
+    {q:'Qual é maior: 100 ou a soma de todos os números de 1 a 10?', op:['100','A soma','São iguais'], a:0, e:'1+2+...+10 = 55. O 100 é bem maior!'},
+    {q:'Tenho 2 moedas que somam 30 centavos. Uma NÃO é de 20. Quais são?', op:['20 e 10','15 e 15','25 e 5'], a:0, e:'UMA não é de 20... mas a OUTRA é! Então 20 e 10.'},
+    {q:'O que tem cabeça e cauda, mas não tem corpo?', op:['Uma cobra','Uma moeda','Um peixe'], a:1, e:'Uma moeda! Tem "cara" (cabeça) e "coroa" (cauda).'},
+    {q:'Quantas vezes dá pra tirar 3 do número 12?', op:['4 vezes','1 vez','3 vezes'], a:1, e:'Só 1 vez! Depois já não é mais 12, vira 9.'},
+    {q:'O que é que, quanto mais você anda, mais deixa pra trás?', op:['A sombra','As pegadas','O vento'], a:1, e:'As pegadas! Cada passo deixa mais uma pra trás.'},
+    {q:'O que está sempre na sua frente, mas você nunca consegue ver?', op:['O nariz','O futuro','O ar'], a:1, e:'O futuro! Está sempre vindo, mas ninguém vê.'},
+    {q:'O que é que tem 4 pernas mas não anda?', op:['O cavalo','A cadeira','O cachorro'], a:1, e:'A cadeira! Tem 4 pernas, mas fica paradinha.'},
+    {q:'Dois pais e dois filhos pescaram 3 peixes, um pra cada. Como deu certo?', op:['Sobrou peixe','Eram avô, pai e filho (só 3 pessoas)','Dividiram ao meio'], a:1, e:'Eram só 3: avô, pai e filho. O do meio é pai E filho!'},
+    {q:'O que é, o que é: tem agulha mas não costura, tem números mas não é telefone?', op:['A bússola','O relógio','A balança'], a:1, e:'O relógio! Tem ponteiros (agulhas) e números.'}
   ];
-  let pontos=0, acertos=0, ordem=null, idx=0, travado=false;
+  let pontos=0, acertos=0, vidas=3, ordem=null, idx=0, travado=false;
   function emb(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-  function comecar(){ overlay.classList.remove('show'); ordem=emb(QS.map((_,i)=>i)); idx=0; pontos=0; acertos=0; info1.innerHTML='Pontos: <b>0</b>'; nova(); }
-  function fim(){ mostrarOverlay('🤔 Fim da rodada!','Você acertou '+acertos+' de '+QS.length+' ('+pontos+' pontos)!','↻ Jogar de novo', comecar); }
+  function comecar(){ overlay.classList.remove('show'); ordem=emb(QS.map((_,i)=>i)); idx=0; pontos=0; acertos=0; vidas=3; info1.innerHTML='Pontos: <b>0</b>'; nova(); }
+  function fim(){ registrarPontuacao('charadas',pontos); mostrarOverlay('🤔 Fim de jogo!','Você acertou '+acertos+' charadas ('+pontos+' pontos)!','↻ Jogar de novo', comecar); }
   function nova(){
-    if(idx>=ordem.length){ fim(); return; }
+    if(idx>=ordem.length){ ordem=emb(QS.map((_,i)=>i)); idx=0; }   // sem fim por completar: embaralha de novo
     travado=false; const Q=QS[ordem[idx]];
     desenha(Q.q); dicaEl.innerHTML='Pense bem e escolha!';
-    info2.innerHTML='Pergunta: <b>'+(idx+1)+'/'+QS.length+'</b>';
+    info2.innerHTML='Vidas: <b>'+'❤️'.repeat(vidas)+'</b>';
     escolhasEl.innerHTML=''; Q.op.forEach((t,i)=>{ const b=document.createElement('button'); b.textContent=t; b.onclick=()=>resp(i,b,Q); escolhasEl.appendChild(b); });
   }
   function resp(i,btn,Q){
     if(travado) return; travado=true;
     if(i===Q.a){ btn.classList.add('certo'); acertos++; pontos+=10; registrarPontuacao('charadas',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>'; }
-    else { btn.classList.add('errado'); [...escolhasEl.children][Q.a].classList.add('certo'); }
+    else { btn.classList.add('errado'); [...escolhasEl.children][Q.a].classList.add('certo'); vidas--; info2.innerHTML='Vidas: <b>'+'❤️'.repeat(vidas)+'</b>'; }
     dicaEl.innerHTML = Q.e;
-    setTimeout(()=>{ idx++; nova(); }, 2800);
+    setTimeout(()=>{ if(vidas<=0) fim(); else { idx++; nova(); } }, 2800);
   }
   function desenha(q){
     ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
