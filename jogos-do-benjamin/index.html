@@ -133,6 +133,19 @@
   #escolhas button.certo  { background: linear-gradient(180deg,#7be88a,#36a04a); color:#04220c; box-shadow:0 4px 0 #1d6c33; }
   #escolhas button.errado { background: linear-gradient(180deg,#ff8a8a,#c23a3a); color:#2a0606; box-shadow:0 4px 0 #821d1d; }
 
+  /* ---------- CONTROLES EXTRAS (canhão, cores, etc.) ---------- */
+  #ctrlExtra { display: none; width: 100%; max-width: 460px; margin-top: 14px; }
+  #ctrlExtra.ativo { display: block; }
+  #ctrlExtra .linha { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 15px; }
+  #ctrlExtra .linha label { min-width: 70px; text-align: right; opacity: .85; }
+  #ctrlExtra input[type=range] { flex: 1; accent-color: #6cf; }
+  #ctrlExtra .val { min-width: 54px; color: #ffe14d; font-weight: bold; }
+  #ctrlExtra .botoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+  #ctrlExtra .corbtn { width: 56px; height: 56px; border-radius: 50%; border: 3px solid rgba(255,255,255,.3); cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+  #ctrlExtra .pote { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:10px; }
+  #ctrlExtra .amostra { width: 64px; height: 64px; border-radius: 14px; border: 2px solid rgba(255,255,255,.3); }
+  #ctrlExtra .fogo { background: linear-gradient(180deg,#ffd36c,#e8902a); color:#3a1c00; font-size: 19px; padding: 12px 28px; }
+
   @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
   /* ---------- LOGIN ---------- */
@@ -291,6 +304,36 @@
         <div class="nome">Bandeiras</div>
         <div class="desc">Adivinhe o país. A cada acerto, a bandeira se esconde mais!</div>
       </div>
+      <div class="card" data-jogo="canhao">
+        <span class="ico">💣</span>
+        <div class="nome">Canhão</div>
+        <div class="desc">Ajuste o ângulo e a força e acerte o alvo!</div>
+      </div>
+      <div class="card" data-jogo="minado">
+        <span class="ico">💎</span>
+        <div class="nome">Campo Minado</div>
+        <div class="desc">Ache os campos seguros sem tocar nas minas.</div>
+      </div>
+      <div class="card" data-jogo="capitais">
+        <span class="ico">🌎</span>
+        <div class="nome">Capitais</div>
+        <div class="desc">Qual é a capital do país? Geografia do mundo.</div>
+      </div>
+      <div class="card" data-jogo="cores">
+        <span class="ico">🎨</span>
+        <div class="nome">Laboratório de Cores</div>
+        <div class="desc">Misture as cores primárias pra formar a cor pedida.</div>
+      </div>
+      <div class="card" data-jogo="tempo">
+        <span class="ico">⏳</span>
+        <div class="nome">Linha do Tempo</div>
+        <div class="desc">Ordene as invenções da mais antiga à mais nova.</div>
+      </div>
+      <div class="card" data-jogo="charadas">
+        <span class="ico">🤔</span>
+        <div class="nome">Charadas do Pensador</div>
+        <div class="desc">Perguntas pra pensar e raciocinar. Você consegue?</div>
+      </div>
     </div>
   </div>
 
@@ -316,6 +359,7 @@
       <button class="c-dir"   data-dir="dir">➡️</button>
     </div>
     <div id="escolhas"></div>
+    <div id="ctrlExtra"></div>
     <div id="dica"></div>
   </div>
 
@@ -332,6 +376,7 @@ const dicaEl = document.getElementById('dica');
 const subtitulo = document.getElementById('subtitulo');
 const setasEl = document.getElementById('setas');
 const escolhasEl = document.getElementById('escolhas');
+const ctrlExtra = document.getElementById('ctrlExtra');
 const loginEl = document.getElementById('login');
 const topbarEl = document.getElementById('topbar');
 const homeEl = document.getElementById('home');
@@ -350,30 +395,45 @@ function mostrarTela(t) {
   jogoEl.classList.toggle('ativo', t === 'jogo');
 }
 
+// esconde TODOS os controles; cada jogo liga os seus (usarSetas/usarEscolhas/usarExtra)
+function resetControles() {
+  setasEl.style.display = 'none';
+  escolhasEl.classList.remove('ativo');
+  ctrlExtra.classList.remove('ativo'); ctrlExtra.innerHTML = '';
+}
+function usarSetas()    { setasEl.style.display = ''; }
+function usarEscolhas() { escolhasEl.classList.add('ativo'); }
+function usarExtra()    { ctrlExtra.classList.add('ativo'); }
+
+// converte um clique/toque na tela pras coordenadas internas do canvas (que é escalado no celular)
+function pontoCanvas(e) {
+  const r = canvas.getBoundingClientRect();
+  const cx = (e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX) - r.left;
+  const cy = (e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY) - r.top;
+  return { x: cx * (canvas.width / r.width), y: cy * (canvas.height / r.height) };
+}
+
 function mostrarMenu() {
   pararLoop();
   if (jogoAtual && jogoAtual.parar) jogoAtual.parar();
   jogoAtual = null;
   overlay.classList.remove('show');
-  escolhasEl.classList.remove('ativo');
-  setasEl.style.display = '';
+  resetControles();
   subtitulo.textContent = 'Escolha um jogo pra começar!';
   mostrarTela('home');
   atualizarHome();
   iniciarPollHome();
 }
 
+const FABRICAS = {
+  labirinto: Labirinto, cobrinha: Cobrinha, frutas: Frutas, bandeiras: Bandeiras,
+  canhao: Canhao, minado: Minado, capitais: Capitais, cores: Cores, tempo: Tempo, charadas: Charadas
+};
 function abrirJogo(nome) {
   pararPollHome();
   overlay.classList.remove('show');
-  // bandeiras usa botões de escolha; os outros usam as setas
-  const usaSetas = nome !== 'bandeiras';
-  setasEl.style.display = usaSetas ? '' : 'none';
-  escolhasEl.classList.toggle('ativo', !usaSetas);
-  if (nome === 'labirinto') jogoAtual = Labirinto();
-  if (nome === 'cobrinha')  jogoAtual = Cobrinha();
-  if (nome === 'frutas')    jogoAtual = Frutas();
-  if (nome === 'bandeiras') jogoAtual = Bandeiras();
+  resetControles();
+  jogoAtual = FABRICAS[nome] ? FABRICAS[nome]() : null;
   mostrarTela('jogo');
 }
 
@@ -417,7 +477,7 @@ document.querySelectorAll('.controles button').forEach(b => {
 const NUVEM_LIGADA = true;
 const TOPICO = "datart-jogos-benjamin-arcade-k7m2x9p4";   // canal único da turma (todos os amigos compartilham este)
 const NTFY   = "https://ntfy.sh/" + TOPICO;
-const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras'];
+const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas'];
 
 // --- memória local do aparelho ---
 function _lerLocal()    { try { return JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}'); } catch(e){ return {}; } }
@@ -559,7 +619,7 @@ function sair() {
   mostrarTela('login');
 }
 
-function totalDe(p) { p = p || {}; return (p.labirinto||0)+(p.cobrinha||0)+(p.frutas||0)+(p.bandeiras||0); }
+function totalDe(p) { p = p || {}; let s = 0; for (const g of JOGOSIDS) s += (p[g]||0); return s; }
 
 // guarda só o MELHOR resultado do jogador atual em cada jogo
 async function registrarPontuacao(jogo, valor) {
@@ -698,6 +758,7 @@ async function iniciar() {
 
 // ===================== JOGO 1: LABIRINTO =====================
 function Labirinto() {
+  usarSetas();
   const HEROI = "🐧", ESTRELA = "⭐";
   let fase = 1, passos = 0, cols, rows, cell, grid, player, saida, venceu;
   let flocos, ultimoT;   // neve caindo no fundo
@@ -841,7 +902,7 @@ function Labirinto() {
       passos++; atualizarInfo(); desenhar();
       if (player.x===saida.x && player.y===saida.y) {
         venceu = true;
-        registrarPontuacao('labirinto', fase);  // pontos = fase alcançada
+        registrarPontuacao('labirinto', fase*15);  // 15 pontos por fase vencida
         mostrarOverlay('🎉 Venceu!', 'Fase '+fase+' em '+passos+' passos!',
           'Próxima fase ➜', () => { fase++; criar(); });
       }
@@ -854,6 +915,7 @@ function Labirinto() {
 
 // ===================== JOGO 2: COBRINHA =====================
 function Cobrinha() {
+  usarSetas();
   const N = 18, cell = 480 / N;
   canvas.width = canvas.height = 480;
   let cobra, dirAtual, prox, comida, pontos, vivo, tick, acumulado, ultimo, comecou;
@@ -898,7 +960,8 @@ function Cobrinha() {
     }
     cobra.unshift(cabeca);
     if (cabeca.x===comida.x && cabeca.y===comida.y) {
-      pontos++; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>';
+      pontos += 5; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>';   // 5 pontos por maçã
+      registrarPontuacao('cobrinha', pontos);   // pontua na hora, não só ao perder
       if (tick > 70) tick -= 4;   // acelera um pouco
       novaComida();
     } else {
@@ -947,6 +1010,7 @@ function Cobrinha() {
 
 // ===================== JOGO 3: PEGA-FRUTAS =====================
 function Frutas() {
+  usarSetas();
   const W = 480, H = 480;
   canvas.width = W; canvas.height = H;
   const FRUTAS = ['🍎','🍊','🍓','🍌','🍇','🍑'];
@@ -973,7 +1037,7 @@ function Frutas() {
     itens.push({
       x: 30 + Math.random()*(W-60),
       y: -20,
-      v: 2 + Math.random()*2 + pontos*0.02,
+      v: 2 + Math.random()*2 + pontos*0.0067,
       bomba,
       emoji: bomba ? '💣' : FRUTAS[Math.floor(Math.random()*FRUTAS.length)]
     });
@@ -1006,7 +1070,7 @@ function Frutas() {
                    Math.abs(it.x - cesto.x) < cesto.w/2 + 12;
       if (pego) {
         if (it.bomba) { vidas--; atualizarVidas(); }
-        else { pontos++; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>'; }
+        else { pontos += 3; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>'; registrarPontuacao('frutas', pontos); }
         itens.splice(i,1);
         if (vidas <= 0) return fimDeJogo();
         continue;
@@ -1043,6 +1107,7 @@ function Frutas() {
 
 // ===================== JOGO 4: BANDEIRAS =====================
 function Bandeiras() {
+  usarEscolhas();
   const PAISES = [
     {c:'br',n:'Brasil'}, {c:'ar',n:'Argentina'}, {c:'us',n:'Estados Unidos'},
     {c:'ca',n:'Canadá'}, {c:'mx',n:'México'}, {c:'fr',n:'França'},
@@ -1062,7 +1127,7 @@ function Bandeiras() {
   const W = 480, H = 360;
   canvas.width = W; canvas.height = H;
   const imgs = {};
-  let pontos, nivel, vidas, alvo, janelas, flagRect, opcoes, travado, revelado;
+  let pontos, nivel, vidas, alvo, janelas, flagRect, opcoes, travado, revelado, acertos;
 
   function carregar() {
     dicaEl.textContent = 'Carregando bandeiras...';
@@ -1077,7 +1142,7 @@ function Bandeiras() {
       im.onerror = res;
       im.src = 'bandeiras/' + p.c + '.png';
     }));
-    Promise.all(ps).then(() => { pontos=0; nivel=0; vidas=3; atualizar(); novaRodada(); });
+    Promise.all(ps).then(() => { pontos=0; acertos=0; nivel=0; vidas=3; atualizar(); novaRodada(); });
   }
 
   function atualizar() {
@@ -1159,7 +1224,7 @@ function Bandeiras() {
     if (travado) return;
     travado = true;
     const acertou = p.c === alvo.c;
-    if (acertou) { btn.classList.add('certo'); pontos++; nivel++; }
+    if (acertou) { btn.classList.add('certo'); acertos++; pontos += 10; nivel++; registrarPontuacao('bandeiras', pontos); }
     else {
       btn.classList.add('errado'); vidas--;
       [...escolhasEl.children].forEach(b => { if (b.textContent === alvo.n) b.classList.add('certo'); });
@@ -1173,14 +1238,278 @@ function Bandeiras() {
   function fimDeJogo() {
     escolhasEl.innerHTML = '';
     registrarPontuacao('bandeiras', pontos);
-    mostrarOverlay('Fim de jogo!', 'Você acertou '+pontos+' bandeiras!',
+    mostrarOverlay('Fim de jogo!', 'Você acertou '+acertos+' bandeiras ('+pontos+' pontos)!',
       '↻ Jogar de novo', () => {
         overlay.classList.remove('show');
-        pontos=0; nivel=0; vidas=3; atualizar(); novaRodada();
+        pontos=0; acertos=0; nivel=0; vidas=3; atualizar(); novaRodada();
       });
   }
 
   carregar();
+  return { dir(){}, parar(){ pararLoop(); } };
+}
+
+// ===================== JOGO 5: CANHÃO =====================
+function Canhao() {
+  usarExtra();
+  const W = 480, H = 360; canvas.width = W; canvas.height = H;
+  const solo = H - 28;
+  let angulo = 45, forca = 50, alvo, voando = false, bola, acertos = 0, pontos = 0;
+
+  ctrlExtra.innerHTML =
+    '<div class="linha"><label>Ângulo</label><input id="cAng" type="range" min="10" max="85" value="45"><span class="val" id="cAngV">45°</span></div>'+
+    '<div class="linha"><label>Força</label><input id="cFor" type="range" min="25" max="100" value="50"><span class="val" id="cForV">50</span></div>'+
+    '<div class="botoes"><button class="fogo" id="cFogo">🔥 Atirar!</button></div>';
+  const elAng = document.getElementById('cAng'), elFor = document.getElementById('cFor');
+  elAng.oninput = () => { angulo = +elAng.value; document.getElementById('cAngV').textContent = angulo+'°'; if(!voando) desenhar(); };
+  elFor.oninput = () => { forca = +elFor.value; document.getElementById('cForV').textContent = forca; if(!voando) desenhar(); };
+  document.getElementById('cFogo').onclick = atirar;
+
+  function novoAlvo(){ alvo = { x: 190 + Math.random()*(W-250), w: 44, h: 50 }; }
+  function atualizar(){ info1.innerHTML='Pontos: <b>'+pontos+'</b>'; info2.innerHTML='Acertos: <b>'+acertos+'</b>'; dicaEl.innerHTML='Ajuste <b>ângulo</b> e <b>força</b> e acerte o 🎯'; }
+  function atirar(){
+    if (voando) return; voando = true;
+    const rad = angulo*Math.PI/180, v = forca*0.13;
+    bola = { x: 26, y: solo-22, vx: Math.cos(rad)*v, vy: -Math.sin(rad)*v };
+    pararLoop(); raf = requestAnimationFrame(loop);
+  }
+  function loop(){
+    bola.x += bola.vx; bola.y += bola.vy; bola.vy += 0.12;   // gravidade
+    if (bola.x>alvo.x && bola.x<alvo.x+alvo.w && bola.y>solo-alvo.h && bola.y<solo) return acertou();
+    if (bola.y >= solo || bola.x > W+40) return errou();
+    desenhar();
+    raf = requestAnimationFrame(loop);
+  }
+  function acertou(){ voando=false; acertos++; pontos+=20; registrarPontuacao('canhao',pontos); atualizar();
+    mostrarOverlay('🎯 Acertou!','+20 pontos! Total: '+pontos,'Próximo alvo ➜', ()=>{ overlay.classList.remove('show'); novoAlvo(); desenhar(); }); }
+  function errou(){ voando=false; desenhar(); dicaEl.innerHTML='Quase! Mude o ângulo ou a força e tente de novo.'; }
+  function desenhar(){
+    ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#2e7d32'; ctx.fillRect(0,solo,W,H-solo);
+    ctx.save(); ctx.translate(22,solo); ctx.fillStyle='#9aa'; ctx.beginPath(); ctx.arc(0,0,13,0,Math.PI*2); ctx.fill();
+    ctx.rotate(-angulo*Math.PI/180); ctx.fillStyle='#cdd'; ctx.fillRect(0,-5,30,10); ctx.restore();
+    if (alvo){ ctx.font='38px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🎯', alvo.x+alvo.w/2, solo-alvo.h/2); }
+    if (voando && bola){ ctx.fillStyle='#ffe14d'; ctx.beginPath(); ctx.arc(bola.x,bola.y,6,0,Math.PI*2); ctx.fill(); }
+  }
+  novoAlvo(); atualizar(); desenhar();
+  return { dir(){}, parar(){ pararLoop(); } };
+}
+
+// ===================== JOGO 6: CAMPO MINADO =====================
+function Minado() {
+  usarExtra();
+  const N = 9, MINAS = 10, cell = Math.floor(420/N);
+  canvas.width = canvas.height = cell*N;
+  let grid, revelado, bandeira, vivo, modoBandeira, seguras, pontos = 0;
+
+  ctrlExtra.innerHTML = '<div class="botoes"><button id="mModo" class="ghost">🚩 Modo bandeira: DESLIGADO</button><button id="mNovo" class="ghost">↻ Novo</button></div>';
+  const btnModo = document.getElementById('mModo');
+  btnModo.onclick = () => { modoBandeira = !modoBandeira; btnModo.textContent = '🚩 Modo bandeira: '+(modoBandeira?'LIGADO':'DESLIGADO'); btnModo.classList.toggle('certo', modoBandeira); };
+  document.getElementById('mNovo').onclick = novo;
+
+  function viz(x,y,fn){ for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(dx||dy){ const nx=x+dx,ny=y+dy; if(nx>=0&&ny>=0&&nx<N&&ny<N) fn(nx,ny); } } }
+  function novo(){
+    modoBandeira=false; btnModo.textContent='🚩 Modo bandeira: DESLIGADO'; btnModo.classList.remove('certo');
+    vivo=true; seguras=0; grid=[]; revelado=[]; bandeira=[];
+    for(let y=0;y<N;y++){ grid[y]=[]; revelado[y]=[]; bandeira[y]=[]; for(let x=0;x<N;x++){ grid[y][x]=0; revelado[y][x]=false; bandeira[y][x]=false; } }
+    let postas=0; while(postas<MINAS){ const x=Math.floor(Math.random()*N),y=Math.floor(Math.random()*N); if(grid[y][x]!==-1){ grid[y][x]=-1; postas++; } }
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){ if(grid[y][x]===-1) continue; let c=0; viz(x,y,(nx,ny)=>{ if(grid[ny][nx]===-1)c++; }); grid[y][x]=c; }
+    overlay.classList.remove('show'); atualizar(); desenhar(false);
+  }
+  function atualizar(){ info1.innerHTML='Pontos: <b>'+pontos+'</b>'; info2.innerHTML=''; dicaEl.innerHTML='Toque pra revelar. Ligue o 🚩 pra marcar minas.'; }
+  function revelar(x,y){
+    if(!vivo||revelado[y][x]||bandeira[y][x]) return;
+    revelado[y][x]=true;
+    if(grid[y][x]===-1){ vivo=false; desenhar(true); mostrarOverlay('💥 Boom!','Você tocou numa mina!','↻ Tentar de novo', novo); return; }
+    seguras++; pontos+=2; registrarPontuacao('minado',pontos);
+    if(grid[y][x]===0) viz(x,y,(nx,ny)=>revelar(nx,ny));
+    if(seguras===N*N-MINAS){ vivo=false; pontos+=20; registrarPontuacao('minado',pontos); atualizar(); desenhar(true); mostrarOverlay('🎉 Limpou tudo!','+20 de bônus! Total: '+pontos,'↻ Novo tabuleiro', novo); return; }
+    atualizar(); desenhar(false);
+  }
+  function marcar(x,y){ if(!vivo||revelado[y][x]) return; bandeira[y][x]=!bandeira[y][x]; desenhar(false); }
+  function aoTocar(e){ e.preventDefault(); const p=pontoCanvas(e); const x=Math.floor(p.x/cell), y=Math.floor(p.y/cell); if(x<0||y<0||x>=N||y>=N) return; if(modoBandeira) marcar(x,y); else revelar(x,y); }
+  canvas.addEventListener('click', aoTocar);
+
+  function desenhar(mostraMinas){
+    const cores = ['','#6cf','#7be88a','#ff8a8a','#c39bff','#ffd36c','#7ad7ff','#fff','#bbb'];
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+      const X=x*cell, Y=y*cell;
+      if(revelado[y][x]){
+        ctx.fillStyle='#16163a'; ctx.fillRect(X,Y,cell,cell);
+        if(grid[y][x]>0){ ctx.fillStyle=cores[grid[y][x]]; ctx.font='bold '+(cell*0.5)+'px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(grid[y][x], X+cell/2, Y+cell/2); }
+      } else {
+        ctx.fillStyle='#2a2a5e'; ctx.fillRect(X,Y,cell,cell);
+        if(bandeira[y][x]){ ctx.font=(cell*0.5)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🚩', X+cell/2, Y+cell/2); }
+      }
+      if(mostraMinas && grid[y][x]===-1){ ctx.font=(cell*0.5)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('💣', X+cell/2, Y+cell/2); }
+      ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.strokeRect(X,Y,cell,cell);
+    }
+  }
+  novo();
+  return { dir(){}, parar(){ canvas.removeEventListener('click', aoTocar); pararLoop(); } };
+}
+
+// ===================== JOGO 7: CAPITAIS =====================
+function Capitais() {
+  usarEscolhas();
+  const PAISES = [
+    {n:'Brasil',cap:'Brasília',c:'br'},{n:'Argentina',cap:'Buenos Aires',c:'ar'},
+    {n:'Estados Unidos',cap:'Washington',c:'us'},{n:'França',cap:'Paris',c:'fr'},
+    {n:'Itália',cap:'Roma',c:'it'},{n:'Espanha',cap:'Madri',c:'es'},
+    {n:'Portugal',cap:'Lisboa',c:'pt'},{n:'Reino Unido',cap:'Londres',c:'gb'},
+    {n:'Alemanha',cap:'Berlim',c:'de'},{n:'Japão',cap:'Tóquio',c:'jp'},
+    {n:'China',cap:'Pequim',c:'cn'},{n:'Rússia',cap:'Moscou',c:'ru'},
+    {n:'Canadá',cap:'Ottawa',c:'ca'},{n:'México',cap:'Cidade do México',c:'mx'},
+    {n:'Egito',cap:'Cairo',c:'eg'},{n:'Grécia',cap:'Atenas',c:'gr'},
+    {n:'Austrália',cap:'Camberra',c:'au'},{n:'Índia',cap:'Nova Déli',c:'in'},
+    {n:'Chile',cap:'Santiago',c:'cl'},{n:'Peru',cap:'Lima',c:'pe'},
+    {n:'Colômbia',cap:'Bogotá',c:'co'},{n:'Uruguai',cap:'Montevidéu',c:'uy'},
+    {n:'Cuba',cap:'Havana',c:'cu'},{n:'Noruega',cap:'Oslo',c:'no'},
+    {n:'Suécia',cap:'Estocolmo',c:'se'},{n:'Holanda',cap:'Amsterdã',c:'nl'},
+    {n:'Irlanda',cap:'Dublin',c:'ie'},{n:'Turquia',cap:'Ancara',c:'tr'},
+    {n:'África do Sul',cap:'Pretória',c:'za'},{n:'Tailândia',cap:'Bangcoc',c:'th'}
+  ];
+  const W=480,H=300; canvas.width=W; canvas.height=H;
+  let pontos=0, acertos=0, vidas=3, alvo=null, img=null, travado=false;
+  function atualizar(){ info1.innerHTML='Pontos: <b>'+pontos+'</b>'; info2.innerHTML='Vidas: <b>'+'❤️'.repeat(vidas)+'</b>'; }
+  function aleat(excl){ let p; do{ p=PAISES[Math.floor(Math.random()*PAISES.length)]; } while(excl&&p.n===excl); return p; }
+  function emb(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+  function nova(){
+    travado=false; alvo=aleat(alvo?alvo.n:null);
+    img=new Image(); img.onload=desenhar; img.onerror=desenhar; img.src='bandeiras/'+alvo.c+'.png';
+    dicaEl.innerHTML='Qual é a capital de <b>'+alvo.n+'</b>?';
+    const us=new Set([alvo.cap]); const op=[alvo.cap];
+    while(op.length<4){ const d=aleat(null); if(!us.has(d.cap)){ us.add(d.cap); op.push(d.cap); } }
+    montar(emb(op)); desenhar();
+  }
+  function desenhar(){
+    ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
+    if(img && img.complete && img.naturalWidth){ const m=24,e=Math.min((W-2*m)/img.width,(H-90)/img.height),w=img.width*e,h=img.height*e; ctx.drawImage(img,(W-w)/2,20,w,h); ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.strokeRect((W-w)/2,20,w,h); }
+    ctx.fillStyle='#fff'; ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(alvo.n, W/2, H-30);
+  }
+  function montar(op){ escolhasEl.innerHTML=''; op.forEach(cap=>{ const b=document.createElement('button'); b.textContent=cap; b.onclick=()=>resp(cap,b); escolhasEl.appendChild(b); }); }
+  function resp(cap,btn){
+    if(travado) return; travado=true;
+    const ok = cap===alvo.cap;
+    if(ok){ btn.classList.add('certo'); acertos++; pontos+=10; registrarPontuacao('capitais',pontos); }
+    else { btn.classList.add('errado'); vidas--; [...escolhasEl.children].forEach(b=>{ if(b.textContent===alvo.cap) b.classList.add('certo'); }); }
+    atualizar(); dicaEl.innerHTML = ok ? 'Acertou! 🎉' : 'A capital é <b>'+alvo.cap+'</b>';
+    setTimeout(()=>{ if(vidas<=0){ mostrarOverlay('Fim de jogo!','Você acertou '+acertos+' capitais ('+pontos+' pts)!','↻ Jogar de novo',()=>{ overlay.classList.remove('show'); pontos=0;acertos=0;vidas=3;atualizar();nova(); }); } else nova(); }, ok?900:1600);
+  }
+  atualizar(); nova();
+  return { dir(){}, parar(){ pararLoop(); } };
+}
+
+// ===================== JOGO 8: LABORATÓRIO DE CORES =====================
+function Cores() {
+  usarExtra();
+  const W=480,H=300; canvas.width=W; canvas.height=H;
+  const RECEITAS = [
+    {nome:'Laranja', cor:'#ff8c1a', rec:['vermelho','amarelo']},
+    {nome:'Verde',   cor:'#3fbf3f', rec:['azul','amarelo']},
+    {nome:'Roxo',    cor:'#9b3fd1', rec:['vermelho','azul']},
+    {nome:'Marrom',  cor:'#7a4a1e', rec:['vermelho','azul','amarelo']}
+  ];
+  const PRIM = { vermelho:'#e23b3b', azul:'#2f6bd6', amarelo:'#f2d020' };
+  let pontos=0, acertos=0, alvo=null, escolha=[];
+  ctrlExtra.innerHTML =
+    '<div class="botoes">'+
+      '<button class="corbtn" data-cor="vermelho" style="background:#e23b3b"></button>'+
+      '<button class="corbtn" data-cor="azul" style="background:#2f6bd6"></button>'+
+      '<button class="corbtn" data-cor="amarelo" style="background:#f2d020"></button>'+
+    '</div>'+
+    '<div class="pote"><div class="amostra" id="cAmostra"></div>'+
+      '<button class="ghost" id="cLimpar">Limpar</button><button id="cCheck">Pronto!</button></div>';
+  ctrlExtra.querySelectorAll('.corbtn').forEach(b=> b.onclick = () => add(b.dataset.cor));
+  document.getElementById('cLimpar').onclick = () => { escolha=[]; amostra(); };
+  document.getElementById('cCheck').onclick = checar;
+
+  function nova(){ alvo=RECEITAS[Math.floor(Math.random()*RECEITAS.length)]; escolha=[]; amostra(); dicaEl.innerHTML='Misture as primárias pra formar <b>'+alvo.nome+'</b>'; desenhar(); }
+  function add(c){ if(escolha.length>=3) return; escolha.push(c); amostra(); }
+  function mistura(){ if(!escolha.length) return '#101038'; let r=0,g=0,b=0; escolha.forEach(c=>{ const h=PRIM[c]; r+=parseInt(h.substr(1,2),16); g+=parseInt(h.substr(3,2),16); b+=parseInt(h.substr(5,2),16); }); const n=escolha.length; return 'rgb('+Math.round(r/n)+','+Math.round(g/n)+','+Math.round(b/n)+')'; }
+  function amostra(){ const el=document.getElementById('cAmostra'); if(el) el.style.background=mistura(); }
+  function desenhar(){
+    ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=alvo.cor; ctx.beginPath(); ctx.arc(W/2,H/2-12,68,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('Faça a cor: '+alvo.nome, W/2, H-32);
+  }
+  function checar(){
+    const set=[...new Set(escolha)].sort().join(','), certo=[...new Set(alvo.rec)].sort().join(',');
+    if(set===certo){ acertos++; pontos+=10; registrarPontuacao('cores',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>';
+      mostrarOverlay('🎨 Acertou!', alvo.rec.join(' + ')+' = '+alvo.nome, 'Próxima cor ➜', ()=>{ overlay.classList.remove('show'); nova(); }); }
+    else dicaEl.innerHTML='Ainda não... tente outra mistura pra <b>'+alvo.nome+'</b>';
+  }
+  info1.innerHTML='Pontos: <b>0</b>'; info2.innerHTML=''; nova();
+  return { dir(){}, parar(){ pararLoop(); } };
+}
+
+// ===================== JOGO 9: LINHA DO TEMPO =====================
+function Tempo() {
+  usarEscolhas();
+  const W=480,H=220; canvas.width=W; canvas.height=H;
+  const POOL = [
+    {n:'Descoberta do fogo', t:-400000},{n:'Invenção da roda', t:-3500},
+    {n:'Invenção da escrita', t:-3200},{n:'Pirâmides do Egito', t:-2500},
+    {n:'Descobrimento do Brasil', t:1500},{n:'Primeiro automóvel', t:1886},
+    {n:'Primeiro avião', t:1903},{n:'Primeiro computador', t:1945},
+    {n:'Homem na Lua', t:1969},{n:'Primeiro celular', t:1973},{n:'Internet popular', t:1995}
+  ];
+  let pontos=0, itens=[], escolhidos=[];
+  function emb(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+  function nova(){ itens=emb(POOL).slice(0,4); escolhidos=[]; dicaEl.innerHTML='Toque do <b>mais antigo</b> ao <b>mais novo</b>'; montar(); desenhar(); }
+  function montar(){ escolhasEl.innerHTML=''; itens.forEach(it=>{ const b=document.createElement('button'); b.textContent=it.n; b.onclick=()=>escolher(it,b); escolhasEl.appendChild(b); }); }
+  function escolher(it,btn){ if(btn.disabled) return; btn.disabled=true; btn.style.opacity=.45; btn.textContent=(escolhidos.length+1)+'. '+it.n; escolhidos.push(it); desenhar(); if(escolhidos.length===itens.length) checar(); }
+  function checar(){
+    const ok = escolhidos.every((it,i)=> i===0 || escolhidos[i-1].t<=it.t);
+    if(ok){ pontos+=15; registrarPontuacao('tempo',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>'; mostrarOverlay('⏳ Certo!','Você ordenou a história! +15 pontos','Próxima ➜',()=>{ overlay.classList.remove('show'); nova(); }); }
+    else { const certo=itens.slice().sort((a,b)=>a.t-b.t).map(x=>x.n).join('  →  '); mostrarOverlay('Quase!','A ordem certa: '+certo,'Tentar outra ➜',()=>{ overlay.classList.remove('show'); nova(); }); }
+  }
+  function desenhar(){
+    ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#7ad7ff'; ctx.font='17px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText('Sua ordem (antigo → novo):',18,24);
+    ctx.fillStyle='#fff'; ctx.font='16px sans-serif'; escolhidos.forEach((it,i)=> ctx.fillText((i+1)+'. '+it.n, 18, 56+i*34));
+  }
+  info1.innerHTML='Pontos: <b>0</b>'; info2.innerHTML=''; nova();
+  return { dir(){}, parar(){ pararLoop(); } };
+}
+
+// ===================== JOGO 10: CHARADAS DO PENSADOR =====================
+function Charadas() {
+  usarEscolhas();
+  const W=480,H=240; canvas.width=W; canvas.height=H;
+  const QS = [
+    {q:'O que pesa mais: 1 kg de ferro ou 1 kg de algodão?', op:['O ferro','O algodão','Pesam igual'], a:2, e:'1 kg é 1 kg! O peso é o mesmo, só o tamanho muda.'},
+    {q:'Quantos meses do ano têm 28 dias?', op:['Só fevereiro','Todos os 12','Nenhum'], a:1, e:'Todos os meses têm pelo menos 28 dias!'},
+    {q:'3 gatos pegam 3 ratos em 3 minutos. Em quanto tempo 100 gatos pegam 100 ratos?', op:['100 minutos','3 minutos','33 minutos'], a:1, e:'Cada gato pega 1 rato em 3 min — então 100 gatos pegam 100 em 3 min.'},
+    {q:'O que fica MAIOR quanto mais você tira dele?', op:['Um balão','Um buraco','Uma caixa'], a:1, e:'Quanto mais terra você tira, maior o buraco fica!'},
+    {q:'Um trem elétrico vai para o norte. Para onde vai a fumaça?', op:['Para o sul','Para o norte','Trem elétrico não solta fumaça'], a:2, e:'Trem elétrico não tem fumaça!'},
+    {q:'Numa corrida, você ultrapassa o 2º colocado. Em que lugar você fica?', op:['1º lugar','2º lugar','3º lugar'], a:1, e:'Você toma o lugar dele: fica em 2º!'},
+    {q:'Tem cidades mas não casas, rios mas não água, florestas mas não árvores. O que é?', op:['Um sonho','Um mapa','Um livro'], a:1, e:'Um mapa! Mostra tudo, mas é só desenho.'}
+  ];
+  let pontos=0, acertos=0, ordem=null, idx=0, travado=false;
+  function emb(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+  function nova(){
+    if(!ordem || idx>=ordem.length){ ordem=emb(QS.map((_,i)=>i)); idx=0; }
+    travado=false; const Q=QS[ordem[idx]];
+    desenha(Q.q); dicaEl.innerHTML='Pense bem e escolha!';
+    escolhasEl.innerHTML=''; Q.op.forEach((t,i)=>{ const b=document.createElement('button'); b.textContent=t; b.onclick=()=>resp(i,b,Q); escolhasEl.appendChild(b); });
+  }
+  function resp(i,btn,Q){
+    if(travado) return; travado=true;
+    if(i===Q.a){ btn.classList.add('certo'); acertos++; pontos+=10; registrarPontuacao('charadas',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>'; }
+    else { btn.classList.add('errado'); [...escolhasEl.children][Q.a].classList.add('certo'); }
+    dicaEl.innerHTML = Q.e;
+    setTimeout(()=>{ idx++; nova(); }, 2800);
+  }
+  function desenha(q){
+    ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='19px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    const pal=q.split(' '); let linha='', linhas=[];
+    pal.forEach(p=>{ if((linha+p).length>32){ linhas.push(linha.trim()); linha=''; } linha+=p+' '; }); linhas.push(linha.trim());
+    linhas.forEach((l,i)=> ctx.fillText(l, W/2, H/2 - (linhas.length-1)*15 + i*30));
+  }
+  info1.innerHTML='Pontos: <b>0</b>'; info2.innerHTML=''; nova();
   return { dir(){}, parar(){ pararLoop(); } };
 }
 
