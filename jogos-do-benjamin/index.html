@@ -329,6 +329,11 @@
         <div class="nome">Linha do Tempo</div>
         <div class="desc">Ordene as invenções da mais antiga à mais nova.</div>
       </div>
+      <div class="card" data-jogo="capivara">
+        <span class="ico">🦫</span>
+        <div class="nome">Pega-Capivara</div>
+        <div class="desc">Em 30s, toque nas capivaras que sobem. Fuja das bombas!</div>
+      </div>
       <div class="card" data-jogo="charadas">
         <span class="ico">🤔</span>
         <div class="nome">Charadas do Pensador</div>
@@ -427,7 +432,8 @@ function mostrarMenu() {
 
 const FABRICAS = {
   labirinto: Labirinto, cobrinha: Cobrinha, frutas: Frutas, bandeiras: Bandeiras,
-  canhao: Canhao, minado: Minado, capitais: Capitais, cores: Cores, tempo: Tempo, charadas: Charadas
+  canhao: Canhao, minado: Minado, capitais: Capitais, cores: Cores, tempo: Tempo, charadas: Charadas,
+  capivara: Capivara
 };
 function abrirJogo(nome) {
   pararPollHome();
@@ -477,7 +483,7 @@ document.querySelectorAll('.controles button').forEach(b => {
 const NUVEM_LIGADA = true;
 const TOPICO = "datart-jogos-benjamin-arcade-k7m2x9p4";   // canal único da turma (todos os amigos compartilham este)
 const NTFY   = "https://ntfy.sh/" + TOPICO;
-const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas'];
+const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas','capivara'];
 
 // --- memória local do aparelho ---
 function _lerLocal()    { try { return JSON.parse(localStorage.getItem('benjogos_jogadores') || '{}'); } catch(e){ return {}; } }
@@ -902,7 +908,7 @@ function Labirinto() {
       passos++; atualizarInfo(); desenhar();
       if (player.x===saida.x && player.y===saida.y) {
         venceu = true;
-        registrarPontuacao('labirinto', fase*15);  // 15 pontos por fase vencida
+        registrarPontuacao('labirinto', fase*12);  // 12 pontos por fase vencida
         mostrarOverlay('🎉 Venceu!', 'Fase '+fase+' em '+passos+' passos!',
           'Próxima fase ➜', () => { fase++; criar(); });
       }
@@ -960,7 +966,7 @@ function Cobrinha() {
     }
     cobra.unshift(cabeca);
     if (cabeca.x===comida.x && cabeca.y===comida.y) {
-      pontos += 5; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>';   // 5 pontos por maçã
+      pontos += 3; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>';   // 3 pontos por maçã
       registrarPontuacao('cobrinha', pontos);   // pontua na hora, não só ao perder
       if (tick > 70) tick -= 4;   // acelera um pouco
       novaComida();
@@ -1070,7 +1076,7 @@ function Frutas() {
                    Math.abs(it.x - cesto.x) < cesto.w/2 + 12;
       if (pego) {
         if (it.bomba) { vidas--; atualizarVidas(); }
-        else { pontos += 3; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>'; registrarPontuacao('frutas', pontos); }
+        else { pontos += 2; info1.innerHTML = 'Pontos: <b>'+pontos+'</b>'; registrarPontuacao('frutas', pontos); }
         itens.splice(i,1);
         if (vidas <= 0) return fimDeJogo();
         continue;
@@ -1254,7 +1260,7 @@ function Canhao() {
   usarExtra();
   const W = 480, H = 360; canvas.width = W; canvas.height = H;
   const solo = H - 28;
-  let angulo = 45, forca = 50, alvo, voando = false, bola, acertos = 0, pontos = 0;
+  let angulo = 45, forca = 50, alvo, voando = false, bola, acertos = 0, pontos = 0, vidas = 3, vento = 0;
 
   ctrlExtra.innerHTML =
     '<div class="linha"><label>Ângulo</label><input id="cAng" type="range" min="10" max="85" value="45"><span class="val" id="cAngV">45°</span></div>'+
@@ -1265,8 +1271,16 @@ function Canhao() {
   elFor.oninput = () => { forca = +elFor.value; document.getElementById('cForV').textContent = forca; if(!voando) desenhar(); };
   document.getElementById('cFogo').onclick = atirar;
 
-  function novoAlvo(){ alvo = { x: 190 + Math.random()*(W-250), w: 44, h: 50 }; }
-  function atualizar(){ info1.innerHTML='Pontos: <b>'+pontos+'</b>'; info2.innerHTML='Acertos: <b>'+acertos+'</b>'; dicaEl.innerHTML='Ajuste <b>ângulo</b> e <b>força</b> e acerte o 🎯'; }
+  function novoAlvo(){
+    const w = Math.max(22, 46 - acertos*3);          // encolhe a cada acerto
+    const xMin = Math.min(W-w-30, 170 + acertos*6);  // vai ficando mais longe
+    alvo = { x: xMin + Math.random()*(W-xMin-w-12), w, h: 50 };
+    vento = acertos >= 4 ? (Math.random()*0.10 - 0.05) : 0;   // vento a partir do 5º alvo
+  }
+  function atualizar(){
+    info1.innerHTML='Pontos: <b>'+pontos+'</b>'; info2.innerHTML='Tiros: <b>'+'🔴'.repeat(vidas)+'</b>';
+    dicaEl.innerHTML = vento ? '💨 Cuidado, tem <b>vento</b>! Ajuste e acerte o 🎯' : 'Ajuste <b>ângulo</b> e <b>força</b> e acerte o 🎯';
+  }
   function atirar(){
     if (voando) return; voando = true;
     const rad = angulo*Math.PI/180, v = forca*0.13;
@@ -1274,24 +1288,31 @@ function Canhao() {
     pararLoop(); raf = requestAnimationFrame(loop);
   }
   function loop(){
-    bola.x += bola.vx; bola.y += bola.vy; bola.vy += 0.12;   // gravidade
+    bola.vx += vento; bola.x += bola.vx; bola.y += bola.vy; bola.vy += 0.12;   // gravidade + vento
     if (bola.x>alvo.x && bola.x<alvo.x+alvo.w && bola.y>solo-alvo.h && bola.y<solo) return acertou();
-    if (bola.y >= solo || bola.x > W+40) return errou();
+    if (bola.y >= solo || bola.x > W+40 || bola.x < -40) return errou();
     desenhar();
     raf = requestAnimationFrame(loop);
   }
-  function acertou(){ voando=false; acertos++; pontos+=20; registrarPontuacao('canhao',pontos); atualizar();
-    mostrarOverlay('🎯 Acertou!','+20 pontos! Total: '+pontos,'Próximo alvo ➜', ()=>{ overlay.classList.remove('show'); novoAlvo(); desenhar(); }); }
-  function errou(){ voando=false; desenhar(); dicaEl.innerHTML='Quase! Mude o ângulo ou a força e tente de novo.'; }
+  function acertou(){
+    voando=false; acertos++; pontos+=10; registrarPontuacao('canhao',pontos); novoAlvo(); atualizar();
+    mostrarOverlay('🎯 Acertou!','+10 pontos! Total: '+pontos,'Próximo alvo ➜', ()=>{ overlay.classList.remove('show'); desenhar(); });
+  }
+  function errou(){
+    voando=false; vidas--; atualizar(); desenhar();
+    if (vidas<=0) mostrarOverlay('Fim de jogo!','Você acertou '+acertos+' alvos ('+pontos+' pontos)!','↻ Jogar de novo', ()=>{ overlay.classList.remove('show'); recomecar(); });
+    else dicaEl.innerHTML='Errou! Restam <b>'+vidas+'</b> tiro(s). Mude o ângulo ou a força.';
+  }
   function desenhar(){
     ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#2e7d32'; ctx.fillRect(0,solo,W,H-solo);
     ctx.save(); ctx.translate(22,solo); ctx.fillStyle='#9aa'; ctx.beginPath(); ctx.arc(0,0,13,0,Math.PI*2); ctx.fill();
     ctx.rotate(-angulo*Math.PI/180); ctx.fillStyle='#cdd'; ctx.fillRect(0,-5,30,10); ctx.restore();
-    if (alvo){ ctx.font='38px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🎯', alvo.x+alvo.w/2, solo-alvo.h/2); }
+    if (alvo){ ctx.font=Math.max(22,Math.round(alvo.w*0.85))+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🎯', alvo.x+alvo.w/2, solo-alvo.h/2); }
     if (voando && bola){ ctx.fillStyle='#ffe14d'; ctx.beginPath(); ctx.arc(bola.x,bola.y,6,0,Math.PI*2); ctx.fill(); }
   }
-  novoAlvo(); atualizar(); desenhar();
+  function recomecar(){ acertos=0; pontos=0; vidas=3; vento=0; novoAlvo(); atualizar(); desenhar(); }
+  recomecar();
   return { dir(){}, parar(){ pararLoop(); } };
 }
 
@@ -1310,7 +1331,7 @@ function Minado() {
   function viz(x,y,fn){ for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(dx||dy){ const nx=x+dx,ny=y+dy; if(nx>=0&&ny>=0&&nx<N&&ny<N) fn(nx,ny); } } }
   function novo(){
     modoBandeira=false; btnModo.textContent='🚩 Modo bandeira: DESLIGADO'; btnModo.classList.remove('certo');
-    vivo=true; seguras=0; grid=[]; revelado=[]; bandeira=[];
+    vivo=true; seguras=0; pontos=0; grid=[]; revelado=[]; bandeira=[];
     for(let y=0;y<N;y++){ grid[y]=[]; revelado[y]=[]; bandeira[y]=[]; for(let x=0;x<N;x++){ grid[y][x]=0; revelado[y][x]=false; bandeira[y][x]=false; } }
     let postas=0; while(postas<MINAS){ const x=Math.floor(Math.random()*N),y=Math.floor(Math.random()*N); if(grid[y][x]!==-1){ grid[y][x]=-1; postas++; } }
     for(let y=0;y<N;y++) for(let x=0;x<N;x++){ if(grid[y][x]===-1) continue; let c=0; viz(x,y,(nx,ny)=>{ if(grid[ny][nx]===-1)c++; }); grid[y][x]=c; }
@@ -1321,7 +1342,7 @@ function Minado() {
     if(!vivo||revelado[y][x]||bandeira[y][x]) return;
     revelado[y][x]=true;
     if(grid[y][x]===-1){ vivo=false; desenhar(true); mostrarOverlay('💥 Boom!','Você tocou numa mina!','↻ Tentar de novo', novo); return; }
-    seguras++; pontos+=2; registrarPontuacao('minado',pontos);
+    seguras++; pontos+=1; registrarPontuacao('minado',pontos);
     if(grid[y][x]===0) viz(x,y,(nx,ny)=>revelar(nx,ny));
     if(seguras===N*N-MINAS){ vivo=false; pontos+=20; registrarPontuacao('minado',pontos); atualizar(); desenhar(true); mostrarOverlay('🎉 Limpou tudo!','+20 de bônus! Total: '+pontos,'↻ Novo tabuleiro', novo); return; }
     atualizar(); desenhar(false);
@@ -1391,7 +1412,7 @@ function Capitais() {
   function resp(cap,btn){
     if(travado) return; travado=true;
     const ok = cap===alvo.cap;
-    if(ok){ btn.classList.add('certo'); acertos++; pontos+=10; registrarPontuacao('capitais',pontos); }
+    if(ok){ btn.classList.add('certo'); acertos++; pontos+=8; registrarPontuacao('capitais',pontos); }
     else { btn.classList.add('errado'); vidas--; [...escolhasEl.children].forEach(b=>{ if(b.textContent===alvo.cap) b.classList.add('certo'); }); }
     atualizar(); dicaEl.innerHTML = ok ? 'Acertou! 🎉' : 'A capital é <b>'+alvo.cap+'</b>';
     setTimeout(()=>{ if(vidas<=0){ mostrarOverlay('Fim de jogo!','Você acertou '+acertos+' capitais ('+pontos+' pts)!','↻ Jogar de novo',()=>{ overlay.classList.remove('show'); pontos=0;acertos=0;vidas=3;atualizar();nova(); }); } else nova(); }, ok?900:1600);
@@ -1411,7 +1432,7 @@ function Cores() {
     {nome:'Marrom',  cor:'#7a4a1e', rec:['vermelho','azul','amarelo']}
   ];
   const PRIM = { vermelho:'#e23b3b', azul:'#2f6bd6', amarelo:'#f2d020' };
-  let pontos=0, acertos=0, alvo=null, escolha=[];
+  let pontos=0, resolvidas=0, alvo=null, escolha=[]; const META=6;
   ctrlExtra.innerHTML =
     '<div class="botoes">'+
       '<button class="corbtn" data-cor="vermelho" style="background:#e23b3b"></button>'+
@@ -1424,7 +1445,7 @@ function Cores() {
   document.getElementById('cLimpar').onclick = () => { escolha=[]; amostra(); };
   document.getElementById('cCheck').onclick = checar;
 
-  function nova(){ alvo=RECEITAS[Math.floor(Math.random()*RECEITAS.length)]; escolha=[]; amostra(); dicaEl.innerHTML='Misture as primárias pra formar <b>'+alvo.nome+'</b>'; desenhar(); }
+  function nova(){ alvo=RECEITAS[Math.floor(Math.random()*RECEITAS.length)]; escolha=[]; amostra(); info2.innerHTML='Cor: <b>'+(resolvidas+1)+'/'+META+'</b>'; dicaEl.innerHTML='Misture as primárias pra formar <b>'+alvo.nome+'</b>'; desenhar(); }
   function add(c){ if(escolha.length>=3) return; escolha.push(c); amostra(); }
   function mistura(){ if(!escolha.length) return '#101038'; let r=0,g=0,b=0; escolha.forEach(c=>{ const h=PRIM[c]; r+=parseInt(h.substr(1,2),16); g+=parseInt(h.substr(3,2),16); b+=parseInt(h.substr(5,2),16); }); const n=escolha.length; return 'rgb('+Math.round(r/n)+','+Math.round(g/n)+','+Math.round(b/n)+')'; }
   function amostra(){ const el=document.getElementById('cAmostra'); if(el) el.style.background=mistura(); }
@@ -1436,11 +1457,12 @@ function Cores() {
   }
   function checar(){
     const set=[...new Set(escolha)].sort().join(','), certo=[...new Set(alvo.rec)].sort().join(',');
-    if(set===certo){ acertos++; pontos+=10; registrarPontuacao('cores',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>';
-      mostrarOverlay('🎨 Acertou!', alvo.rec.join(' + ')+' = '+alvo.nome, 'Próxima cor ➜', ()=>{ overlay.classList.remove('show'); nova(); }); }
+    if(set===certo){ resolvidas++; pontos+=10; registrarPontuacao('cores',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>';
+      if(resolvidas>=META) mostrarOverlay('🎨 Fim!', 'Você fez '+pontos+' pontos misturando cores!', '↻ Jogar de novo', ()=>{ overlay.classList.remove('show'); pontos=0; resolvidas=0; info1.innerHTML='Pontos: <b>0</b>'; nova(); });
+      else mostrarOverlay('🎨 Acertou!', alvo.rec.join(' + ')+' = '+alvo.nome, 'Próxima cor ➜', ()=>{ overlay.classList.remove('show'); nova(); }); }
     else dicaEl.innerHTML='Ainda não... tente outra mistura pra <b>'+alvo.nome+'</b>';
   }
-  info1.innerHTML='Pontos: <b>0</b>'; info2.innerHTML=''; nova();
+  info1.innerHTML='Pontos: <b>0</b>'; nova();
   return { dir(){}, parar(){ pararLoop(); } };
 }
 
@@ -1462,8 +1484,9 @@ function Tempo() {
   function escolher(it,btn){ if(btn.disabled) return; btn.disabled=true; btn.style.opacity=.45; btn.textContent=(escolhidos.length+1)+'. '+it.n; escolhidos.push(it); desenhar(); if(escolhidos.length===itens.length) checar(); }
   function checar(){
     const ok = escolhidos.every((it,i)=> i===0 || escolhidos[i-1].t<=it.t);
-    if(ok){ pontos+=15; registrarPontuacao('tempo',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>'; mostrarOverlay('⏳ Certo!','Você ordenou a história! +15 pontos','Próxima ➜',()=>{ overlay.classList.remove('show'); nova(); }); }
-    else { const certo=itens.slice().sort((a,b)=>a.t-b.t).map(x=>x.n).join('  →  '); mostrarOverlay('Quase!','A ordem certa: '+certo,'Tentar outra ➜',()=>{ overlay.classList.remove('show'); nova(); }); }
+    if(ok){ pontos+=15; registrarPontuacao('tempo',pontos); info1.innerHTML='Pontos: <b>'+pontos+'</b>'; mostrarOverlay('⏳ Certo!','+15 pontos! Sequência: '+pontos,'Próxima ➜',()=>{ overlay.classList.remove('show'); nova(); }); }
+    else { const certo=itens.slice().sort((a,b)=>a.t-b.t).map(x=>x.n).join('  →  ');
+      mostrarOverlay('Fim de jogo!','A ordem certa: '+certo+'  ·  Você fez '+pontos+' pontos','↻ Jogar de novo',()=>{ overlay.classList.remove('show'); pontos=0; info1.innerHTML='Pontos: <b>0</b>'; nova(); }); }
   }
   function desenhar(){
     ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
@@ -1489,10 +1512,13 @@ function Charadas() {
   ];
   let pontos=0, acertos=0, ordem=null, idx=0, travado=false;
   function emb(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+  function comecar(){ overlay.classList.remove('show'); ordem=emb(QS.map((_,i)=>i)); idx=0; pontos=0; acertos=0; info1.innerHTML='Pontos: <b>0</b>'; nova(); }
+  function fim(){ mostrarOverlay('🤔 Fim da rodada!','Você acertou '+acertos+' de '+QS.length+' ('+pontos+' pontos)!','↻ Jogar de novo', comecar); }
   function nova(){
-    if(!ordem || idx>=ordem.length){ ordem=emb(QS.map((_,i)=>i)); idx=0; }
+    if(idx>=ordem.length){ fim(); return; }
     travado=false; const Q=QS[ordem[idx]];
     desenha(Q.q); dicaEl.innerHTML='Pense bem e escolha!';
+    info2.innerHTML='Pergunta: <b>'+(idx+1)+'/'+QS.length+'</b>';
     escolhasEl.innerHTML=''; Q.op.forEach((t,i)=>{ const b=document.createElement('button'); b.textContent=t; b.onclick=()=>resp(i,b,Q); escolhasEl.appendChild(b); });
   }
   function resp(i,btn,Q){
@@ -1509,8 +1535,74 @@ function Charadas() {
     pal.forEach(p=>{ if((linha+p).length>32){ linhas.push(linha.trim()); linha=''; } linha+=p+' '; }); linhas.push(linha.trim());
     linhas.forEach((l,i)=> ctx.fillText(l, W/2, H/2 - (linhas.length-1)*15 + i*30));
   }
-  info1.innerHTML='Pontos: <b>0</b>'; info2.innerHTML=''; nova();
+  comecar();
   return { dir(){}, parar(){ pararLoop(); } };
+}
+
+// ===================== JOGO 11: PEGA-CAPIVARA (bate-capivara) =====================
+function Capivara() {
+  const COLS=3, ROWS=3, W=420, H=420, cell=W/COLS;
+  canvas.width=W; canvas.height=H;
+  let buracos, tempo, pontos, spawnAcc, tickId=null, rodando, ultimoTick;
+
+  function reset(){
+    buracos = Array.from({length:COLS*ROWS}, ()=>({tipo:null, restante:0}));
+    tempo = 30000; pontos = 0; spawnAcc = 0; rodando = true; ultimoTick = Date.now();
+    overlay.classList.remove('show'); atualizar(); desenhar();
+    pararTick(); tickId = setInterval(tick, 100);
+  }
+  // dificuldade sobe com os pontos (canal de fluxo): capivara fica menos tempo e aparece mais rápido
+  function dificuldade(){ return { up: Math.max(600, 1200 - pontos*7), sp: Math.max(450, 950 - pontos*5) }; }
+  function tick(){
+    if(!rodando) return;
+    const agora = Date.now(); const dt = Math.min(agora - ultimoTick, 500); ultimoTick = agora;
+    tempo -= dt;
+    buracos.forEach(b=>{ if(b.tipo){ b.restante -= dt; if(b.restante<=0) b.tipo=null; } });
+    const d = dificuldade(); spawnAcc += dt;
+    if(spawnAcc >= d.sp){ spawnAcc = 0; spawnar(d.up); }
+    if(tempo <= 0){ fim(); return; }
+    atualizar(); desenhar();
+  }
+  function spawnar(up){
+    const vazios = []; buracos.forEach((b,i)=>{ if(!b.tipo) vazios.push(i); });
+    if(!vazios.length) return;
+    const i = vazios[Math.floor(Math.random()*vazios.length)];
+    const r = Math.random();
+    const tipo = r < 0.12 ? 'ouro' : (r < 0.27 ? 'bomba' : 'capi');
+    buracos[i] = { tipo, restante: up * (tipo==='ouro' ? 0.75 : 1) };
+  }
+  function aoTocar(e){
+    e.preventDefault(); if(!rodando) return;
+    const p = pontoCanvas(e); const c = Math.floor(p.x/cell), rr = Math.floor(p.y/cell);
+    if(c<0||rr<0||c>=COLS||rr>=ROWS) return;
+    const b = buracos[rr*COLS+c]; if(!b.tipo) return;
+    if(b.tipo==='capi'){ pontos += 5; registrarPontuacao('capivara', pontos); }
+    else if(b.tipo==='ouro'){ pontos += 15; registrarPontuacao('capivara', pontos); }
+    else if(b.tipo==='bomba'){ pontos = Math.max(0, pontos - 10); }
+    b.tipo = null; atualizar(); desenhar();
+  }
+  canvas.addEventListener('click', aoTocar);
+
+  function atualizar(){
+    info1.innerHTML='Pontos: <b>'+pontos+'</b>';
+    info2.innerHTML='Tempo: <b>'+Math.ceil(Math.max(0,tempo)/1000)+'s</b>';
+    dicaEl.innerHTML='Toque na 🦫 (a ✨ vale mais!). Mas fuja da 💣';
+  }
+  function desenhar(){
+    ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
+    for(let i=0;i<buracos.length;i++){
+      const c=i%COLS, rr=(i/COLS)|0, cx=c*cell+cell/2, cy=rr*cell+cell/2;
+      ctx.fillStyle='#23234d'; ctx.beginPath(); ctx.ellipse(cx, cy+cell*0.24, cell*0.34, cell*0.15, 0, 0, Math.PI*2); ctx.fill();
+      const b=buracos[i];
+      if(b.tipo){ ctx.font=(cell*0.5)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(b.tipo==='capi'?'🦫':(b.tipo==='ouro'?'✨':'💣'), cx, cy); }
+    }
+  }
+  function fim(){ rodando=false; pararTick(); registrarPontuacao('capivara', pontos);
+    mostrarOverlay('⏰ Tempo!', 'Você fez '+pontos+' pontos!', '↻ Jogar de novo', reset); }
+  function pararTick(){ if(tickId){ clearInterval(tickId); tickId=null; } }
+  reset();
+  return { dir(){}, parar(){ pararTick(); canvas.removeEventListener('click', aoTocar); } };
 }
 
 // suporte a roundRect em navegadores antigos
