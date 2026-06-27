@@ -531,6 +531,13 @@ const Nuvem = {
   }
 };
 
+// fetch com tempo-limite: a nuvem NUNCA pode pendurar a tela
+function fetchTO(url, opts, ms) {
+  const ctl = new AbortController();
+  const to = setTimeout(() => ctl.abort(), ms);
+  return fetch(url, Object.assign({}, opts, { signal: ctl.signal })).finally(() => clearTimeout(to));
+}
+
 // publica o que este aparelho sabe pro canal (com leve atraso pra agrupar)
 let _pubTimer = null;
 function publicar() {
@@ -539,7 +546,7 @@ function publicar() {
   _pubTimer = setTimeout(async () => {
     _pubTimer = null;
     try {
-      await fetch(NTFY, { method:'POST', body: JSON.stringify({ jogadores: _lerLocal(), tumbas: _lerTumbas() }) });
+      await fetchTO(NTFY, { method:'POST', body: JSON.stringify({ jogadores: _lerLocal(), tumbas: _lerTumbas() }) }, 5000);
     } catch(e) {}
   }, 1500);   // agrupa publicações: mais leve pro limite grátis do ntfy
 }
@@ -550,7 +557,7 @@ async function sincronizar() {
   if (!NUVEM_LIGADA || _sincronizando) return;
   _sincronizando = true;
   try {
-    const r = await fetch(NTFY + "/json?poll=1&since=all");
+    const r = await fetchTO(NTFY + "/json?poll=1&since=all", {}, 4000);
     const txt = await r.text();
     let local = _lerLocal(), tum = _lerTumbas(), mudou = false;
     txt.split('\n').forEach(linha => {
@@ -707,16 +714,18 @@ function iniciarPollHome(){ sincronizar(); }  // ao abrir a home, puxa a nuvem n
 function pararPollHome(){}                      // o rádio global continua sozinho
 
 // ----- botões da tela de login -----
+// melhor-esforço de sincronizar, mas NUNCA trava o login (máx ~1.5s)
+function syncRapido(){ return Promise.race([sincronizar(), new Promise(r=>setTimeout(r,1500))]); }
 async function tentarEntrar() {
   loginErro.textContent = 'Entrando...';
-  await sincronizar();   // busca contas criadas em outros aparelhos antes de checar
+  await syncRapido();   // tenta buscar contas de outros aparelhos, mas sem pendurar
   const erro = await entrar(inApelido.value, inSenha.value);
   if (erro) { loginErro.textContent = erro; return; }
   aposLogin();
 }
 async function tentarCadastrar() {
   loginErro.textContent = 'Criando conta...';
-  await sincronizar();   // pra não criar um apelido que já existe em outro aparelho
+  await syncRapido();   // tenta evitar apelido repetido, mas sem pendurar
   const erro = await cadastrar(inApelido.value, inSenha.value);
   if (erro) { loginErro.textContent = erro; return; }
   await entrar(inApelido.value, inSenha.value);
@@ -743,8 +752,8 @@ document.getElementById('btnApagarEu').addEventListener('click', apagarMeuPerfil
 
 // ----- início: já tinha alguém logado neste aparelho? -----
 async function iniciar() {
-  ligarSync();          // liga o rádio que sincroniza com a nuvem
-  await sincronizar();  // puxa o estado atual antes de decidir a tela
+  ligarSync();          // liga o rádio que sincroniza com a nuvem (em segundo plano)
+  sincronizar();        // puxa o estado SEM esperar — a tela nunca pode pendurar na nuvem
   const s = lerSessao();
   if (s && s.admin) {
     ehAdmin = true; usuario = null; apelidoExibicao = ADMIN_APELIDO;
