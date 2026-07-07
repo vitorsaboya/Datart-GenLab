@@ -1694,11 +1694,10 @@ function Penalti() {
   const chao = golY + golH;                             // onde o gramado começa
   const VEL_BASE = 2.6, VEL_INC = 0.9;                  // a cada gol o goleiro fica mais rápido
   const goleiro = { w: 56, x: W/2, dir: 1, vel: VEL_BASE };  // o goleiro vai e volta
-  const TOTAL = 5;                                       // 5 chutes, como o Benjamin pediu
-  let chutes, gols, pontos, bola, chutando, acabou, flash;
+  let vidas, gols, pontos, bola, chutando, acabou, flash;
 
   function reset(){
-    chutes = 0; gols = 0; pontos = 0; chutando = false; acabou = false; flash = null;
+    vidas = 3; gols = 0; pontos = 0; chutando = false; acabou = false; flash = null;
     goleiro.x = W/2; goleiro.dir = 1; goleiro.vel = VEL_BASE;
     bola = null;
     overlay.classList.remove('show');
@@ -1708,8 +1707,8 @@ function Penalti() {
 
   function atualizar(){
     info1.innerHTML = 'Pontos: <b>'+pontos+'</b>';
-    info2.innerHTML = 'Chutes: <b>'+ (chutes >= TOTAL ? '—' : '⚽'.repeat(TOTAL - chutes)) +'</b>';
-    dicaEl.innerHTML = 'Toque no <b>gol</b> pra chutar! Cada gol vale <b>3 pontos</b>. Fuja do goleiro 🧤';
+    info2.innerHTML = 'Vidas: <b>'+ '❤️'.repeat(Math.max(0, vidas)) +'</b>';
+    dicaEl.innerHTML = 'Toque no <b>gol</b> pra chutar! Cada gol vale <b>3 pontos</b>. Se o goleiro 🧤 pegar <b>3 vezes</b>, acaba!';
   }
 
   // quando o dedo toca a tela: mira e chuta
@@ -1747,9 +1746,9 @@ function Penalti() {
   // a bola chegou no gol: foi gol ou o goleiro pegou?
   function resolver(){
     chutando = false;
-    chutes++;
     const defendeu = Math.abs(bola.alvoX - goleiro.x) < goleiro.w/2 + 6;
     if (defendeu){
+      vidas--;                             // o goleiro pegou: perde uma vida
       flash = { txt: '🧤 Defendeu!', cor: '#ff9a9a' };
     } else {
       gols++; pontos += 3; registrarPontuacao('penalti', pontos);
@@ -1759,7 +1758,7 @@ function Penalti() {
     atualizar();
     setTimeout(() => {                     // mostra o resultado um tiquinho e segue
       flash = null; bola = null;
-      if (chutes >= TOTAL) fim();
+      if (vidas <= 0) fim();               // 3 defesas do goleiro = fim de jogo
     }, 1100);
   }
 
