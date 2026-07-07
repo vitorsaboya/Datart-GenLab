@@ -1479,7 +1479,18 @@ function Cores() {
 
   function nova(){ alvo=RECEITAS[Math.floor(Math.random()*RECEITAS.length)]; escolha=[]; amostra(); info2.innerHTML='Vidas: <b>'+'❤️'.repeat(vidas)+'</b>'; dicaEl.innerHTML='Misture pra formar <b>'+alvo.nome+'</b> (a quantidade importa!)'; desenhar(); }
   function add(c){ if(escolha.length>=4) return; escolha.push(c); amostra(); }
-  function mistura(){ if(!escolha.length) return '#101038'; let r=0,g=0,b=0; escolha.forEach(c=>{ const h=PRIM[c]; r+=parseInt(h.substr(1,2),16); g+=parseInt(h.substr(3,2),16); b+=parseInt(h.substr(5,2),16); }); const n=escolha.length; return 'rgb('+Math.round(r/n)+','+Math.round(g/n)+','+Math.round(b/n)+')'; }
+  // mistura de TINTA (subtrativa): azul+amarelo=verde, etc. Se a mistura bate com uma
+  // receita conhecida, a bolinha vira EXATAMENTE a cor real daquela mistura (honesto + satisfatório).
+  function mistura(){
+    if(!escolha.length) return '#101038';
+    const chave = escolha.slice().sort().join(',');
+    const r = RECEITAS.find(x => x.rec.slice().sort().join(',') === chave);
+    if(r) return r.cor;                       // mistura reconhecida -> a cor de verdade dela
+    // mistura ainda incompleta/desconhecida: blend subtrativo (multiplica as tintas) só pra dar retorno
+    let R=255,G=255,B=255;
+    escolha.forEach(c=>{ const h=PRIM[c]; R=R*parseInt(h.substr(1,2),16)/255; G=G*parseInt(h.substr(3,2),16)/255; B=B*parseInt(h.substr(5,2),16)/255; });
+    return 'rgb('+Math.round(R)+','+Math.round(G)+','+Math.round(B)+')';
+  }
   function amostra(){ const el=document.getElementById('cAmostra'); if(el) el.style.background=mistura(); }
   function desenhar(){
     ctx.fillStyle='#0a0a22'; ctx.fillRect(0,0,W,H);
