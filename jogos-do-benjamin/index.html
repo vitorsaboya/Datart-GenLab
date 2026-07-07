@@ -1291,23 +1291,48 @@ function Canhao() {
   function novoAlvo(){
     const w = Math.max(18, 44 - acertos*4);          // encolhe rápido (mín. bem pequeno)
     const xMin = Math.min(W-w-28, 180 + acertos*8);  // afasta rápido
-    alvo = { x: xMin + Math.random()*(W-xMin-w-12), w, h: 50 };
+    const cx = xMin + w/2 + Math.random()*(W - xMin - w - 12);
+    alvo = {
+      cx, w, h: 50,
+      baseY: 80 + Math.random()*120,                 // altura em que fica flutuando no ar
+      ampl: 26 + acertos*6,                          // sobe e desce mais forte conforme você acerta
+      fase: Math.random()*Math.PI*2,
+      velY: 0.035 + acertos*0.006,                   // voa mais rápido com o tempo
+      driftX: acertos >= 3 ? (Math.random()<.5?-1:1)*(0.35 + (acertos-3)*0.15) : 0,  // deriva lateral só do 4º alvo em diante
+      cy: 0
+    };
+    alvo.cy = alvo.baseY;
     vento = acertos >= 2 ? (Math.random()*0.14 - 0.07) * (1 + acertos*0.05) : 0;  // vento forte a partir do 3º
+  }
+  // o alvo VOA: sobe e desce no ar (e deriva de lado nos níveis mais altos)
+  function moverAlvo(){
+    if (!alvo) return;
+    alvo.fase += alvo.velY;
+    alvo.cy = alvo.baseY + Math.sin(alvo.fase) * alvo.ampl;
+    if (alvo.driftX){
+      alvo.cx += alvo.driftX;
+      const minX = alvo.w/2 + 120, maxX = W - alvo.w/2 - 8;   // não deixa colar no canhão
+      if (alvo.cx < minX){ alvo.cx = minX; alvo.driftX *= -1; }
+      if (alvo.cx > maxX){ alvo.cx = maxX; alvo.driftX *= -1; }
+    }
   }
   function atualizar(){
     info1.innerHTML='Pontos: <b>'+pontos+'</b>'; info2.innerHTML='Tiros: <b>'+'🔴'.repeat(vidas)+'</b>';
-    dicaEl.innerHTML = vento ? '💨 Cuidado, tem <b>vento</b>! Ajuste e acerte o 🎯' : 'Ajuste <b>ângulo</b> e <b>força</b> e acerte o 🎯';
+    dicaEl.innerHTML = vento ? '💨 Cuidado, tem <b>vento</b>! Acerte o 🎯 <b>voador</b>' : 'Ajuste <b>ângulo</b> e <b>força</b> e acerte o 🎯 <b>voador</b>';
   }
   function atirar(){
     if (voando) return; voando = true;
     const rad = angulo*Math.PI/180, v = forca*0.13;
     bola = { x: 26, y: solo-22, vx: Math.cos(rad)*v, vy: -Math.sin(rad)*v };
-    pararLoop(); raf = requestAnimationFrame(loop);
+    // o loop já está rodando (animando o alvo voador) — só solta a bola
   }
   function loop(){
-    bola.vx += vento; bola.x += bola.vx; bola.y += bola.vy; bola.vy += 0.12;   // gravidade + vento
-    if (bola.x>alvo.x && bola.x<alvo.x+alvo.w && bola.y>solo-alvo.h && bola.y<solo) return acertou();
-    if (bola.y >= solo || bola.x > W+40 || bola.x < -40) return errou();
+    moverAlvo();                                   // o alvo voa o tempo todo, mesmo antes de atirar
+    if (voando && bola){
+      bola.vx += vento; bola.x += bola.vx; bola.y += bola.vy; bola.vy += 0.12;   // gravidade + vento
+      if (Math.abs(bola.x - alvo.cx) < alvo.w/2 && Math.abs(bola.y - alvo.cy) < alvo.h/2) acertou();
+      else if (bola.y >= solo || bola.x > W+40 || bola.x < -40) errou();
+    }
     desenhar();
     raf = requestAnimationFrame(loop);
   }
@@ -1326,10 +1351,10 @@ function Canhao() {
     ctx.fillStyle='#2e7d32'; ctx.fillRect(0,solo,W,H-solo);
     ctx.save(); ctx.translate(22,solo); ctx.fillStyle='#9aa'; ctx.beginPath(); ctx.arc(0,0,13,0,Math.PI*2); ctx.fill();
     ctx.rotate(-angulo*Math.PI/180); ctx.fillStyle='#cdd'; ctx.fillRect(0,-5,30,10); ctx.restore();
-    if (alvo){ ctx.font=Math.max(22,Math.round(alvo.w*0.85))+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🎯', alvo.x+alvo.w/2, solo-alvo.h/2); }
+    if (alvo){ ctx.font=Math.max(22,Math.round(alvo.w*0.85))+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🎯', alvo.cx, alvo.cy); }
     if (voando && bola){ ctx.fillStyle='#ffe14d'; ctx.beginPath(); ctx.arc(bola.x,bola.y,6,0,Math.PI*2); ctx.fill(); }
   }
-  function recomecar(){ acertos=0; pontos=0; vidas=3; vento=0; novoAlvo(); atualizar(); desenhar(); }
+  function recomecar(){ acertos=0; pontos=0; vidas=3; vento=0; novoAlvo(); atualizar(); pararLoop(); raf = requestAnimationFrame(loop); }
   recomecar();
   return { dir(){}, parar(){ pararLoop(); } };
 }
