@@ -309,6 +309,11 @@
         <div class="nome">Canhão</div>
         <div class="desc">Ajuste o ângulo e a força e acerte o alvo!</div>
       </div>
+      <div class="card" data-jogo="penalti">
+        <span class="ico">⚽</span>
+        <div class="nome">Pênalti</div>
+        <div class="desc">Você tem 5 chutes. Cada gol vale 3 pontos. Fuja do goleiro!</div>
+      </div>
       <div class="card" data-jogo="minado">
         <span class="ico">💎</span>
         <div class="nome">Campo Minado</div>
@@ -433,7 +438,7 @@ function mostrarMenu() {
 const FABRICAS = {
   labirinto: Labirinto, cobrinha: Cobrinha, frutas: Frutas, bandeiras: Bandeiras,
   canhao: Canhao, minado: Minado, capitais: Capitais, cores: Cores, tempo: Tempo, charadas: Charadas,
-  capivara: Capivara
+  capivara: Capivara, penalti: Penalti
 };
 function abrirJogo(nome) {
   pararPollHome();
@@ -480,7 +485,7 @@ document.querySelectorAll('.controles button').forEach(b => {
 // Cada conta é um nó em /jogadores/<apelido>. Pra "limpar" tudo: apagar /jogadores
 // no console do Firebase (ou trocar a URL abaixo por outro banco).
 const FIREBASE_URL = "https://jogos-benjamin-default-rtdb.firebaseio.com";
-const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas','capivara'];
+const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas','capivara','penalti'];
 
 // lista-mestra de países (código da bandeira + nome + capital) — serve Bandeiras E Capitais
 const PAISES_MASTER = [
@@ -1632,6 +1637,125 @@ function Capivara() {
   function pararTick(){ if(tickId){ clearInterval(tickId); tickId=null; } }
   reset();
   return { dir(){}, parar(){ pararTick(); canvas.removeEventListener('click', aoTocar); } };
+}
+
+// ===================== JOGO 12: PÊNALTI =====================
+function Penalti() {
+  const W = 480, H = 360; canvas.width = W; canvas.height = H;
+  const golX = 70, golW = 340, golY = 60, golH = 66;   // a moldura do gol, lá no alto
+  const chao = golY + golH;                             // onde o gramado começa
+  const goleiro = { w: 56, x: W/2, dir: 1, vel: 2.6 };  // o goleiro vai e volta
+  const TOTAL = 5;                                       // 5 chutes, como o Benjamin pediu
+  let chutes, gols, pontos, bola, chutando, acabou, flash;
+
+  function reset(){
+    chutes = 0; gols = 0; pontos = 0; chutando = false; acabou = false; flash = null;
+    goleiro.x = W/2; goleiro.dir = 1;
+    bola = null;
+    overlay.classList.remove('show');
+    atualizar();
+    pararLoop(); raf = requestAnimationFrame(loop);
+  }
+
+  function atualizar(){
+    info1.innerHTML = 'Pontos: <b>'+pontos+'</b>';
+    info2.innerHTML = 'Chutes: <b>'+ (chutes >= TOTAL ? '—' : '⚽'.repeat(TOTAL - chutes)) +'</b>';
+    dicaEl.innerHTML = 'Toque no <b>gol</b> pra chutar! Cada gol vale <b>3 pontos</b>. Fuja do goleiro 🧤';
+  }
+
+  // quando o dedo toca a tela: mira e chuta
+  function aoTocar(e){
+    e.preventDefault();
+    if (chutando || acabou || flash) return;       // um chute de cada vez
+    const p = pontoCanvas(e);
+    if (p.y > chao + 40) return;                    // só chuta se mirar lá em cima, no gol
+    const alvoX = Math.max(golX + 16, Math.min(golX + golW - 16, p.x));  // não sai pra fora da trave
+    bola = { x0: W/2, y0: H - 34, alvoX, alvoY: golY + golH*0.55, x: W/2, y: H - 34, t: 0 };
+    chutando = true;
+  }
+
+  function loop(){
+    // o goleiro anda de um lado pro outro dentro do gol
+    if (!acabou){
+      goleiro.x += goleiro.dir * goleiro.vel;
+      const minX = golX + goleiro.w/2, maxX = golX + golW - goleiro.w/2;
+      if (goleiro.x <= minX){ goleiro.x = minX; goleiro.dir = 1; }
+      if (goleiro.x >= maxX){ goleiro.x = maxX; goleiro.dir = -1; }
+    }
+    // a bola voando até o alvo
+    if (chutando && bola){
+      bola.t += 0.045;
+      if (bola.t >= 1){ bola.t = 1; resolver(); }
+      else {
+        bola.x = bola.x0 + (bola.alvoX - bola.x0) * bola.t;
+        bola.y = bola.y0 + (bola.alvoY - bola.y0) * bola.t;
+      }
+    }
+    desenhar();
+    raf = requestAnimationFrame(loop);
+  }
+
+  // a bola chegou no gol: foi gol ou o goleiro pegou?
+  function resolver(){
+    chutando = false;
+    chutes++;
+    const defendeu = Math.abs(bola.alvoX - goleiro.x) < goleiro.w/2 + 6;
+    if (defendeu){
+      flash = { txt: '🧤 Defendeu!', cor: '#ff9a9a' };
+    } else {
+      gols++; pontos += 3; registrarPontuacao('penalti', pontos);
+      flash = { txt: '⚽ GOOOL!', cor: '#7be88a' };
+    }
+    atualizar();
+    setTimeout(() => {                     // mostra o resultado um tiquinho e segue
+      flash = null; bola = null;
+      if (chutes >= TOTAL) fim();
+    }, 1100);
+  }
+
+  function desenhar(){
+    // fundo + gramado
+    ctx.fillStyle = '#0a0a22'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#2e7d32'; ctx.fillRect(0, chao, W, H - chao);
+    // marca da grande área (só enfeite)
+    ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 2;
+    ctx.strokeRect(golX - 26, chao, golW + 52, H - chao - 8);
+    ctx.beginPath(); ctx.arc(W/2, H - 30, 4, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fill();
+
+    // a rede do gol
+    ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.fillRect(golX, golY, golW, golH);
+    ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 1;
+    for (let gx = golX + 16; gx < golX + golW; gx += 16){ ctx.beginPath(); ctx.moveTo(gx, golY); ctx.lineTo(gx, golY + golH); ctx.stroke(); }
+    for (let gy = golY + 14; gy < golY + golH; gy += 14){ ctx.beginPath(); ctx.moveTo(golX, gy); ctx.lineTo(golX + golW, gy); ctx.stroke(); }
+    // as traves
+    ctx.strokeStyle = '#eaf6ff'; ctx.lineWidth = 5; ctx.strokeRect(golX, golY, golW, golH);
+
+    // o goleiro
+    ctx.font = '38px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🧤', goleiro.x, golY + golH*0.5);
+
+    // a bola
+    ctx.font = '26px serif';
+    ctx.fillText('⚽', bola ? bola.x : W/2, bola ? bola.y : H - 34);
+
+    // GOL! ou Defendeu!
+    if (flash){
+      ctx.font = 'bold 40px "Comic Sans MS", sans-serif';
+      ctx.fillStyle = flash.cor;
+      ctx.fillText(flash.txt, W/2, chao + (H - chao)/2);
+    }
+  }
+
+  function fim(){
+    acabou = true;
+    registrarPontuacao('penalti', pontos);
+    mostrarOverlay('🏁 Fim dos pênaltis!', 'Você fez '+gols+' gol(s) e ganhou '+pontos+' pontos!',
+      '↻ Jogar de novo', reset);
+  }
+
+  canvas.addEventListener('click', aoTocar);
+  reset();
+  return { dir(){}, parar(){ pararLoop(); canvas.removeEventListener('click', aoTocar); } };
 }
 
 // suporte a roundRect em navegadores antigos
