@@ -1644,13 +1644,14 @@ function Penalti() {
   const W = 480, H = 360; canvas.width = W; canvas.height = H;
   const golX = 70, golW = 340, golY = 60, golH = 66;   // a moldura do gol, lá no alto
   const chao = golY + golH;                             // onde o gramado começa
-  const goleiro = { w: 56, x: W/2, dir: 1, vel: 2.6 };  // o goleiro vai e volta
+  const VEL_BASE = 2.6, VEL_INC = 0.9;                  // a cada gol o goleiro fica mais rápido
+  const goleiro = { w: 56, x: W/2, dir: 1, vel: VEL_BASE };  // o goleiro vai e volta
   const TOTAL = 5;                                       // 5 chutes, como o Benjamin pediu
   let chutes, gols, pontos, bola, chutando, acabou, flash;
 
   function reset(){
     chutes = 0; gols = 0; pontos = 0; chutando = false; acabou = false; flash = null;
-    goleiro.x = W/2; goleiro.dir = 1;
+    goleiro.x = W/2; goleiro.dir = 1; goleiro.vel = VEL_BASE;
     bola = null;
     overlay.classList.remove('show');
     atualizar();
@@ -1704,6 +1705,7 @@ function Penalti() {
       flash = { txt: '🧤 Defendeu!', cor: '#ff9a9a' };
     } else {
       gols++; pontos += 3; registrarPontuacao('penalti', pontos);
+      goleiro.vel = VEL_BASE + gols * VEL_INC;   // gol! o goleiro fica mais rápido pro próximo chute
       flash = { txt: '⚽ GOOOL!', cor: '#7be88a' };
     }
     atualizar();
@@ -1730,9 +1732,13 @@ function Penalti() {
     // as traves
     ctx.strokeStyle = '#eaf6ff'; ctx.lineWidth = 5; ctx.strokeRect(golX, golY, golW, golH);
 
-    // o goleiro
-    ctx.font = '38px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('🧤', goleiro.x, golY + golH*0.5);
+    // o goleiro: um corpo bem escuro pra enxergar fácil, com a luva por cima
+    const gcy = golY + golH*0.5, gbw = goleiro.w, gbh = golH*0.82;
+    ctx.fillStyle = '#0d0d1f';
+    ctx.strokeStyle = 'rgba(120,215,255,.55)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(goleiro.x - gbw/2, gcy - gbh/2, gbw, gbh, 10); ctx.fill(); ctx.stroke();
+    ctx.font = '30px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🧤', goleiro.x, gcy);
 
     // a bola
     ctx.font = '26px serif';
