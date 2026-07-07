@@ -1690,10 +1690,10 @@ function Capivara() {
 // ===================== JOGO 12: PÊNALTI =====================
 function Penalti() {
   const W = 480, H = 360; canvas.width = W; canvas.height = H;
-  const golX = 70, golW = 340, golY = 60, golH = 66;   // a moldura do gol, lá no alto
+  const golX = 105, golW = 270, golY = 60, golH = 56;  // gol menor (mais difícil), centralizado
   const chao = golY + golH;                             // onde o gramado começa
   const VEL_BASE = 2.6, VEL_INC = 0.9;                  // a cada gol o goleiro fica mais rápido
-  const goleiro = { w: 56, x: W/2, dir: 1, vel: VEL_BASE };  // o goleiro vai e volta
+  const goleiro = { w: 66, x: W/2, dir: 1, vel: VEL_BASE };  // goleiro maior (tapa mais o gol)
   let vidas, gols, pontos, bola, chutando, acabou, flash;
 
   function reset(){
