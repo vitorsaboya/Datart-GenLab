@@ -1916,7 +1916,7 @@ function Pistas() {
   // o pulo sobe ~58px (passa o obstáculo de 26px, NÃO passa o cubo de 70px) e fica 0,85s no ar
   // — o tempo no ar é generoso de propósito: a janela pra acertar o pulo fica larga (criança joga!)
   const GRAV = 640, PULO = 272;
-  let pista, y, vy, noAr, obstaculos, tempo, pontos, vidas, invul, vivo, ultimo, spawnAcc, prox;
+  let pista, y, vy, noAr, obstaculos, tempo, pontos, vidas, invul, vivo, ultimo, spawnAcc, prox, comecou;
 
   ctrlExtra.innerHTML = '<div class="botoes"><button class="fogo" id="pPular">🦘 PULAR (espaço)</button></div>';
   document.getElementById('pPular').onclick = pular;
@@ -1926,7 +1926,8 @@ function Pistas() {
   function reset(){
     pista = 1; y = PISTA[1]; vy = 0; noAr = false;
     obstaculos = []; tempo = 0; pontos = 0; vidas = 3; invul = 0; vivo = true;
-    ultimo = null; spawnAcc = 0; prox = 900;
+    ultimo = null; spawnAcc = 0; prox = 1400;   // pista limpa no começo: 1º obstáculo demora a vir
+    comecou = false;                            // o pinguim fica PARADO até você apertar
     overlay.classList.remove('show');
     atualizar();
     pararLoop(); raf = requestAnimationFrame(loop);
@@ -1938,13 +1939,20 @@ function Pistas() {
     dicaEl.innerHTML = 'Teclas: <b>⬆️ ⬇️</b> trocam de pista · <b>ESPAÇO</b> (ou Z) <b>PULA</b>.<br>Cubo alto 🟥 = troque de pista. Obstáculo baixo 🟧 = pule! <b>1 ponto por segundo.</b>';
   }
 
+  // o PRIMEIRO aperto só dá a largada (assim ninguém perde vida sem estar pronto)
+  function largar(){ if (!comecou){ comecou = true; return true; } return false; }
+
   function dir(d){
-    if (!vivo || noAr) return;                     // só troca de pista com os pés no chão
+    if (!vivo) return;
+    if (largar()) return;
+    if (noAr) return;                              // só troca de pista com os pés no chão
     if (d === 'cima'  && pista === 1){ pista = 0; y = PISTA[0]; }
     if (d === 'baixo' && pista === 0){ pista = 1; y = PISTA[1]; }
   }
   function pular(){
-    if (!vivo || noAr) return;
+    if (!vivo) return;
+    if (largar()) return;
+    if (noAr) return;
     noAr = true; vy = -PULO;
   }
 
@@ -1974,6 +1982,10 @@ function Pistas() {
   function loop(ts){
     if (!vivo) return;
     if (ultimo === null) ultimo = ts;
+    if (!comecou){                       // esperando a largada: nada anda, nem o relógio
+      ultimo = ts; desenhar();
+      raf = requestAnimationFrame(loop); return;
+    }
     const dt = Math.min((ts - ultimo)/1000, 0.05); ultimo = ts;
     tempo += dt*1000;
     if (invul > 0) invul -= dt*1000;
@@ -2027,6 +2039,17 @@ function Pistas() {
     if (!piscando){
       ctx.font = TAM+'px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
       ctx.fillText('🐧', PX + TAM/2, y);
+    }
+    // ainda não largou: avisa que está esperando você
+    if (!comecou){
+      ctx.fillStyle = 'rgba(10,10,34,.62)'; ctx.fillRect(0,0,W,H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Comic Sans MS", sans-serif';
+      ctx.fillText('Aperte ESPAÇO pra começar!', W/2, 120);
+      ctx.fillStyle = '#9cc8ff'; ctx.font = '16px sans-serif';
+      ctx.fillText('⬆️ ⬇️ trocam de pista  ·  ESPAÇO pula', W/2, 155);
+      ctx.font = TAM+'px serif'; ctx.textBaseline = 'bottom';
+      ctx.fillText('🐧', PX + TAM/2, y);      // o pinguim aparece por cima, esperando
     }
   }
 
