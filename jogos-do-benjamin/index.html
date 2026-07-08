@@ -632,6 +632,14 @@ function ligarSync() {
 const ADMIN_APELIDO = "Admin";
 const ADMIN_SENHA   = "chave-mestra";
 
+// ===== DONO DO JOGO =====
+// O dono JOGA normalmente (pontua, aparece no placar) E pode apagar perfis — por exemplo,
+// se alguém estranho criar uma conta. É pela CHAVE do apelido (minúsculas).
+// Só "masa" é dono; o perfil "ben" fica de fora (pedido do Benjamin).
+const DONOS = ['masa'];
+function ehDono(){ return !!usuario && DONOS.indexOf(usuario) !== -1; }
+function podeApagarPerfis(){ return ehAdmin || ehDono(); }
+
 // quem está logado (a sessão fica sempre no próprio aparelho)
 let usuario = null;     // chave (apelido minúsculo) do jogador; null se for admin
 let ehAdmin = false;
@@ -765,11 +773,13 @@ function renderPlacar(js) {
   });
 }
 
-// painel só do admin: lista todos os perfis com botão de apagar
+// painel do admin OU do dono: lista todos os perfis com botão de apagar
 function renderAdmin(js) {
   const painel = document.getElementById('painelAdmin');
-  if (!ehAdmin) { painel.style.display = 'none'; return; }
+  if (!podeApagarPerfis()) { painel.style.display = 'none'; return; }
   painel.style.display = 'block';
+  const tit = painel.querySelector('h2');
+  if (tit) tit.textContent = ehAdmin ? '🔧 Administrador' : '🛡️ Dono do jogo';
   const ul = document.getElementById('adminLista');
   ul.innerHTML = '';
   const chaves = Object.keys(js).sort();
@@ -777,10 +787,16 @@ function renderAdmin(js) {
   chaves.forEach(k => {
     const li = document.createElement('li');
     li.innerHTML = '<span>'+escapar(js[k].apelido)+' <small style="opacity:.6">('+totalDe(js[k].pontos)+' pts)</small></span>';
-    const b = document.createElement('button');
-    b.className = 'apagar'; b.textContent = 'Apagar';
-    b.onclick = () => apagarPerfilAdmin(k, js[k].apelido);
-    li.appendChild(b);
+    if (k === usuario) {
+      const eu = document.createElement('small');   // o dono não apaga o próprio perfil por aqui
+      eu.style.opacity = '.7'; eu.textContent = '(você)';
+      li.appendChild(eu);
+    } else {
+      const b = document.createElement('button');
+      b.className = 'apagar'; b.textContent = 'Apagar';
+      b.onclick = () => apagarPerfilAdmin(k, js[k].apelido);
+      li.appendChild(b);
+    }
     ul.appendChild(li);
   });
 }
@@ -793,10 +809,11 @@ async function apagarMeuPerfil() {
   sair();
 }
 
-// admin apaga o perfil de QUALQUER pessoa
+// admin OU dono apaga o perfil de outra pessoa
 async function apagarPerfilAdmin(chave, apelido) {
-  if (!ehAdmin) return;
-  if (!confirm('Apagar o perfil de "'+apelido+'"? Não dá pra desfazer.')) return;
+  if (!podeApagarPerfis()) return;
+  if (chave === usuario) return;                       // nunca o próprio perfil por aqui
+  if (!confirm('Apagar o perfil de "'+apelido+'"?\n\nIsso é PRA SEMPRE: os pontos dele somem e NÃO dá pra desfazer.')) return;
   await Nuvem.apagarJogador(chave);
   atualizarHome();
 }
