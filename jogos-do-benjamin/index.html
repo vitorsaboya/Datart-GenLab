@@ -180,6 +180,21 @@
   }
   #ola { font-size: 16px; opacity: .9; }
   #ola b { color: #ffe14d; }
+  #seqDias { font-size: 15px; opacity: .9; }
+  #seqDias b { color: #ffb066; }
+
+  /* ---------- PRÊMIO DIÁRIO ---------- */
+  #premio {
+    display: none; position: fixed; inset: 0; z-index: 50;
+    background: rgba(5,5,20,.82);
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  #premio.show { display: flex; }
+  #premio .painel { max-width: 380px; animation: pop .35s ease; }
+  #premio h2 { font-size: 26px; text-shadow: 0 0 16px #ffe14d; margin-bottom: 10px; }
+  #premio p { font-size: 17px; margin-bottom: 10px; line-height: 1.45; }
+  #premio .ganho { color: #ffe14d; font-weight: bold; font-size: 21px; }
+  #premio .fogo { font-size: 40px; display: block; margin-bottom: 6px; }
 
   /* ---------- HOME: PLACAR + MENU ---------- */
   #home {
@@ -264,8 +279,20 @@
   <!-- BARRA DO JOGADOR (quando logado) -->
   <div id="topbar">
     <span id="ola"></span>
+    <span id="seqDias"></span>
     <button class="ghost" id="btnApagarEu">Apagar meu perfil</button>
     <button class="ghost" id="btnSair">Sair</button>
+  </div>
+
+  <!-- PRÊMIO DIÁRIO (sequência) -->
+  <div id="premio">
+    <div class="painel">
+      <span class="fogo" id="premioIcone">🎁</span>
+      <h2 id="premioTitulo">Prêmio diário!</h2>
+      <p id="premioTexto"></p>
+      <p id="premioSeq" class="loginDesc"></p>
+      <button id="premioOk">Oba! 🎉</button>
+    </div>
   </div>
 
   <!-- PÁGINA INICIAL: PLACAR + MENU -->
@@ -485,7 +512,7 @@ document.querySelectorAll('.controles button').forEach(b => {
 // Cada conta é um nó em /jogadores/<apelido>. Pra "limpar" tudo: apagar /jogadores
 // no console do Firebase (ou trocar a URL abaixo por outro banco).
 const FIREBASE_URL = "https://jogos-benjamin-default-rtdb.firebaseio.com";
-const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas','capivara','penalti'];
+const JOGOSIDS = ['labirinto','cobrinha','frutas','bandeiras','canhao','minado','capitais','cores','tempo','charadas','capivara','penalti','diario'];
 
 // lista-mestra de países (código da bandeira + nome + capital) — serve Bandeiras E Capitais
 const PAISES_MASTER = [
@@ -642,11 +669,59 @@ function sair() {
   pararPollHome();
   usuario = null; ehAdmin = false; apelidoExibicao = '';
   limparSessao();
+  mostrarSeq(0);           // some com o contador de sequência ao sair
   inApelido.value = ''; inSenha.value = '';
   mostrarTela('login');
 }
 
 function totalDe(p) { p = p || {}; let s = 0; for (const g of JOGOSIDS) s += (p[g]||0); return s; }
+
+// ===================== PRÊMIO DIÁRIO (a sequência) =====================
+// Entrou pra jogar hoje: +5 pontos. Jogou ontem também: a sequência cresce.
+// Faltou um dia: a sequência recomeça do 1. Completou 7 dias seguidos: +20 de bônus.
+// A data vem do relógio do próprio aparelho (é um jogo de família, sem cartório).
+const PREMIO_DIA = 5, BONUS_SEMANA = 20, DIAS_DA_SEMANA = 7;
+
+function hojeStr(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function diasEntre(a, b){   // quantos dias de 'a' até 'b' (strings AAAA-MM-DD)
+  const [ay,am,ad] = a.split('-').map(Number), [by,bm,bd] = b.split('-').map(Number);
+  return Math.round((Date.UTC(by,bm-1,bd) - Date.UTC(ay,am-1,ad)) / 86400000);
+}
+function mostrarSeq(seq){
+  const el = document.getElementById('seqDias');
+  if (el) el.innerHTML = (seq > 0) ? '🔥 <b>'+seq+'</b> '+(seq>1?'dias seguidos':'dia seguido') : '';
+}
+function mostrarPremio(bonus, seq){
+  document.getElementById('premioIcone').textContent = bonus ? '🏆' : '🎁';
+  document.getElementById('premioTitulo').textContent = bonus ? 'Semana completa!' : 'Prêmio diário!';
+  document.getElementById('premioTexto').innerHTML = bonus
+    ? 'Você jogou <b>7 dias seguidos</b>! <span class="ganho">+'+(PREMIO_DIA+bonus)+' pontos</span><br><small>(5 do dia + 20 de bônus)</small>'
+    : 'Você voltou pra jogar! <span class="ganho">+'+PREMIO_DIA+' pontos</span>';
+  document.getElementById('premioSeq').innerHTML = bonus
+    ? 'A sequência recomeça amanhã. Bora de novo!'
+    : 'Sequência: <b>'+seq+'</b> '+(seq>1?'dias seguidos':'dia seguido')+'. Volte amanhã pra não perder!';
+  document.getElementById('premio').classList.add('show');
+}
+async function premioDiario(){
+  if (!usuario) return;                       // o administrador não ganha prêmio
+  const j = await Nuvem.lerJogador(usuario);
+  if (!j) return;
+  const hoje = hojeStr();
+  const d = j.diario || { ultimo: null, seq: 0 };
+  if (d.ultimo === hoje) { mostrarSeq(d.seq); return; }   // já pegou o prêmio hoje
+  // jogou ontem? a sequência cresce. faltou (ou é a 1ª vez)? recomeça do 1.
+  let seq = (d.ultimo && diasEntre(d.ultimo, hoje) === 1) ? (d.seq || 0) + 1 : 1;
+  if (seq > DIAS_DA_SEMANA) seq = 1;                       // passou de 7: começa uma semana nova
+  const bonus = (seq === DIAS_DA_SEMANA) ? BONUS_SEMANA : 0;
+  j.pontos = j.pontos || {};
+  j.pontos.diario = (j.pontos.diario || 0) + PREMIO_DIA + bonus;
+  j.diario = { ultimo: hoje, seq };
+  await Nuvem.gravarJogador(usuario, j);
+  mostrarSeq(seq);
+  mostrarPremio(bonus, seq);
+  atualizarHome();                             // o placar já mostra os pontos novos
+}
+document.getElementById('premioOk').addEventListener('click', () => document.getElementById('premio').classList.remove('show'));
 
 // guarda só o MELHOR resultado do jogador atual em cada jogo (lê do cache local p/ ser leve)
 async function registrarPontuacao(jogo, valor) {
@@ -747,6 +822,7 @@ function aposLogin() {
     : 'Olá, <b>'+escapar(apelidoExibicao)+'</b>!';
   document.getElementById('btnApagarEu').style.display = ehAdmin ? 'none' : '';
   mostrarMenu();
+  premioDiario();          // entrou pra jogar: confere a sequência e dá o prêmio do dia
 }
 const inApelido = document.getElementById('inApelido');
 const inSenha   = document.getElementById('inSenha');
@@ -775,6 +851,7 @@ async function iniciar() {
     document.getElementById('ola').innerHTML = 'Olá, <b>'+escapar(apelidoExibicao)+'</b>!';
     document.getElementById('btnApagarEu').style.display = '';
     mostrarMenu();
+    premioDiario();        // já estava logado: confere a sequência e dá o prêmio do dia
   } else {
     mostrarTela('login');
   }
