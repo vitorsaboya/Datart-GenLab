@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banner — Jogos do Pinguim</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #262019;
+    color: #f4ecd8; text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 12px 40px;
+  }
+  h1 { font-size: 22px; margin-bottom: 4px; letter-spacing: .04em; }
+  .dica { opacity: .85; font-size: 15px; margin-bottom: 16px; line-height: 1.4; max-width: 520px; }
+  #tela { width: 100%; max-width: 520px; height: auto; border-radius: 6px;
+    box-shadow: 0 14px 44px rgba(0,0,0,.6); background:#f4ecd8; }
+  .botoes { margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  button {
+    font-family: inherit; font-size: 18px; font-weight: bold;
+    padding: 13px 26px; border: none; border-radius: 6px; cursor: pointer;
+    background: #b3261e; color: #f4ecd8;
+    box-shadow: 0 5px 0 #6e1512; transition: transform .05s;
+  }
+  button.ghost { background: #f4ecd8; color: #1a1611; box-shadow: 0 5px 0 #a99e85; }
+  button:active { transform: translateY(3px); box-shadow: 0 2px 0 #6e1512; }
+  .ajuda { margin-top: 16px; font-size: 13px; opacity: .65; max-width: 440px; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <h1>📰 Banner dos Jogos Novos</h1>
+  <p class="dica">Aperte <b>Baixar imagem</b> e manda no grupo dos seus amigos — extra, extra, tem jogo novo no ar!</p>
+  <canvas id="tela" width="1080" height="1080"></canvas>
+  <div class="botoes">
+    <button id="btnBaixar">📥 Baixar imagem</button>
+    <button class="ghost" id="btnLink">🔗 Copiar link dos jogos</button>
+  </div>
+  <p class="ajuda" id="ajuda">No celular: segure o dedo na imagem pra salvar ou compartilhar. No computador: use o botão Baixar.</p>
+
+<script>
+const LINK = 'vitorsaboya.github.io/Datart-GenLab/jogos-do-pinguim';
+
+const cv = document.getElementById('tela');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+
+const TINTA = '#1a1611';       // preto de jornal
+const PAPEL = '#f4ecd8';       // papel envelhecido
+const VERMELHO = '#b3261e';    // carimbo
+
+function serif(peso, tam){ return peso + ' ' + tam + 'px Georgia, "Times New Roman", serif'; }
+
+// quebra o texto em linhas que caibam na largura
+function linhas(texto, maxLarg){
+  const pal = texto.split(' '); const out = []; let l = '';
+  for (const p of pal){
+    const teste = l ? l + ' ' + p : p;
+    if (ctx.measureText(teste).width > maxLarg && l){ out.push(l); l = p; }
+    else l = teste;
+  }
+  if (l) out.push(l);
+  return out;
+}
+
+function regua(x1, x2, y, grossa){
+  ctx.fillStyle = TINTA;
+  ctx.fillRect(x1, y, x2 - x1, grossa ? 5 : 2);
+}
+
+function desenhar(){
+  // o papel, com manchinhas de idade
+  ctx.fillStyle = PAPEL; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 260; i++){
+    const mx = (i * 761) % W, my = (i * 397 + 130) % H;
+    ctx.fillStyle = 'rgba(120,100,60,' + (0.03 + (i % 5) * 0.008) + ')';
+    ctx.fillRect(mx, my, 2 + (i % 3), 1 + (i % 2));
+  }
+
+  // moldura dupla de jornal
+  ctx.strokeStyle = TINTA;
+  ctx.lineWidth = 8; ctx.strokeRect(26, 26, W-52, H-52);
+  ctx.lineWidth = 2; ctx.strokeRect(44, 44, W-88, H-88);
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  // cabecalho do jornal
+  ctx.fillStyle = TINTA;
+  ctx.font = serif('bold', 34);
+  ctx.fillText('O  P I N G U I M   N O T Í C I A S', W/2, 95);
+  ctx.font = serif('italic', 22);
+  ctx.fillText('Edição especial · saiu hoje · leia e corra pra jogar', W/2, 133);
+  regua(70, W-70, 158, false);
+
+  // a manchete
+  ctx.fillStyle = VERMELHO;
+  ctx.font = serif('bold', 102);
+  ctx.fillText('EXTRA! EXTRA!', W/2, 240);
+  ctx.fillStyle = TINTA;
+  ctx.font = serif('bold', 52);
+  ctx.fillText('DOIS JOGOS NOVOS NO AR', W/2, 330);
+  regua(70, W-70, 372, true);
+
+  // as duas colunas (uma por jogo)
+  const colW = (W - 140 - 40) / 2;   // 70 de margem + 40 de vao central
+  const xc1 = 70 + colW/2, xc2 = W - 70 - colW/2;
+  desenharJogo(xc1, colW, '🐧🏝️', 'ILHA DO', 'PINGUIM', 'AVENTURA · estilo PK XD',
+    'Explore uma ilha 3D que muda a cada partida e ache os 8 totens de luz. Corre, nada e desliza de barriga!');
+  desenharJogo(xc2, colW, '🐧🥚', 'COLÔNIA DO', 'PINGUIM', 'ESTRATÉGIA',
+    'Comande sua colônia: seus pinguins pescam, você constrói ninhos e espanta a gaivota ladra. Meta: 20 pinguins!');
+
+  // linha vertical entre as colunas
+  ctx.fillStyle = TINTA; ctx.fillRect(W/2 - 1, 400, 2, 380);
+
+  regua(70, W-70, 810, true);
+
+  // chamada final + link
+  ctx.fillStyle = TINTA;
+  ctx.font = serif('bold', 46);
+  ctx.fillText('Entra pra jogar com a gente!', W/2, 866);
+  ctx.font = serif('bold', 30);
+  ctx.fillStyle = VERMELHO;
+  ctx.fillText(LINK, W/2, 926);
+  ctx.fillStyle = TINTA;
+  ctx.font = serif('italic', 24);
+  ctx.fillText('De graça · no celular, no tablet e no computador', W/2, 975);
+
+  // carimbo GRÁTIS! inclinado
+  ctx.save();
+  ctx.translate(W - 165, 300);
+  ctx.rotate(-0.22);
+  ctx.strokeStyle = VERMELHO; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.arc(0, 0, 82, 0, 6.29); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, 70, 0, 6.29); ctx.stroke();
+  ctx.fillStyle = VERMELHO; ctx.font = serif('bold', 40);
+  ctx.fillText('GRÁTIS!', 0, 0);
+  ctx.restore();
+}
+
+function desenharJogo(xc, colW, emoji, nome1, nome2, tag, texto){
+  // ilustracao
+  ctx.font = '104px serif'; ctx.fillStyle = TINTA;
+  ctx.fillText(emoji, xc, 468);
+  // nome do jogo
+  ctx.font = serif('bold', 46);
+  ctx.fillText(nome1, xc, 556);
+  ctx.fillText(nome2, xc, 604);
+  // etiqueta da categoria
+  ctx.font = serif('bold', 25);
+  const tw = ctx.measureText(tag).width + 36;
+  ctx.fillStyle = TINTA;
+  ctx.fillRect(xc - tw/2, 632, tw, 42);
+  ctx.fillStyle = PAPEL;
+  ctx.fillText(tag, xc, 654);
+  // a materia
+  ctx.fillStyle = TINTA;
+  ctx.font = serif('normal', 25);
+  let y = 700;
+  for (const l of linhas(texto, colW - 30)){
+    ctx.fillText(l, xc, y);
+    y += 31;
+  }
+}
+
+function baixar(){
+  const a = document.createElement('a');
+  a.download = 'extra-jogos-do-pinguim.png';
+  a.href = cv.toDataURL('image/png');
+  a.click();
+}
+document.getElementById('btnBaixar').addEventListener('click', baixar);
+document.getElementById('btnLink').addEventListener('click', () => {
+  const url = 'https://' + LINK + '/';
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(
+    () => { document.getElementById('ajuda').textContent = '✅ Link copiado! Agora é só colar no grupo.'; },
+    () => { document.getElementById('ajuda').textContent = url; }
+  );
+  else document.getElementById('ajuda').textContent = url;
+});
+
+// os emojis podem demorar um tiquinho pra carregar: desenha ao abrir e de novo logo depois
+desenhar();
+window.addEventListener('load', () => setTimeout(desenhar, 300));
+</script>
+</body>
+</html>
