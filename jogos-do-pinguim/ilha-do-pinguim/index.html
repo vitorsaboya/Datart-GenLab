@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <title>Ilha do Pinguim</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <style>
   html, body { margin:0; padding:0; overflow:hidden; height:100%; background:#cfe8f5;
                font-family:'Segoe UI', Tahoma, sans-serif; }
+  canvas { display:block; touch-action:none; }
   #hud { position:fixed; top:14px; left:16px; color:#1d3b4d; user-select:none; pointer-events:none; }
   #hud h1 { margin:0 0 2px; font-size:20px; letter-spacing:.5px; }
   #contador { font-size:15px; font-weight:600; background:rgba(255,255,255,.65);
@@ -26,6 +27,27 @@
             background:rgba(255,255,255,.65); padding:5px 12px; border-radius:8px;
             text-decoration:none; user-select:none; }
   #voltar:hover { background:rgba(255,255,255,.9); }
+  /* controles de toque (so aparecem em tela de toque) */
+  #tctl { display:none; }
+  body.touch #tctl { display:block; }
+  body.touch #controles { display:none; }
+  #joy { position:fixed; left:18px; bottom:18px; width:124px; height:124px; border-radius:50%;
+         background:rgba(255,255,255,.28); border:2px solid rgba(255,255,255,.6);
+         touch-action:none; z-index:5; }
+  #joyKnob { position:absolute; left:50%; top:50%; width:52px; height:52px; margin:-26px 0 0 -26px;
+             border-radius:50%; background:rgba(255,255,255,.78); box-shadow:0 2px 8px rgba(0,0,0,.25); }
+  .tbt { position:fixed; right:18px; border:none; border-radius:14px; background:rgba(255,255,255,.72);
+         color:#1d3b4d; font-weight:700; font-family:inherit; touch-action:none; user-select:none;
+         -webkit-user-select:none; z-index:5; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+  #btDesliza { bottom:18px; width:98px; height:74px; font-size:15px; }
+  #btNova { bottom:106px; width:98px; height:40px; font-size:13px; }
+  .tbt.on { background:#ffd166; }
+  @media (max-width:700px) {
+    #hud h1 { font-size:16px; }
+    #contador { font-size:13px; }
+    #voltar { font-size:12px; padding:5px 10px; }
+    #vitoria div { font-size:18px; padding:18px 24px; margin:0 14px; }
+  }
 </style>
 </head>
 <body>
@@ -40,6 +62,11 @@
 </div>
 <div id="vitoria"><div>Voce descobriu todos os totens!<small>Pressione R para gerar uma nova ilha.</small></div></div>
 <div id="erro">Nao foi possivel carregar o three.js (lib/three.min.js).</div>
+<div id="tctl">
+  <div id="joy"><div id="joyKnob"></div></div>
+  <button id="btDesliza" class="tbt">Deslizar</button>
+  <button id="btNova" class="tbt">Nova ilha</button>
+</div>
 
 <script src="lib/three.min.js"></script>
 <script>
@@ -345,6 +372,69 @@ addEventListener('resize', function () {
   renderer.setSize(innerWidth, innerHeight);
 });
 
+// ---------- toque (celular/tablet): joystick + botoes + pinca de zoom ----------
+var ehToque = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+var tFrente = 0, tGiro = 0, tDesliza = false;
+if (ehToque) {
+  document.body.classList.add('touch');
+  document.querySelector('#vitoria small').textContent = 'Toque em "Nova ilha" para gerar outra.';
+  var joy = document.getElementById('joy');
+  var knob = document.getElementById('joyKnob');
+  var joyId = null;
+  function moverJoy(tq) {
+    var r = joy.getBoundingClientRect();
+    var dx = tq.clientX - (r.left + r.width / 2);
+    var dy = tq.clientY - (r.top + r.height / 2);
+    var max = r.width / 2 - 10;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d > max) { dx *= max / d; dy *= max / d; }
+    knob.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
+    tFrente = Math.max(-0.6, Math.min(1, -dy / max * 1.25));
+    tGiro = Math.max(-1, Math.min(1, -dx / max * 1.25));
+  }
+  function soltarJoy() { joyId = null; tFrente = 0; tGiro = 0; knob.style.transform = ''; }
+  joy.addEventListener('touchstart', function (e) {
+    e.preventDefault(); joyId = e.changedTouches[0].identifier; moverJoy(e.changedTouches[0]);
+  }, { passive: false });
+  joy.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === joyId) moverJoy(e.changedTouches[i]);
+    }
+  }, { passive: false });
+  joy.addEventListener('touchend', soltarJoy);
+  joy.addEventListener('touchcancel', soltarJoy);
+
+  var bd = document.getElementById('btDesliza');
+  bd.addEventListener('touchstart', function (e) { e.preventDefault(); tDesliza = true; bd.classList.add('on'); }, { passive: false });
+  bd.addEventListener('touchend', function () { tDesliza = false; bd.classList.remove('on'); });
+  bd.addEventListener('touchcancel', function () { tDesliza = false; bd.classList.remove('on'); });
+
+  document.getElementById('btNova').addEventListener('touchstart', function (e) {
+    e.preventDefault();
+    seed = (Math.random() * 2147483646 | 0) + 1;
+    gerarMundo();
+  }, { passive: false });
+
+  // pinca = zoom da camera (mesmo papel da roda do mouse)
+  var pincaDist = 0;
+  renderer.domElement.addEventListener('touchstart', function (e) {
+    if (e.touches.length === 2) {
+      pincaDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                             e.touches[0].clientY - e.touches[1].clientY);
+    }
+  }, { passive: true });
+  renderer.domElement.addEventListener('touchmove', function (e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      var d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                         e.touches[0].clientY - e.touches[1].clientY);
+      if (pincaDist > 0 && d > 0) camDist = Math.max(6, Math.min(30, camDist * (pincaDist / d)));
+      pincaDist = d;
+    }
+  }, { passive: false });
+}
+
 // ---------- HUD ----------
 function atualizarContador() {
   document.getElementById('contador').textContent = 'Totens: ' + descobertos + ' / ' + totens.length;
@@ -359,14 +449,16 @@ function animate() {
   var dt = Math.min(relogio.getDelta(), 0.05);
   var t = relogio.elapsedTime;
 
-  // movimento
+  // movimento (teclado + joystick de toque somados)
   var frente = (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0) - (keys['KeyS'] || keys['ArrowDown'] ? 0.6 : 0);
   var giro = (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0) - (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0);
+  frente = Math.max(-0.6, Math.min(1, frente + tFrente));
+  giro = Math.max(-1, Math.min(1, giro + tGiro));
   heading += giro * 2.6 * dt;
 
   var h = terrainHeight(player.position.x, player.position.z);
   var nadando = h < WATER_Y + 0.15;
-  var deslizando = !nadando && (keys['ShiftLeft'] || keys['ShiftRight']) && frente > 0;
+  var deslizando = !nadando && (keys['ShiftLeft'] || keys['ShiftRight'] || tDesliza) && frente > 0;
   var vel = 9;
   if (nadando) vel = 17;
   else if (deslizando) vel = 15;

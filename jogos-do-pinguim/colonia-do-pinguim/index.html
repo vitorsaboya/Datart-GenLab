@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <title>Colonia do Pinguim</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <style>
   html, body { margin:0; padding:0; overflow:hidden; height:100%; background:#7db4d8;
                font-family:'Segoe UI', Tahoma, sans-serif; }
-  canvas { display:block; cursor:default; }
+  canvas { display:block; cursor:default; touch-action:manipulation; }
   #placar { position:fixed; top:12px; left:50%; transform:translateX(-50%);
             background:rgba(255,255,255,.85); border-radius:10px; padding:8px 18px;
             font-size:16px; font-weight:600; color:#1d3b4d; user-select:none;
@@ -35,6 +35,15 @@
             background:rgba(255,255,255,.85); padding:8px 14px; border-radius:10px;
             text-decoration:none; box-shadow:0 3px 12px rgba(0,0,0,.15); user-select:none; }
   #voltar:hover { background:#fff; }
+  @media (max-width:640px) {
+    #placar { left:10px; transform:none; font-size:13px; padding:6px 10px; }
+    #placar span { margin:0 5px; }
+    #voltar { font-size:12px; padding:6px 10px; top:10px; right:10px; }
+    #botoes { width:calc(100% - 20px); flex-wrap:wrap; justify-content:center; gap:8px; bottom:10px; }
+    #botoes button { font-size:13px; padding:9px 12px; }
+    #aviso { bottom:112px; font-size:13.5px; }
+    #vitoria div { font-size:18px; padding:18px 24px; margin:0 14px; }
+  }
 </style>
 </head>
 <body>
@@ -363,7 +372,7 @@ tela.addEventListener('click', function (e) {
   // primeiro: clicou numa gaivota?
   for (var g = 0; g < gaivotas.length; g++) {
     var gv = gaivotas[g];
-    if (!gv.fugindo && Math.abs(gv.x - x) < 30 && Math.abs(gv.y - y) < 26) {
+    if (!gv.fugindo && Math.abs(gv.x - x) < 36 && Math.abs(gv.y - y) < 32) {
       gv.fugindo = true; gv.dirFuga = gv.x < CX ? -1 : 1;
       avisar('Gaivota espantada! O ovo esta salvo.');
       return;
