@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Colonia do Pinguim</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin:0; padding:0; overflow:hidden; height:100%; background:#7db4d8;
+               font-family:'Segoe UI', Tahoma, sans-serif; }
+  canvas { display:block; cursor:default; }
+  #placar { position:fixed; top:12px; left:50%; transform:translateX(-50%);
+            background:rgba(255,255,255,.85); border-radius:10px; padding:8px 18px;
+            font-size:16px; font-weight:600; color:#1d3b4d; user-select:none;
+            box-shadow:0 3px 12px rgba(0,0,0,.15); white-space:nowrap; }
+  #placar span { margin:0 10px; }
+  #botoes { position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
+            display:flex; gap:10px; }
+  #botoes button { font-size:15px; font-weight:600; padding:10px 18px; border:none;
+                   border-radius:10px; background:#2f6f9e; color:#fff; cursor:pointer;
+                   box-shadow:0 3px 10px rgba(0,0,0,.2); }
+  #botoes button:hover { background:#3a83b8; }
+  #botoes button.ativo { background:#1d8a4e; }
+  #botoes button:disabled { background:#8ea6b5; cursor:not-allowed; }
+  #aviso { position:fixed; bottom:70px; left:50%; transform:translateX(-50%);
+           background:rgba(29,59,77,.85); color:#fff; padding:7px 16px; border-radius:9px;
+           font-size:15px; user-select:none; pointer-events:none; opacity:0;
+           transition:opacity .3s; max-width:90%; text-align:center; }
+  #vitoria { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+             pointer-events:none; }
+  #vitoria div { background:rgba(255,255,255,.93); color:#14532d; padding:24px 36px;
+                 border-radius:14px; font-size:22px; font-weight:600; text-align:center;
+                 box-shadow:0 8px 30px rgba(0,0,0,.25); }
+  #vitoria small { display:block; margin-top:8px; font-size:14px; font-weight:400; color:#3b6b4d; }
+</style>
+</head>
+<body>
+<div id="placar">
+  <span id="pPeixes">Peixes: 15</span><span id="pPinguins">Pinguins: 4</span><span id="pOvos">Ovos: 0</span>
+</div>
+<div id="aviso"></div>
+<div id="botoes">
+  <button id="btNinho">Construir ninho (8 peixes)</button>
+  <button id="btIlha" style="display:none">Aumentar a ilha</button>
+  <button id="btVel">Velocidade: normal</button>
+</div>
+<div id="vitoria"><div>Sua colonia chegou a 20 pinguins!<small>Pode continuar jogando e crescendo.</small></div></div>
+
+<canvas id="tela"></canvas>
+<script>
+(function(){
+'use strict';
+var tela = document.getElementById('tela');
+var ctx = tela.getContext('2d');
+var W = 0, H = 0, CX = 0, CY = 0, RAIO = 0;
+
+function redimensionar() {
+  W = tela.width = innerWidth;
+  H = tela.height = innerHeight;
+  CX = W / 2; CY = H / 2 + 10;
+  RAIO = Math.min(W, H) * (0.36 + 0.055 * (expansao || 0));
+}
+// tudo que fica em cima do gelo encolhe um pouco quando a ilha cresce,
+// para caber mais coisa na mesma tela
+function escalaAtual() { return 1 - 0.12 * expansao; }
+redimensionar();
+addEventListener('resize', redimensionar);
+
+// ---------- estado do jogo ----------
+var expansao = 0;   // quantas vezes a ilha ja cresceu
+var EXPANSOES = [
+  { custo: 30, precisa: 10 },
+  { custo: 50, precisa: 14 }
+];
+var peixes = 15;  // o parametro ?peixes=N existe so para testes
+var pinguins = [];
+var ninhos = [];
+var gaivotas = [];
+var ondas = [];       // circulos de agua quando alguem mergulha
+var flocos = [];      // neve caindo, so enfeite
+var velocidade = 1;
+var modoNinho = false;
+var venceu = false;
+var CUSTO_NINHO = 8;
+var META = 20;
+
+function aleat(a, b) { return a + Math.random() * (b - a); }
+
+function dentroDoGelo(x, y, margem) {
+  var dx = (x - CX), dy = (y - CY) * 1.25; // gelo e uma elipse levemente achatada
+  return Math.sqrt(dx * dx + dy * dy) < RAIO - (margem || 0);
+}
+function pontoNoGelo(margem) {
+  for (var t = 0; t < 60; t++) {
+    var x = CX + aleat(-RAIO, RAIO), y = CY + aleat(-RAIO * 0.8, RAIO * 0.8);
+    if (dentroDoGelo(x, y, margem)) return { x: x, y: y };
+  }
+  return { x: CX, y: CY };
+}
+function bordaDoGelo(x, y) {
+  // ponto da beirada na direcao de (x,y) a partir do centro
+  var ang = Math.atan2((y - CY) * 1.25, x - CX);
+  return { x: CX + Math.cos(ang) * (RAIO - 6), y: CY + Math.sin(ang) * (RAIO - 6) / 1.25 };
+}
+
+// ---------- pinguins ----------
+function novoPinguim(x, y, adulto) {
+  return {
+    x: x, y: y, alvoX: x, alvoY: y,
+    estado: 'passeando',      // passeando | indoPescar | mergulhado | chocando | indoChocar
+    timer: aleat(1, 4),
+    fome: aleat(0, 30),
+    adulto: adulto !== false,
+    idade: adulto !== false ? 999 : 0,
+    ninho: null,
+    fase: Math.random() * 6.28  // para o gingado
+  };
+}
+// numero inicial de pinguins (o parametro ?pinguins=N existe so para testes)
+var INICIAIS = parseInt(new URLSearchParams(location.search).get('pinguins'), 10) || 4;
+peixes = parseInt(new URLSearchParams(location.search).get('peixes'), 10) || peixes;
+for (var i = 0; i < INICIAIS; i++) {
+  var p0 = pontoNoGelo(30);
+  pinguins.push(novoPinguim(p0.x, p0.y, true));
+}
+
+function pescadoresAgora() {
+  var n = 0;
+  for (var i = 0; i < pinguins.length; i++) {
+    if (pinguins[i].estado === 'indoPescar' || pinguins[i].estado === 'mergulhado') n++;
+  }
+  return n;
+}
+
+function atualizarPinguim(p, dt) {
+  p.fome += dt * 1.6;
+  if (!p.adulto) {
+    p.idade += dt;
+    if (p.idade > 25) { p.adulto = true; avisar('Um filhote cresceu e virou adulto!'); }
+  }
+
+  // comer quando tem fome e tem peixe guardado
+  if (p.fome > 55 && peixes > 0 && p.estado !== 'mergulhado') {
+    peixes--; p.fome = 0; atualizarPlacar();
+  }
+
+  var vel = (p.adulto ? 55 : 38) * dt;
+
+  if (p.estado === 'passeando') {
+    p.timer -= dt;
+    if (p.timer <= 0) {
+      var d = pontoNoGelo(24);
+      p.alvoX = d.x; p.alvoY = d.y;
+      p.timer = aleat(2, 6);
+    }
+    andarAteAlvo(p, vel * 0.6);
+    // decidir pescar: so adultos, estoque baixo, no maximo metade da colonia fora
+    if (p.adulto && peixes < pinguins.length * 2 && pescadoresAgora() < Math.max(1, pinguins.length / 2)) {
+      var b = bordaDoGelo(p.x, p.y);
+      p.alvoX = b.x; p.alvoY = b.y;
+      p.estado = 'indoPescar';
+    }
+    // decidir chocar: ninho vazio sem ocupante
+    if (p.adulto && p.estado === 'passeando') {
+      for (var n = 0; n < ninhos.length; n++) {
+        if (!ninhos[n].ocupante && !ninhos[n].chocado) {
+          ninhos[n].ocupante = p;
+          p.ninho = ninhos[n];
+          p.alvoX = ninhos[n].x; p.alvoY = ninhos[n].y;
+          p.estado = 'indoChocar';
+          break;
+        }
+      }
+    }
+  }
+  else if (p.estado === 'indoPescar') {
+    if (andarAteAlvo(p, vel)) {
+      p.estado = 'mergulhado';
+      p.timer = aleat(6, 9);
+      ondas.push({ x: p.x, y: p.y, r: 4, vida: 1 });
+    }
+  }
+  else if (p.estado === 'mergulhado') {
+    p.timer -= dt;
+    if (Math.random() < dt * 1.5) ondas.push({ x: p.x + aleat(-8, 8), y: p.y + aleat(-4, 4), r: 3, vida: 1 });
+    if (p.timer <= 0) {
+      var pegou = 3 + (Math.random() * 3 | 0);
+      peixes += pegou;
+      atualizarPlacar();
+      avisar('Um pinguim voltou da pesca com ' + pegou + ' peixes.');
+      var v = pontoNoGelo(30);
+      p.alvoX = v.x; p.alvoY = v.y;
+      p.estado = 'passeando';
+      p.timer = aleat(2, 5);
+    }
+  }
+  else if (p.estado === 'indoChocar') {
+    if (andarAteAlvo(p, vel)) {
+      p.estado = 'chocando';
+      if (!p.ninho.ovo) {
+        p.ninho.ovo = true;
+        p.ninho.ovoTimer = 30;
+        avisar('Um ovo apareceu num ninho! Proteja das gaivotas.');
+        atualizarPlacar();
+      }
+    }
+  }
+  else if (p.estado === 'chocando') {
+    var nn = p.ninho;
+    if (!nn || nn.chocado || (!nn.ovo && nn.roubado)) {
+      // ovo roubado ou ninho encerrado: volta a passear
+      if (nn) { nn.ocupante = null; nn.roubado = false; }
+      p.ninho = null; p.estado = 'passeando'; p.timer = 0.5;
+      return;
+    }
+    if (nn.ovo) {
+      nn.ovoTimer -= dt;
+      if (nn.ovoTimer <= 0) {
+        nn.ovo = false;
+        nn.chocado = true;   // ninho ja cumpriu o papel
+        nn.ocupante = null;
+        p.ninho = null;
+        p.estado = 'passeando'; p.timer = 1;
+        var filhote = novoPinguim(nn.x + aleat(-14, 14), nn.y + aleat(8, 16), false);
+        filhote.idade = 0;
+        pinguins.push(filhote);
+        var exp = EXPANSOES[expansao];
+        if (exp && pinguins.length === exp.precisa) {
+          avisar('Sua colonia chegou a ' + exp.precisa + ' pinguins! Ja pode aumentar a ilha.');
+        } else {
+          avisar('Nasceu um filhote!');
+        }
+        atualizarPlacar();
+        verificarVitoria();
+      }
+    }
+  }
+}
+
+function andarAteAlvo(p, passo) {
+  var dx = p.alvoX - p.x, dy = p.alvoY - p.y;
+  var d = Math.sqrt(dx * dx + dy * dy);
+  if (d < 3) return true;
+  p.x += dx / d * passo;
+  p.y += dy / d * passo;
+  p.fase += passo * 0.25;
+  return false;
+}
+
+// ---------- gaivotas ladras ----------
+var tempoGaivota = aleat(20, 30);
+function atualizarGaivotas(dt) {
+  var temOvo = false;
+  for (var n = 0; n < ninhos.length; n++) if (ninhos[n].ovo) temOvo = true;
+  if (temOvo) {
+    tempoGaivota -= dt;
+    if (tempoGaivota <= 0) {
+      tempoGaivota = aleat(22, 35);
+      var alvo = null;
+      for (var j = 0; j < ninhos.length; j++) if (ninhos[j].ovo) { alvo = ninhos[j]; break; }
+      if (alvo) {
+        var lado = Math.random() < 0.5 ? -60 : W + 60;
+        gaivotas.push({ x: lado, y: aleat(40, H * 0.35), alvo: alvo, fugindo: false, fase: 0 });
+        avisar('Gaivota ladra a vista! CLIQUE nela para espantar.');
+      }
+    }
+  }
+  for (var g = gaivotas.length - 1; g >= 0; g--) {
+    var gv = gaivotas[g];
+    gv.fase += dt * 10;
+    if (gv.fugindo) {
+      gv.y -= 130 * dt; gv.x += gv.dirFuga * 90 * dt;
+      if (gv.y < -60) gaivotas.splice(g, 1);
+      continue;
+    }
+    var dx = gv.alvo.x - gv.x, dy = (gv.alvo.y - 6) - gv.y;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d < 10) {
+      if (gv.alvo.ovo) {
+        gv.alvo.ovo = false;
+        gv.alvo.roubado = true;
+        avisar('A gaivota roubou um ovo...');
+        atualizarPlacar();
+      }
+      gv.fugindo = true; gv.dirFuga = gv.x < CX ? -1 : 1;
+    } else {
+      gv.x += dx / d * 95 * dt;
+      gv.y += dy / d * 95 * dt;
+    }
+  }
+}
+
+// ---------- interface ----------
+var btNinho = document.getElementById('btNinho');
+var btIlha = document.getElementById('btIlha');
+var btVel = document.getElementById('btVel');
+var avisoEl = document.getElementById('aviso');
+var avisoTimer = null;
+
+function avisar(txt) {
+  avisoEl.textContent = txt;
+  avisoEl.style.opacity = 1;
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(function () { avisoEl.style.opacity = 0; }, 3500);
+}
+function atualizarPlacar() {
+  var ovos = 0;
+  for (var n = 0; n < ninhos.length; n++) if (ninhos[n].ovo) ovos++;
+  document.getElementById('pPeixes').textContent = 'Peixes: ' + peixes;
+  document.getElementById('pPinguins').textContent = 'Pinguins: ' + pinguins.length + ' / ' + META;
+  document.getElementById('pOvos').textContent = 'Ovos: ' + ovos;
+  btNinho.disabled = peixes < CUSTO_NINHO && !modoNinho;
+  // botao de aumentar a ilha: aparece quando a colonia atinge o tamanho pedido
+  var exp = EXPANSOES[expansao];
+  if (!exp) {
+    btIlha.style.display = 'none';
+  } else if (pinguins.length >= exp.precisa) {
+    btIlha.style.display = '';
+    btIlha.textContent = 'Aumentar a ilha (' + exp.custo + ' peixes)';
+    btIlha.disabled = peixes < exp.custo;
+  } else {
+    btIlha.style.display = 'none';
+  }
+}
+function verificarVitoria() {
+  if (!venceu && pinguins.length >= META) {
+    venceu = true;
+    document.getElementById('vitoria').style.display = 'flex';
+    setTimeout(function () { document.getElementById('vitoria').style.display = 'none'; }, 6000);
+  }
+}
+
+btNinho.addEventListener('click', function () {
+  modoNinho = !modoNinho;
+  btNinho.classList.toggle('ativo', modoNinho);
+  if (modoNinho) avisar('Agora clique num lugar do gelo para colocar o ninho.');
+});
+btIlha.addEventListener('click', function () {
+  var exp = EXPANSOES[expansao];
+  if (!exp || peixes < exp.custo) return;
+  peixes -= exp.custo;
+  expansao++;
+  redimensionar();
+  // ondinhas em volta do gelo para marcar o crescimento
+  for (var a = 0; a < 10; a++) {
+    var ang = a / 10 * 6.28;
+    ondas.push({ x: CX + Math.cos(ang) * RAIO, y: CY + Math.sin(ang) * RAIO / 1.25, r: 6, vida: 1 });
+  }
+  avisar('A ilha cresceu! Agora ha mais espaco para ninhos.');
+  atualizarPlacar();
+});
+btVel.addEventListener('click', function () {
+  velocidade = velocidade === 1 ? 2 : 1;
+  btVel.textContent = velocidade === 1 ? 'Velocidade: normal' : 'Velocidade: rapida';
+});
+
+tela.addEventListener('click', function (e) {
+  var x = e.clientX, y = e.clientY;
+  // primeiro: clicou numa gaivota?
+  for (var g = 0; g < gaivotas.length; g++) {
+    var gv = gaivotas[g];
+    if (!gv.fugindo && Math.abs(gv.x - x) < 30 && Math.abs(gv.y - y) < 26) {
+      gv.fugindo = true; gv.dirFuga = gv.x < CX ? -1 : 1;
+      avisar('Gaivota espantada! O ovo esta salvo.');
+      return;
+    }
+  }
+  // depois: colocando ninho?
+  if (modoNinho) {
+    if (!dentroDoGelo(x, y, 34)) { avisar('O ninho precisa ficar no gelo, longe da beirada.'); return; }
+    if (peixes < CUSTO_NINHO) { avisar('Peixes insuficientes. Espere a pescaria.'); modoNinho = false; btNinho.classList.remove('ativo'); return; }
+    peixes -= CUSTO_NINHO;
+    ninhos.push({ x: x, y: y, ovo: false, ovoTimer: 0, ocupante: null, chocado: false, roubado: false });
+    modoNinho = false;
+    btNinho.classList.remove('ativo');
+    avisar('Ninho pronto! Um pinguim adulto vai sentar nele.');
+    atualizarPlacar();
+  }
+});
+
+// ---------- desenho ----------
+function desenharFundo(t) {
+  // mar
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#8ec3e2');
+  grad.addColorStop(1, '#4a86b4');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+  // brilhos do mar
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 2;
+  for (var i = 0; i < 14; i++) {
+    var yy = (i * 97 + t * 12) % H;
+    var xx = (i * 173) % W;
+    ctx.beginPath(); ctx.moveTo(xx, yy); ctx.lineTo(xx + 26, yy); ctx.stroke();
+  }
+  // gelo
+  ctx.fillStyle = '#eef6fa';
+  ctx.beginPath();
+  ctx.ellipse(CX, CY, RAIO, RAIO / 1.25, 0, 0, 6.29);
+  ctx.fill();
+  ctx.strokeStyle = '#cfe3ee';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+  // sombras suaves no gelo
+  ctx.fillStyle = 'rgba(190,215,230,0.35)';
+  ctx.beginPath(); ctx.ellipse(CX - RAIO * 0.3, CY + RAIO * 0.18, RAIO * 0.32, RAIO * 0.12, 0.3, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(CX + RAIO * 0.35, CY - RAIO * 0.1, RAIO * 0.22, RAIO * 0.09, -0.2, 0, 6.29); ctx.fill();
+}
+
+function desenharNinho(n) {
+  var e = escalaAtual();
+  ctx.fillStyle = '#b0a189';
+  ctx.beginPath(); ctx.ellipse(n.x, n.y + 4 * e, 20 * e, 9 * e, 0, 0, 6.29); ctx.fill();
+  ctx.fillStyle = '#8f8069';
+  ctx.beginPath(); ctx.ellipse(n.x, n.y + 3 * e, 13 * e, 5.5 * e, 0, 0, 6.29); ctx.fill();
+  if (n.ovo) {
+    ctx.fillStyle = '#fbf7ea';
+    ctx.strokeStyle = '#d8d0ba';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(n.x, n.y - 3 * e, 6 * e, 8 * e, 0, 0, 6.29); ctx.fill(); ctx.stroke();
+  }
+}
+
+function desenharPinguim(p, t) {
+  var s = (p.adulto ? 1 : 0.62) * escalaAtual();
+  var gingado = (p.estado === 'passeando' || p.estado === 'indoPescar' || p.estado === 'indoChocar')
+    ? Math.sin(p.fase) * 0.1 : 0;
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(gingado);
+  ctx.scale(s, s);
+  // sombra
+  ctx.fillStyle = 'rgba(60,90,110,0.25)';
+  ctx.beginPath(); ctx.ellipse(0, 13, 12, 4, 0, 0, 6.29); ctx.fill();
+  // corpo
+  ctx.fillStyle = p.adulto ? '#23272c' : '#5d6670';
+  ctx.beginPath(); ctx.ellipse(0, 0, 11, 15, 0, 0, 6.29); ctx.fill();
+  // barriga
+  ctx.fillStyle = '#f5f5f0';
+  ctx.beginPath(); ctx.ellipse(0, 3, 7.5, 10.5, 0, 0, 6.29); ctx.fill();
+  // cabeca
+  ctx.fillStyle = p.adulto ? '#23272c' : '#5d6670';
+  ctx.beginPath(); ctx.arc(0, -14, 7, 0, 6.29); ctx.fill();
+  // olhos
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-2.6, -15, 1.7, 0, 6.29); ctx.arc(2.6, -15, 1.7, 0, 6.29); ctx.fill();
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.arc(-2.6, -15, 0.8, 0, 6.29); ctx.arc(2.6, -15, 0.8, 0, 6.29); ctx.fill();
+  // bico
+  ctx.fillStyle = '#f0a03e';
+  ctx.beginPath(); ctx.moveTo(-2.5, -12); ctx.lineTo(2.5, -12); ctx.lineTo(0, -8.5); ctx.closePath(); ctx.fill();
+  // asas
+  ctx.fillStyle = p.adulto ? '#23272c' : '#5d6670';
+  var abre = p.estado === 'chocando' ? 0.15 : Math.abs(Math.sin(p.fase)) * 0.25;
+  ctx.beginPath(); ctx.ellipse(-11, 0, 3, 9, -abre, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(11, 0, 3, 9, abre, 0, 6.29); ctx.fill();
+  // pes
+  ctx.fillStyle = '#f0a03e';
+  ctx.beginPath(); ctx.ellipse(-4, 14, 3.6, 1.8, 0, 0, 6.29); ctx.ellipse(4, 14, 3.6, 1.8, 0, 0, 6.29); ctx.fill();
+  ctx.restore();
+}
+
+function desenharGaivota(g) {
+  ctx.save();
+  ctx.translate(g.x, g.y);
+  var bater = Math.sin(g.fase) * 10;
+  // asas
+  ctx.strokeStyle = '#6e5f4e';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-22, -bater); ctx.quadraticCurveTo(-10, -6, 0, 0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(22, -bater); ctx.quadraticCurveTo(10, -6, 0, 0); ctx.stroke();
+  // corpo
+  ctx.fillStyle = '#8d7c66';
+  ctx.beginPath(); ctx.ellipse(0, 0, 10, 6.5, 0, 0, 6.29); ctx.fill();
+  // cabeca e bico
+  ctx.fillStyle = '#8d7c66';
+  ctx.beginPath(); ctx.arc(9, -3, 4.5, 0, 6.29); ctx.fill();
+  ctx.fillStyle = '#e6b23c';
+  ctx.beginPath(); ctx.moveTo(12, -4); ctx.lineTo(19, -2.5); ctx.lineTo(12, -1); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+// neve de enfeite
+for (var f = 0; f < 40; f++) {
+  flocos.push({ x: Math.random() * 2000, y: Math.random() * 1200, v: aleat(12, 30), r: aleat(1, 2.6) });
+}
+
+// ---------- laco principal ----------
+var ultimo = performance.now();
+function quadro(agora) {
+  requestAnimationFrame(quadro);
+  var dt = Math.min((agora - ultimo) / 1000, 0.05) * velocidade;
+  var t = agora / 1000;
+  ultimo = agora;
+
+  for (var i = 0; i < pinguins.length; i++) atualizarPinguim(pinguins[i], dt);
+  atualizarGaivotas(dt);
+
+  for (var o = ondas.length - 1; o >= 0; o--) {
+    ondas[o].r += 26 * dt; ondas[o].vida -= dt * 0.9;
+    if (ondas[o].vida <= 0) ondas.splice(o, 1);
+  }
+
+  desenharFundo(t);
+  for (var o2 = 0; o2 < ondas.length; o2++) {
+    ctx.strokeStyle = 'rgba(255,255,255,' + (ondas[o2].vida * 0.6).toFixed(2) + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(ondas[o2].x, ondas[o2].y, ondas[o2].r, ondas[o2].r * 0.45, 0, 0, 6.29); ctx.stroke();
+  }
+  for (var n = 0; n < ninhos.length; n++) desenharNinho(ninhos[n]);
+  // pinguins ordenados por altura para sobreposicao correta
+  var vivos = pinguins.slice().sort(function (a, b) { return a.y - b.y; });
+  for (var pz = 0; pz < vivos.length; pz++) {
+    if (vivos[pz].estado !== 'mergulhado') desenharPinguim(vivos[pz], t);
+  }
+  for (var g = 0; g < gaivotas.length; g++) desenharGaivota(gaivotas[g]);
+  // neve
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  for (var fl = 0; fl < flocos.length; fl++) {
+    var fk = flocos[fl];
+    fk.y += fk.v * dt; fk.x += Math.sin(t + fl) * 10 * dt;
+    if (fk.y > H + 5) { fk.y = -5; fk.x = Math.random() * W; }
+    ctx.beginPath(); ctx.arc(fk.x % W, fk.y, fk.r, 0, 6.29); ctx.fill();
+  }
+}
+
+atualizarPlacar();
+avisar('Bem-vindo! Seus pinguins pescam sozinhos. Junte peixes e clique em "Construir ninho".');
+requestAnimationFrame(quadro);
+})();
+</script>
+</body>
+</html>

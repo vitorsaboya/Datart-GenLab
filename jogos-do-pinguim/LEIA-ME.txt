@@ -1,0 +1,36 @@
+JOGOS DO PINGUIM
+================
+
+Esta pasta e completa e independente. Pode copiar ela inteira para
+qualquer lugar (outro computador, outra pasta, pen drive) que os
+jogos continuam funcionando. Nao precisa de internet nem de instalar nada.
+
+COMO ABRIR
+----------
+1. Entre na pasta do jogo que quiser.
+2. De dois cliques no arquivo "index" (ou "index.html").
+3. O jogo abre no navegador.
+
+OS DOIS JOGOS
+-------------
+1. ilha-do-pinguim
+   Jogo de explorar. Um pinguim numa ilha 3D que muda a cada partida.
+   Missao: encontrar os 8 totens de luz.
+   Controles: setas ou W/A/S/D andam, Shift desliza de barriga,
+   roda do mouse aproxima a camera, R cria uma ilha nova.
+   Na agua o pinguim nada bem mais rapido.
+
+2. colonia-do-pinguim
+   Jogo de cuidar. Seus pinguins pescam sozinhos; use os peixes para
+   construir ninhos, e dos ovos nascem filhotes.
+   Clique na gaivota marrom quando ela aparecer, para ela nao roubar ovo.
+   Com 10 pinguins voce pode comprar mais espaco na ilha (30 peixes);
+   com 14, uma segunda expansao (50 peixes).
+   Meta: chegar a 20 pinguins.
+
+AVISO TECNICO (so se algum dia precisar)
+----------------------------------------
+- A pasta "lib" dentro de ilha-do-pinguim e obrigatoria: e o motor 3D.
+  Sem ela o jogo da tela de erro.
+- Se o jogo ficar parado, e porque a aba do navegador esta em segundo
+  plano; ao voltar para a aba ele continua.

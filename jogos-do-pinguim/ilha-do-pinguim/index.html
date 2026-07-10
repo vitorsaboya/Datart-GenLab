@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Ilha do Pinguim</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin:0; padding:0; overflow:hidden; height:100%; background:#cfe8f5;
+               font-family:'Segoe UI', Tahoma, sans-serif; }
+  #hud { position:fixed; top:14px; left:16px; color:#1d3b4d; user-select:none; pointer-events:none; }
+  #hud h1 { margin:0 0 2px; font-size:20px; letter-spacing:.5px; }
+  #contador { font-size:15px; font-weight:600; background:rgba(255,255,255,.65);
+              display:inline-block; padding:3px 10px; border-radius:8px; }
+  #controles { position:fixed; bottom:12px; left:16px; font-size:12.5px; color:#2a4a5c;
+               background:rgba(255,255,255,.55); padding:6px 10px; border-radius:8px;
+               user-select:none; pointer-events:none; }
+  #vitoria { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+             pointer-events:none; }
+  #vitoria div { background:rgba(255,255,255,.9); color:#14532d; padding:22px 34px;
+                 border-radius:14px; font-size:22px; font-weight:600; text-align:center;
+                 box-shadow:0 8px 30px rgba(0,0,0,.2); }
+  #vitoria small { display:block; margin-top:8px; font-size:14px; font-weight:400; color:#3b6b4d; }
+  #erro { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+          color:#7a1f1f; font-size:16px; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <h1>Ilha do Pinguim</h1>
+  <span id="contador">Totens: 0 / 8</span>
+</div>
+<div id="controles">
+  W/S ou setas: andar &nbsp;|&nbsp; A/D: virar &nbsp;|&nbsp; Shift: deslizar de barriga
+  &nbsp;|&nbsp; roda do mouse: zoom &nbsp;|&nbsp; R: nova ilha &nbsp;|&nbsp; na agua o pinguim nada rapido
+</div>
+<div id="vitoria"><div>Voce descobriu todos os totens!<small>Pressione R para gerar uma nova ilha.</small></div></div>
+<div id="erro">Nao foi possivel carregar o three.js (lib/three.min.js).</div>
+
+<script src="lib/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+if (typeof THREE === 'undefined') {
+  document.getElementById('erro').style.display = 'flex';
+  return;
+}
+
+// ---------- constantes do mundo ----------
+var SIZE = 260;          // lado do plano do terreno
+var ISLAND_R = 110;      // raio da mascara da ilha
+var WATER_Y = 0;         // nivel do mar
+var TOTENS = 8;          // pontos de interesse
+var LIMITE_R = SIZE * 0.47;
+
+// ---------- ruido deterministico por seed ----------
+var seed = (Math.random() * 2147483646 | 0) + 1;
+function hash2(ix, iz) {
+  var n = (Math.imul(ix, 374761393) + Math.imul(iz, 668265263) + Math.imul(seed, 144066263)) | 0;
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  n = (n ^ (n >>> 16)) >>> 0;
+  return n / 4294967295;
+}
+function smooth(t) { return t * t * (3 - 2 * t); }
+function noise2(x, z) {
+  var ix = Math.floor(x), iz = Math.floor(z);
+  var fx = x - ix, fz = z - iz;
+  var a = hash2(ix, iz), b = hash2(ix + 1, iz), c = hash2(ix, iz + 1), d = hash2(ix + 1, iz + 1);
+  var u = smooth(fx), v = smooth(fz);
+  return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
+}
+function fbm(x, z) {
+  var amp = 1, freq = 1, sum = 0, norm = 0;
+  for (var o = 0; o < 4; o++) {
+    sum += amp * noise2(x * freq, z * freq); norm += amp;
+    amp *= 0.5; freq *= 2;
+  }
+  return sum / norm;
+}
+// altura do terreno — a MESMA funcao gera a malha e posiciona o pinguim
+function terrainHeight(x, z) {
+  var d = Math.sqrt(x * x + z * z) / ISLAND_R;
+  var falloff = Math.max(0, 1 - d * d);
+  var n = fbm(x * 0.022 + 7.3, z * 0.022 + 3.1);
+  var m = fbm(x * 0.008 + 41.7, z * 0.008 + 17.9);
+  return (n * 13 + m * 11) * falloff - 3.2;
+}
+
+// ---------- cena ----------
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0xcfe8f5);
+scene.fog = new THREE.Fog(0xcfe8f5, 70, 280);
+
+var camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 600);
+var renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xbfd9e8, 0.55));
+var sun = new THREE.DirectionalLight(0xfff3d6, 0.95);
+sun.position.set(90, 140, 60);
+scene.add(sun);
+
+// ---------- mundo (recriavel com R) ----------
+var mundo = null;   // grupo com terreno, agua, vegetacao e totens
+var totens = [];    // { grupo, topo, feixe, pos, achado }
+var descobertos = 0;
+
+function corDaAltura(h, steep, jitter) {
+  var c;
+  if (h < 0.8) c = new THREE.Color(0xe8d8a0);        // areia
+  else if (steep) c = new THREE.Color(0x8d8781);     // encosta = rocha
+  else if (h < 7) c = new THREE.Color(0x69a95a);     // grama
+  else if (h < 12.5) c = new THREE.Color(0x8d8781);  // rocha
+  else c = new THREE.Color(0xf2f7fa);                // neve
+  var f = 1 + jitter;
+  c.r = Math.min(1, c.r * f); c.g = Math.min(1, c.g * f); c.b = Math.min(1, c.b * f);
+  return c;
+}
+
+function criarTerreno() {
+  var geo = new THREE.PlaneGeometry(SIZE, SIZE, 108, 108);
+  geo.rotateX(-Math.PI / 2);
+  geo = geo.toNonIndexed();
+  var pos = geo.attributes.position;
+  for (var i = 0; i < pos.count; i++) {
+    pos.setY(i, terrainHeight(pos.getX(i), pos.getZ(i)));
+  }
+  var colors = new Float32Array(pos.count * 3);
+  var va = new THREE.Vector3(), vb = new THREE.Vector3(), vc = new THREE.Vector3();
+  var ab = new THREE.Vector3(), cb = new THREE.Vector3(), nrm = new THREE.Vector3();
+  for (var f = 0; f < pos.count; f += 3) {
+    va.fromBufferAttribute(pos, f); vb.fromBufferAttribute(pos, f + 1); vc.fromBufferAttribute(pos, f + 2);
+    ab.subVectors(va, vb); cb.subVectors(vc, vb); nrm.crossVectors(cb, ab).normalize();
+    var hMed = (va.y + vb.y + vc.y) / 3;
+    var jitter = (hash2(f, 977) - 0.5) * 0.12;
+    var c = corDaAltura(hMed, nrm.y < 0.74, jitter);
+    for (var k = 0; k < 3; k++) {
+      colors[(f + k) * 3] = c.r; colors[(f + k) * 3 + 1] = c.g; colors[(f + k) * 3 + 2] = c.b;
+    }
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+  var mat = new THREE.MeshPhongMaterial({ vertexColors: true, flatShading: true, shininess: 4 });
+  return new THREE.Mesh(geo, mat);
+}
+
+function criarAgua() {
+  var geo = new THREE.PlaneGeometry(SIZE * 1.6, SIZE * 1.6, 1, 1);
+  geo.rotateX(-Math.PI / 2);
+  var mat = new THREE.MeshPhongMaterial({
+    color: 0x2f86bd, transparent: true, opacity: 0.78, shininess: 90, specular: 0x99ccee
+  });
+  var m = new THREE.Mesh(geo, mat);
+  m.position.y = WATER_Y;
+  return m;
+}
+
+function pontoEmTerra(minH, tentativas) {
+  for (var t = 0; t < tentativas; t++) {
+    var x = (hash2(t * 3 + 11, seed % 1000) - 0.5) * ISLAND_R * 1.8;
+    var z = (hash2(t * 7 + 29, (seed >> 3) % 1000) - 0.5) * ISLAND_R * 1.8;
+    var h = terrainHeight(x, z);
+    if (h > minH) return new THREE.Vector3(x, h, z);
+  }
+  return new THREE.Vector3(0, terrainHeight(0, 0), 0);
+}
+
+function espalharVegetacao(grupo) {
+  var troncoGeo = new THREE.CylinderGeometry(0.12, 0.2, 0.9, 5);
+  var copaGeo = new THREE.ConeGeometry(0.85, 2.3, 6);
+  var troncoMat = new THREE.MeshPhongMaterial({ color: 0x6b4a2f, flatShading: true });
+  var copaMat = new THREE.MeshPhongMaterial({ color: 0x3e7a3a, flatShading: true });
+  var rochaMat = new THREE.MeshPhongMaterial({ color: 0x8a8580, flatShading: true });
+  var n = 0, tent = 0;
+  while (n < 120 && tent < 900) {
+    tent++;
+    var x = (hash2(tent * 13 + 5, 333) - 0.5) * ISLAND_R * 1.9;
+    var z = (hash2(tent * 17 + 3, 777) - 0.5) * ISLAND_R * 1.9;
+    var h = terrainHeight(x, z);
+    if (h < 1.6 || h > 8.5) continue;
+    var s = 0.7 + hash2(tent, 51) * 0.9;
+    var arv = new THREE.Group();
+    var tr = new THREE.Mesh(troncoGeo, troncoMat); tr.position.y = 0.45;
+    var cp = new THREE.Mesh(copaGeo, copaMat); cp.position.y = 1.9;
+    arv.add(tr); arv.add(cp);
+    arv.scale.setScalar(s);
+    arv.position.set(x, h - 0.1, z);
+    arv.rotation.y = hash2(tent, 99) * 6.28;
+    grupo.add(arv);
+    n++;
+  }
+  n = 0; tent = 0;
+  while (n < 40 && tent < 400) {
+    tent++;
+    var rx = (hash2(tent * 31 + 7, 123) - 0.5) * ISLAND_R * 1.9;
+    var rz = (hash2(tent * 37 + 1, 457) - 0.5) * ISLAND_R * 1.9;
+    var rh = terrainHeight(rx, rz);
+    if (rh < 0.5) continue;
+    var pedra = new THREE.Mesh(new THREE.IcosahedronGeometry(0.35 + hash2(tent, 88) * 0.8, 0), rochaMat);
+    pedra.position.set(rx, rh, rz);
+    pedra.rotation.set(hash2(tent, 1) * 3, hash2(tent, 2) * 3, hash2(tent, 3) * 3);
+    grupo.add(pedra);
+    n++;
+  }
+}
+
+function criarTotens(grupo) {
+  totens = [];
+  descobertos = 0;
+  var pilarGeo = new THREE.CylinderGeometry(0.35, 0.55, 4, 6);
+  var pilarMat = new THREE.MeshPhongMaterial({ color: 0x7a736b, flatShading: true });
+  var topoGeo = new THREE.IcosahedronGeometry(0.75, 0);
+  var feixeGeo = new THREE.CylinderGeometry(0.5, 0.5, 70, 8, 1, true);
+  var posicoes = [];
+  var tent = 0;
+  while (posicoes.length < TOTENS && tent < 4000) {
+    tent++;
+    var x = (hash2(tent * 41 + 13, 611) - 0.5) * ISLAND_R * 1.85;
+    var z = (hash2(tent * 43 + 19, 907) - 0.5) * ISLAND_R * 1.85;
+    var h = terrainHeight(x, z);
+    if (h < 1.8) continue;
+    var longe = true;
+    for (var j = 0; j < posicoes.length; j++) {
+      if (posicoes[j].distanceTo(new THREE.Vector3(x, 0, z)) < 30) { longe = false; break; }
+    }
+    if (!longe) continue;
+    posicoes.push(new THREE.Vector3(x, 0, z));
+    var g = new THREE.Group();
+    var pilar = new THREE.Mesh(pilarGeo, pilarMat); pilar.position.y = 2;
+    var topoMat = new THREE.MeshPhongMaterial({
+      color: 0xff8c42, emissive: 0xd45500, emissiveIntensity: 0.9, flatShading: true
+    });
+    var topo = new THREE.Mesh(topoGeo, topoMat); topo.position.y = 4.7;
+    var feixeMat = new THREE.MeshBasicMaterial({
+      color: 0xffb066, transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false
+    });
+    var feixe = new THREE.Mesh(feixeGeo, feixeMat); feixe.position.y = 35;
+    g.add(pilar); g.add(topo); g.add(feixe);
+    g.position.set(x, h, z);
+    grupo.add(g);
+    totens.push({ grupo: g, topo: topo, feixe: feixe, pos: new THREE.Vector3(x, h, z), achado: false });
+  }
+  atualizarContador();
+}
+
+function criarNuvens(grupo) {
+  var mat = new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, flatShading: true });
+  for (var i = 0; i < 9; i++) {
+    var nuvem = new THREE.Group();
+    var partes = 2 + (hash2(i, 42) * 2 | 0);
+    for (var p = 0; p <= partes; p++) {
+      var b = new THREE.Mesh(new THREE.SphereGeometry(2.5 + hash2(i, p) * 2.5, 6, 5), mat);
+      b.position.set(p * 3.4 - partes * 1.7, hash2(p, i) * 1.2, hash2(i + p, 7) * 2);
+      b.scale.y = 0.55;
+      nuvem.add(b);
+    }
+    nuvem.position.set((hash2(i, 500) - 0.5) * SIZE * 1.2, 46 + hash2(i, 501) * 18, (hash2(i, 502) - 0.5) * SIZE * 1.2);
+    nuvem.userData.vel = 0.6 + hash2(i, 503) * 0.8;
+    grupo.add(nuvem);
+    nuvens.push(nuvem);
+  }
+}
+
+var nuvens = [];
+function gerarMundo() {
+  if (mundo) {
+    scene.remove(mundo);
+    mundo.traverse(function (o) {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) o.material.dispose();
+    });
+  }
+  nuvens = [];
+  mundo = new THREE.Group();
+  mundo.add(criarTerreno());
+  mundo.add(criarAgua());
+  espalharVegetacao(mundo);
+  criarTotens(mundo);
+  criarNuvens(mundo);
+  scene.add(mundo);
+  document.getElementById('vitoria').style.display = 'none';
+  // spawn em terra firme
+  var spawn = pontoEmTerra(2, 500);
+  player.position.set(spawn.x, spawn.y, spawn.z);
+  heading = hash2(seed, 4) * 6.28;
+}
+
+// ---------- pinguim ----------
+function construirPinguim() {
+  var g = new THREE.Group();
+  var corpo = new THREE.Group();
+  function mat(c) { return new THREE.MeshPhongMaterial({ color: c, flatShading: true, shininess: 12 }); }
+  var preto = mat(0x22262b), branco = mat(0xf4f4f0), laranja = mat(0xf29f3f);
+
+  var body = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), preto);
+  body.scale.set(0.8, 1.15, 0.8); body.position.y = 1.15;
+  var belly = new THREE.Mesh(new THREE.SphereGeometry(0.74, 8, 6), branco);
+  belly.scale.set(0.72, 1.05, 0.58); belly.position.set(0, 1.08, 0.34);
+  var bico = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.45, 6), laranja);
+  bico.rotation.x = Math.PI / 2; bico.position.set(0, 1.78, 0.78);
+  var olhoE = new THREE.Mesh(new THREE.SphereGeometry(0.09, 5, 4), branco);
+  olhoE.position.set(-0.24, 1.95, 0.6);
+  var olhoD = olhoE.clone(); olhoD.position.x = 0.24;
+  var asaE = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 5), preto);
+  asaE.scale.set(0.18, 0.85, 0.45); asaE.position.set(-0.82, 1.15, 0);
+  var asaD = asaE.clone(); asaD.position.x = 0.82;
+  var peE = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.1, 0.55), laranja);
+  peE.position.set(-0.3, 0.05, 0.15);
+  var peD = peE.clone(); peD.position.x = 0.3;
+
+  corpo.add(body); corpo.add(belly); corpo.add(bico); corpo.add(olhoE); corpo.add(olhoD);
+  corpo.add(asaE); corpo.add(asaD); corpo.add(peE); corpo.add(peD);
+  g.add(corpo);
+  g.userData.corpo = corpo;
+  g.userData.asas = [asaE, asaD];
+  return g;
+}
+
+var player = construirPinguim();
+scene.add(player);
+var heading = 0;
+
+// ---------- entrada ----------
+var keys = {};
+addEventListener('keydown', function (e) {
+  keys[e.code] = true;
+  if (e.code === 'KeyR') { seed = (Math.random() * 2147483646 | 0) + 1; gerarMundo(); }
+});
+addEventListener('keyup', function (e) { keys[e.code] = false; });
+
+var camDist = 11;
+addEventListener('wheel', function (e) {
+  camDist = Math.max(6, Math.min(30, camDist + e.deltaY * 0.012));
+}, { passive: true });
+
+addEventListener('resize', function () {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ---------- HUD ----------
+function atualizarContador() {
+  document.getElementById('contador').textContent = 'Totens: ' + descobertos + ' / ' + totens.length;
+}
+
+// ---------- laco principal ----------
+var relogio = new THREE.Clock();
+var camAlvo = new THREE.Vector3();
+
+function animate() {
+  requestAnimationFrame(animate);
+  var dt = Math.min(relogio.getDelta(), 0.05);
+  var t = relogio.elapsedTime;
+
+  // movimento
+  var frente = (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0) - (keys['KeyS'] || keys['ArrowDown'] ? 0.6 : 0);
+  var giro = (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0) - (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0);
+  heading += giro * 2.6 * dt;
+
+  var h = terrainHeight(player.position.x, player.position.z);
+  var nadando = h < WATER_Y + 0.15;
+  var deslizando = !nadando && (keys['ShiftLeft'] || keys['ShiftRight']) && frente > 0;
+  var vel = 9;
+  if (nadando) vel = 17;
+  else if (deslizando) vel = 15;
+
+  player.position.x += Math.sin(heading) * frente * vel * dt;
+  player.position.z += Math.cos(heading) * frente * vel * dt;
+
+  // limite do mundo
+  var r = Math.sqrt(player.position.x * player.position.x + player.position.z * player.position.z);
+  if (r > LIMITE_R) {
+    player.position.x *= LIMITE_R / r;
+    player.position.z *= LIMITE_R / r;
+  }
+
+  h = terrainHeight(player.position.x, player.position.z);
+  nadando = h < WATER_Y + 0.15;
+  player.position.y = nadando ? WATER_Y - 0.35 : h;
+  player.rotation.y = heading;
+
+  // postura e animacao
+  var corpo = player.userData.corpo;
+  var andando = frente !== 0;
+  if (nadando) {
+    corpo.rotation.x = THREE.MathUtils.lerp(corpo.rotation.x, 1.25, dt * 6);
+    corpo.rotation.z = 0;
+    player.userData.asas[0].rotation.z = Math.sin(t * 9) * 0.5;
+    player.userData.asas[1].rotation.z = -Math.sin(t * 9) * 0.5;
+    player.position.y += Math.sin(t * 3) * 0.12;
+  } else if (deslizando) {
+    corpo.rotation.x = THREE.MathUtils.lerp(corpo.rotation.x, 1.35, dt * 8);
+    corpo.rotation.z = 0;
+  } else {
+    corpo.rotation.x = THREE.MathUtils.lerp(corpo.rotation.x, 0, dt * 8);
+    corpo.rotation.z = andando ? Math.sin(t * 10) * 0.09 : 0;
+    player.userData.asas[0].rotation.z = andando ? Math.sin(t * 10) * 0.25 : 0;
+    player.userData.asas[1].rotation.z = andando ? -Math.sin(t * 10) * 0.25 : 0;
+  }
+
+  // totens: descoberta por proximidade
+  for (var i = 0; i < totens.length; i++) {
+    var tot = totens[i];
+    tot.topo.rotation.y += dt * 1.5;
+    tot.topo.scale.setScalar(1 + Math.sin(t * 3 + i) * 0.08);
+    if (!tot.achado && tot.pos.distanceTo(player.position) < 4.5) {
+      tot.achado = true;
+      descobertos++;
+      tot.topo.material.color.set(0x35c46a);
+      tot.topo.material.emissive.set(0x0f7a3a);
+      tot.feixe.material.color.set(0x7de8a8);
+      atualizarContador();
+      if (descobertos === totens.length) {
+        document.getElementById('vitoria').style.display = 'flex';
+      }
+    }
+  }
+
+  // nuvens
+  for (var nv = 0; nv < nuvens.length; nv++) {
+    nuvens[nv].position.x += nuvens[nv].userData.vel * dt;
+    if (nuvens[nv].position.x > SIZE * 0.8) nuvens[nv].position.x = -SIZE * 0.8;
+  }
+
+  // camera em terceira pessoa
+  camAlvo.set(
+    player.position.x - Math.sin(heading) * camDist,
+    player.position.y + camDist * 0.55,
+    player.position.z - Math.cos(heading) * camDist
+  );
+  // nao deixar a camera entrar no chao
+  var chaoCam = terrainHeight(camAlvo.x, camAlvo.z) + 1.5;
+  if (camAlvo.y < chaoCam) camAlvo.y = chaoCam;
+  camera.position.lerp(camAlvo, 1 - Math.pow(0.0001, dt));
+  camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
+
+  renderer.render(scene, camera);
+}
+
+gerarMundo();
+animate();
+})();
+</script>
+</body>
+</html>

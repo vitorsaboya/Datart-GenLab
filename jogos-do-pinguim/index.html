@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jogos do Pinguim</title>
+  <meta name="description" content="Dois jogos de pinguim feitos no Datart GenLab: explorar a ilha e cuidar da colônia." />
+  <style>
+    :root{ --ceu:#0b1d33; --gelo:#eaf4fb; --gelo2:#cfe6f5; --agua:#123a5e; --tinta:#10222f; --sol:#ffd166; }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,var(--ceu) 0%,#14395c 55%,var(--agua) 100%);
+      font-family:system-ui,Segoe UI,Arial,sans-serif;color:var(--gelo);
+      display:flex;flex-direction:column;align-items:center;padding:40px 18px 60px}
+    h1{font-size:clamp(30px,6vw,46px);margin:10px 0 4px;letter-spacing:-.01em}
+    h1 .p{display:inline-block;transform:translateY(4px)}
+    .sub{color:var(--gelo2);opacity:.85;margin:0 0 34px;font-size:16px;text-align:center}
+    .jogos{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(260px,340px));width:100%;max-width:760px;justify-content:center}
+    a.jogo{display:block;text-decoration:none;color:var(--tinta);background:var(--gelo);border-radius:18px;
+      padding:24px 22px;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .15s}
+    a.jogo:hover{transform:translateY(-4px) scale(1.01)}
+    a.jogo .ico{font-size:40px}
+    a.jogo h2{margin:10px 0 6px;font-size:22px}
+    a.jogo p{margin:0;font-size:14.5px;line-height:1.5;color:#3b4c59}
+    a.jogo .go{display:inline-block;margin-top:14px;background:var(--ceu);color:var(--gelo);
+      padding:8px 16px;border-radius:999px;font-weight:700;font-size:14px}
+    footer{margin-top:44px;color:var(--gelo2);opacity:.6;font-size:12.5px}
+  </style>
+</head>
+<body>
+  <h1><span class="p">🐧</span> Jogos do Pinguim</h1>
+  <p class="sub">Escolha um jogo — funciona no computador e não precisa instalar nada.</p>
+
+  <div class="jogos">
+    <a class="jogo" href="ilha-do-pinguim/">
+      <div class="ico">🏝️</div>
+      <h2>Ilha do Pinguim</h2>
+      <p>Explore uma ilha 3D que muda a cada partida e encontre os <b>8 totens de luz</b>.
+         Setas ou W/A/S/D andam, Shift desliza de barriga, R cria uma ilha nova.</p>
+      <span class="go">Jogar &rarr;</span>
+    </a>
+    <a class="jogo" href="colonia-do-pinguim/">
+      <div class="ico">🥚</div>
+      <h2>Colônia do Pinguim</h2>
+      <p>Seus pinguins pescam sozinhos: use os peixes para construir ninhos e chegar a
+         <b>20 pinguins</b>. Clique na gaivota antes que ela roube um ovo!</p>
+      <span class="go">Jogar &rarr;</span>
+    </a>
+  </div>
+
+  <footer>Datart GenLab · feitos em casa, com dados de carinho · 2026</footer>
+</body>
+</html>
