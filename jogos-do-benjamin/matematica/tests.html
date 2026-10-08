@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testes — jogos de matemática</title>
+<style>
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: #f8fafc; color: #111827; margin: 0; padding: 16px; font-size: 16px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  #resumo { font-size: 20px; font-weight: 800; padding: 10px 14px; border-radius: 12px; margin: 10px 0 16px; }
+  #resumo.ok { background: #dcfce7; color: #14532d; } #resumo.falha { background: #fee2e2; color: #7f1d1d; }
+  h2 { font-size: 18px; margin: 18px 0 6px; }
+  .t { padding: 3px 0; font-family: Consolas, monospace; font-size: 14px; }
+  .t.ok::before { content: "✔ "; color: #15803d; } .t.falha { color: #b91c1c; } .t.falha::before { content: "✘ "; }
+  .t small { color: #6b7280; }
+</style>
+</head>
+<body>
+<h1>Testes da lógica pura</h1>
+<div>Carrega o bloco <code>&lt;script id="logica"&gt;</code> de cada jogo e testa as funções. Precisa ser aberto por http (ex.: 127.0.0.1).</div>
+<div id="resumo">rodando…</div>
+<div id="saida"></div>
+<script>
+// ===================== suíte do jogo de missões (index.html) =====================
+window.testesJogo = async function (J, R, { secao, teste, igual, verdade }) {
+  const H = 20000;
+  const rng = s => R.criarRng(s);
+
+  secao('Missões — adição com reserva');
+  teste('2345 + 1789 = 4134 com as reservas certas', () => {
+    const p = J.passosAdicao(2345, 1789);
+    igual(p.resultado, 4134); igual(p.passos.map(x => x.escreve), [4, 3, 1, 4]); igual(p.passos.map(x => x.vai), [1, 1, 1, 0]);
+  });
+  teste('resultado e colunas certos para todo a 0..999 × b (passo 7) e amostras de 4 dígitos', () => {
+    const conf = (a, b) => {
+      const p = J.passosAdicao(a, b);
+      if (p.resultado !== a + b) throw new Error(`${a}+${b}`);
+      p.passos.forEach((x, i) => { if (x.escreve < 0 || x.escreve > 9 || x.total !== x.x + x.y + x.reserva || (i && x.reserva !== p.passos[i - 1].vai)) throw new Error(`coluna ${i} de ${a}+${b}`); });
+    };
+    for (let a = 0; a <= 999; a++) for (let b = 0; b <= 999; b += 7) conf(a, b);
+    const r = rng(1); for (let i = 0; i < 20000; i++) conf(Math.floor(r() * 10000), Math.floor(r() * 10000));
+  });
+
+  secao('Missões — subtração com empréstimo');
+  teste('503 − 278 = 225 (zero no meio vira 9)', () => {
+    const p = J.passosSubtracao(503, 278);
+    igual(p.resultado, 225); igual(p.passos.map(x => x.valor), [13, 9, 4]);
+    igual(p.passos.map(x => x.eventos), [['recebeu'], ['recebeu', 'emprestou'], ['emprestou']]);
+  });
+  teste('casos difíceis: 1000 − 1, 5003 − 2678, 1000 − 999, 312 − 18', () => {
+    for (const [a, b] of [[1000, 1], [5003, 2678], [1000, 999], [312, 18], [100, 100], [900, 9]]) igual(J.passosSubtracao(a, b).resultado, a - b, `${a}-${b}`);
+  });
+  teste('exaustivo: todo a 100..999 e b ≤ a (passo 3) + 4 dígitos', () => {
+    const conf = (a, b) => {
+      const p = J.passosSubtracao(a, b);
+      if (p.resultado !== a - b) throw new Error(`${a}-${b}`);
+      for (const x of p.passos) if (x.escreve < 0 || x.escreve > 9 || x.valor - x.y !== x.escreve) throw new Error(`coluna de ${a}-${b}`);
+    };
+    for (let a = 100; a <= 999; a++) for (let b = 0; b <= a; b += 3) conf(a, b);
+    const r = rng(2); for (let i = 0; i < 20000; i++) { const a = Math.floor(r() * 10000), b = Math.floor(r() * (a + 1)); conf(a, b); }
+  });
+  teste('explicação da subtração termina no resultado', () => {
+    const L = J.linhasSubtracao(Object.assign({ a: 503, b: 278 }, J.passosSubtracao(503, 278)));
+    verdade(L[L.length - 1] === 'Resultado: 503 − 278 = 225'); verdade(L.some(l => l.includes('13 − 8 = 5')), L.join(' | '));
+  });
+
+  secao('Missões — geradores (conferidos por outro caminho)');
+  teste('adição, subtração e multiplicação: resposta = conta nativa', () => {
+    const r = rng(3); let comRes = 0, comEmp = 0, nA = 0, nS = 0;
+    for (let i = 0; i < 3000; i++) {
+      for (const g of [J.gerarAdicao, J.gerarSubtracao, J.gerarMultiplicacao]) {
+        const q = g(r);
+        if (q.tipo === 'mult') { igual(Number(q.correta), q.meta.a * q.meta.m); continue; }
+        const { op, a, b } = q.meta, certo = op === '+' ? a + b : op === '−' ? a - b : a * b;
+        igual(Number(q.correta), certo, `${a}${op}${b}`);
+        verdade(certo >= 0, 'negativo');
+        if (q.tipo === 'conta') {
+          igual(q.conta.resultado, certo);
+          if (op === '+') { nA++; if (J.temReservaAd(a, b)) comRes++; verdade(String(a).length >= 3 && a + b < 10000); }
+          if (op === '−') { nS++; if (J.temEmprestimo(a, b)) comEmp++; verdade(b < a); }
+        }
+      }
+    }
+    verdade(comRes / nA > 0.7, 'reserva frequente: ' + (comRes / nA).toFixed(2));
+    verdade(comEmp / nS > 0.7, 'empréstimo frequente: ' + (comEmp / nS).toFixed(2));
+  });
+  teste('prova real: a conta inversa e o veredito estão certos', () => {
+    const r = rng(4); let certas = 0;
+    for (let i = 0; i < 3000; i++) {
+      const q = J.gerarProvaReal(r), { op, a, b, c, certo } = q.meta;
+      igual(certo, op === '+' ? a + b : a - b);
+      const inv = op === '+' ? '−' : '+';
+      igual(q.provaConta.resultado, inv === '+' ? c + b : c - b);
+      igual(q.etapa1.correta, `${c} ${inv} ${b}`);
+      igual(q.etapa1.opcoes.filter(o => o === q.etapa1.correta).length, 1); igual(new Set(q.etapa1.opcoes).size, 3);
+      igual(q.correta, c === certo ? 'Certa ✔' : 'Errada ✘');
+      igual(q.provaConta.resultado === a, c === certo, 'prova volta ao começo só se a conta está certa');
+      if (c === certo) certas++;
+    }
+    verdade(certas > 1200 && certas < 1800, 'metade certa, metade errada: ' + certas);
+  });
+
+  secao('Missões — tabuada (Leitner, todos os fatos de 2 a 10)');
+  teste('81 cartões, sem ×1, todos começam sem aparecer', () => {
+    const c = J.cartoesIniciais();
+    igual(Object.keys(c).length, 81); verdade(Object.values(c).every(x => x.a >= 2 && x.b >= 2 && J.novo(x) && x.caixa === 1));
+  });
+  const novoC = (caixa, vence) => ({ a: 6, b: 7, caixa, vence, acertos: 0, erros: 0, tempoTotal: 0, nTempo: 0, ultimaVez: null });
+  const resp = (c, o) => J.responderCartao(c, Object.assign({ limiarMs: 4000, hoje: H }, o)).cartao;
+  teste('rápido sobe, lento fica, erro volta pra caixa 1, vencimentos 0/2/4/7/14', () => {
+    let c = novoC(1, H);
+    for (const [cx, d] of [[2, 2], [3, 4], [4, 7], [5, 14], [5, 14]]) { c = resp(c, { correto: true, ms: 1000 }); igual([c.caixa, c.vence], [cx, H + d]); }
+    igual(resp(novoC(3, H), { correto: true, ms: 9000 }).caixa, 3);
+    igual(resp(novoC(4, H), { correto: false, ms: 900 }).caixa, 1);
+    igual(resp(novoC(1, null), { correto: true, ms: 900 }).caixa, 2, 'novo acertado rápido');
+    const m = resp(novoC(3, H + 3), { correto: true, ms: 500, manutencao: true }); igual([m.caixa, m.vence], [3, H + 3], 'manutenção não mexe');
+  });
+  teste('escolher fatos: 70/30, limite de novos por dia, sem a×b colado em b×a', () => {
+    for (let s = 1; s <= 100; s++) {
+      const c = J.cartoesIniciais(), ks = Object.keys(c);
+      ks.slice(0, 30).forEach((k, i) => { c[k].caixa = 1 + (i % 2); c[k].vence = H; });
+      ks.slice(30, 60).forEach(k => { c[k].caixa = 4; c[k].vence = H + 5; });
+      const f = J.escolherFatos(c, H, 10, rng(s), 3);
+      igual(f.length, 10); igual(new Set(f.map(x => x.chave)).size, 10);
+      igual(f.filter(x => x.manutencao).length, 3, 's=' + s);
+      verdade(f.every(x => !x.novo), 'com vencidos sobrando, não puxa novos');
+      for (let i = 1; i < f.length; i++) verdade(f[i].chave !== J.ligado(f[i - 1].chave));
+    }
+    const c = J.cartoesIniciais();
+    igual(J.escolherFatos(c, H, 10, rng(9), 4).length, 10, 'no 1º dia completa com novos');
+    verdade(J.escolherFatos(c, H, 6, rng(9), 15).every(x => x.novo));
+  });
+  teste('todo formato de pergunta da tabuada tem a resposta certa', () => {
+    const r = rng(5);
+    for (let a = 2; a <= 10; a++) for (let b = 2; b <= 10; b++) for (const f of ['digitar', 'escolha', 'lacuna', 'problema']) {
+      const q = J.montarFato(J.chave(a, b), f, r);
+      if (f === 'lacuna') igual(Number(q.correta), q.antes ? b : a); else igual(Number(q.correta), a * b);
+      if (f === 'escolha') { igual(q.opcoes.length, 4); igual(new Set(q.opcoes).size, 4); verdade(q.opcoes.includes(String(a * b))); }
+      verdade(J.verificar(q, q.correta));
+    }
+  });
+  teste('a dica de cada um dos 81 fatos chega no resultado', () => {
+    for (let a = 2; a <= 10; a++) for (let b = 2; b <= 10; b++) igual(J.estrategia(a, b).resultado, a * b, `${a}×${b}`);
+  });
+
+  secao('Missões — missão, XP, patentes e temas');
+  const estadoNovo = () => J.estadoInicial();
+  teste('missão padrão: 12 perguntas, só temas ligados, todos aparecem, sem dois iguais seguidos', () => {
+    for (let s = 1; s <= 100; s++) {
+      const e = estadoNovo(), m = J.criarMissao(e, H, rng(s), 1);
+      igual(m.perguntas.length, 12);
+      igual([...new Set(m.perguntas.map(q => q.tema))].sort(), ['adicao', 'multiplicacao', 'provareal', 'subtracao', 'tabuada']);
+      verdade(m.perguntas.filter(q => q.tema === 'tabuada').length >= 4, 'tabuada pesa mais');
+      for (let i = 1; i < 12; i++) verdade(m.perguntas[i].tema !== m.perguntas[i - 1].tema, `seguidos s=${s}`);
+      igual(JSON.parse(JSON.stringify(m)), m, 'só dados');
+    }
+  });
+  teste('ligar/desligar temas: desligado nunca aparece; temas da revisão entram quando ligados', () => {
+    const e = estadoNovo();
+    e.temas.adicao.ligado = false; e.temas.romanos.ligado = true; e.temas.relogio.ligado = true; e.temas.relogio.peso = 'muito';
+    for (let s = 1; s <= 50; s++) {
+      const m = J.criarMissao(e, H, rng(s), 1);
+      verdade(!m.perguntas.some(q => q.tema === 'adicao'));
+      verdade(m.perguntas.some(q => q.tema === 'romanos') && m.perguntas.some(q => q.tema === 'relogio'));
+    }
+    const so = estadoNovo(); for (const t of J.TEMAS) so.temas[t.id].ligado = false;
+    verdade(J.criarMissao(so, H, rng(1), 1).perguntas.every(q => q.tema === 'tabuada'), 'tudo desligado → tabuada');
+  });
+  teste('todas as perguntas de todas as missões (todos os temas ligados) se conferem', () => {
+    const e = estadoNovo(); for (const t of J.TEMAS) e.temas[t.id].ligado = true;
+    e.config.perguntasPorMissao = 20;
+    for (let s = 1; s <= 150; s++) {
+      const m = J.criarMissao(e, H, rng(s), 1);
+      for (const q of m.perguntas) {
+        if (['fato', 'numero', 'romano', 'conta'].includes(q.tipo)) verdade(J.verificar(q, q.correta), q.enunciado);
+        if (q.tipo === 'conta') igual(Number(q.correta), q.meta.op === '+' ? q.meta.a + q.meta.b : q.meta.op === '−' ? q.meta.a - q.meta.b : q.meta.a * q.meta.b);
+        if (q.tipo === 'escolha') igual(q.opcoes.filter(o => o === q.correta).length, 1);
+        verdade(typeof J.textoPergunta(q) === 'string' && J.textoPergunta(q).length > 3);
+      }
+    }
+  });
+  teste('erro volta 3 a 5 perguntas depois; missão só acaba com tudo certo', () => {
+    const vistos = new Set();
+    for (let s = 1; s <= 200; s++) {
+      const e = estadoNovo(), m = J.criarMissao(e, H, rng(s), 1), id = m.fila[0];
+      J.registrar(e, m, { acertou: false, ms: 1000 }, H, rng(s));
+      const d = m.fila.indexOf(id) + 1; verdade(d >= 3 && d <= 5, 'distância ' + d); vistos.add(d);
+    }
+    igual([...vistos].sort(), [3, 4, 5]);
+    const e = estadoNovo(), m = J.criarMissao(e, H, rng(7), 1);
+    let n = 0; while (!m.finalizada && n++ < 200) { const q = J.perguntaAtual(m); J.registrar(e, m, { acertou: q.tentativas > 0 || q.id % 3 !== 0, ms: 1500 }, H, rng(n)); }
+    verdade(m.finalizada && m.perguntas.every(q => q.acertou));
+  });
+  teste('XP: 10 de primeira, 4 depois, +25 por missão, +50 com todas do dia', () => {
+    const e = estadoNovo(); J.garantirDia(e, H);
+    const fazer = (num, erros) => {
+      const m = J.criarMissao(e, H, rng(typeof num === 'number' ? num : 99), num); e.missaoAtiva = m;
+      let k = 0; while (!m.finalizada) { const q = J.perguntaAtual(m); J.registrar(e, m, { acertou: !(q.tentativas === 0 && k++ < erros), ms: 1000 }, H, rng(k + 1)); }
+      return J.finalizarMissao(e, m, H);
+    };
+    const r1 = fazer(1, 0); igual(r1.total, 12 * 10 + 25); igual(e.xp, 145);
+    const r2 = fazer(2, 2); igual(r2.total, 10 * 10 + 2 * 4 + 25);
+    verdade(!r2.ganhos.some(g => g.xp === 50));
+    const r3 = fazer(3, 0); verdade(r3.ganhos.some(g => g.xp === 50), 'bônus do dia'); verdade(r3.diaCompleto);
+    igual(e.dia.revisar.length, 2, 'as 2 erradas vão para o papai revisar');
+    igual(e.historico.length, 1); igual(e.historico[0].missoes, 3);
+    const rx = fazer('extra', 0); verdade(!rx.ganhos.some(g => g.xp === 50), 'bônus só uma vez'); igual(e.dia.extras, 1);
+  });
+  teste('patentes por XP', () => {
+    igual(J.patenteDe(0).nome, 'Cadete'); igual(J.patenteDe(499).nome, 'Cadete'); igual(J.patenteDe(500).nome, 'Piloto Aprendiz');
+    igual(J.patenteDe(25000).nome, 'Lenda da Galáxia'); igual(J.patenteDe(31000).nome, 'Lenda da Galáxia nível 2');
+    const p = J.patenteDe(850); igual(p.falta, 350); verdade(Math.abs(p.progresso - 0.5) < 1e-9);
+    for (let xp = 0; xp < 40000; xp += 37) { const q = J.patenteDe(xp); verdade(q.progresso >= 0 && q.progresso < 1 && q.falta > 0, 'xp ' + xp); }
+  });
+  teste('dia novo zera as missões do dia; missão de ontem pela metade é descartada', () => {
+    const e = estadoNovo(); J.garantirDia(e, H); e.dia.missoes[0].feita = true; e.missaoAtiva = J.criarMissao(e, H, rng(1), 2);
+    J.garantirDia(e, H + 1);
+    verdade(e.dia.n === H + 1 && e.dia.missoes.every(m => !m.feita) && e.missaoAtiva === null);
+    igual(J.sequenciaDias([H - 1, H], H + 1), 2, 'não zera antes de jogar hoje');
+  });
+  teste('limite de fatos novos por dia vale entre as missões do dia', () => {
+    const e = estadoNovo(); e.config.novosPorDia = 8; J.garantirDia(e, H);
+    const ja = new Set();
+    for (let s = 1; s <= 3; s++) J.criarMissao(e, H, rng(s), s).perguntas.filter(q => q.tema === 'tabuada').forEach(q => ja.add(q.chave));
+    verdade(e.novos.n >= 8 && e.novos.dia === H, 'contador ' + e.novos.n);
+  });
+  teste('temas com mais erros ganham mais perguntas', () => {
+    const e = estadoNovo(); const base = J.distribuicaoMissao(e, rng(1));
+    e.estat.subtracao = Array(20).fill(0);
+    const depois = J.distribuicaoMissao(e, rng(1));
+    verdade(depois.subtracao > base.subtracao, JSON.stringify([base, depois]));
+  });
+  teste('estado salvo antigo ganha temas novos sozinho; exportar → importar', () => {
+    const e = estadoNovo(); delete e.temas.unidades; delete e.estat.unidades;
+    const vol = J.validarImportacao(JSON.stringify(e)); verdade(vol.temas.unidades && Array.isArray(vol.estat.unidades));
+    const f = estadoNovo(); f.xp = 777; igual(J.validarImportacao(JSON.stringify(f)), JSON.parse(JSON.stringify(f)));
+    let falhou = false; try { J.validarImportacao('{"a":1}'); } catch (err) { falhou = true; } verdade(falhou);
+  });
+};
+</script>
+<script>
+(async function () {
+  'use strict';
+  const saida = document.getElementById('saida');
+  let total = 0, falhas = 0;
+  const resultados = [];
+  function secao(nome) { const h = document.createElement('h2'); h.textContent = nome; saida.appendChild(h); }
+  function teste(nome, fn) {
+    total++;
+    let ok = false, msg = '';
+    try { const r = fn(); ok = r === undefined || r === true; if (!ok) msg = String(r); } catch (e) { msg = e && e.message ? e.message : String(e); }
+    if (!ok) falhas++;
+    resultados.push({ nome, ok, msg });
+    const d = document.createElement('div');
+    d.className = 't ' + (ok ? 'ok' : 'falha');
+    d.textContent = nome + (msg ? ' — ' + msg : '');
+    saida.appendChild(d);
+  }
+  function igual(a, b, ctx) { if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${ctx || ''} esperado ${JSON.stringify(b)}, veio ${JSON.stringify(a)}`); }
+  function verdade(c, ctx) { if (!c) throw new Error(ctx || 'condição falsa'); }
+
+  async function carregarLogica(arquivo, nomeGlobal) {
+    const html = await (await fetch(arquivo, { cache: 'no-store' })).text();
+    const m = html.match(/<script id="logica">([\s\S]*?)<\/script>/);
+    if (!m) throw new Error('bloco de lógica não encontrado em ' + arquivo);
+    return new Function(m[1] + '\nreturn ' + nomeGlobal + ';')();
+  }
+
+  // ---------- referências independentes (outro algoritmo) ----------
+  const ROM_U = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+  const ROM_D = ['', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC'];
+  const ROM_C = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM'];
+  const ROM_M = ['', 'M', 'MM', 'MMM'];
+  const romRef = n => ROM_M[Math.floor(n / 1000)] + ROM_C[Math.floor(n / 100) % 10] + ROM_D[Math.floor(n / 10) % 10] + ROM_U[n % 10];
+  const romRefInverso = (() => { const m = new Map(); for (let n = 1; n <= 3999; n++) m.set(romRef(n), n); return s => m.has(s) ? m.get(s) : null; })();
+  const horaRef = (h, m, mais) => { const d = new Date(2026, 0, 10, h, m + mais); return { h: d.getHours(), m: d.getMinutes() }; };
+  const fmtRef = (h, m) => m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`;
+  const MESES_REF = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const mesRef = (i, k) => new Date(2026, i + k, 1).getMonth();
+  const diaRef = (d, k) => { const base = new Date(2026, 0, 4); /* domingo */ return new Date(2026, 0, 4 + d + k).getDay(); };
+  const capRef = s => s[0].toUpperCase() + s.slice(1);
+  const DIAS_REF = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+
+  // ======================================================================
+  // JOGO 1 — revisao-prova.html
+  // ======================================================================
+  let R;
+  try { R = await carregarLogica('revisao-prova.html', 'Logica'); } catch (e) { secao('revisao-prova.html'); teste('carregar lógica', () => { throw e; }); }
+  if (R) {
+    secao('Revisão — numerais romanos');
+    teste('a semana começa no domingo (referência dos testes)', () => igual(new Date(2026, 0, 4).getDay(), 0));
+    teste(`número → romano → número em todo 1..ROMAN_MAX (${R.ROMAN_MAX})`, () => {
+      for (let n = 1; n <= R.ROMAN_MAX; n++) { igual(R.paraRomano(n), romRef(n), 'n=' + n); igual(R.deRomano(R.paraRomano(n)), n, 'volta n=' + n); }
+    });
+    teste('número → romano → número em todo 1..3999', () => { for (let n = 1; n <= 3999; n++) { if (R.paraRomano(n) !== romRef(n)) throw new Error('n=' + n); if (R.deRomano(romRef(n)) !== n) throw new Error('volta ' + n); } });
+    teste('valores clássicos', () => {
+      const casos = { 1: 'I', 4: 'IV', 9: 'IX', 14: 'XIV', 19: 'XIX', 24: 'XXIV', 29: 'XXIX', 40: 'XL', 44: 'XLIV', 49: 'XLIX', 50: 'L', 90: 'XC', 99: 'XCIX', 100: 'C' };
+      for (const n in casos) igual(R.paraRomano(Number(n)), casos[n], 'n=' + n);
+    });
+    teste('rejeita romanos inválidos', () => {
+      for (const s of ['IIII', 'VV', 'IL', 'XXXX', 'VX', 'IIV', 'LL', 'IC', 'XIIII', 'VIX', 'IVX', 'IIX', 'XLX', 'VIIII', 'XXXXX', 'IXI', 'IVI', 'VL', 'LC', '', 'ABC', 'X1', 'IIIII'])
+        verdade(!R.romanoValido(s) && R.deRomano(s) === null, `"${s}" deveria ser inválido`);
+    });
+    teste('aceita minúsculas (teclado físico)', () => igual(R.deRomano('xiv'), 14));
+    teste('nenhuma string inválida curta é aceita (busca exaustiva até 5 letras)', () => {
+      const L = ['I', 'V', 'X', 'L', 'C'];
+      const rec = (s, k) => {
+        if (s) { const v = R.deRomano(s); const ref = romRefInverso(s); if (v !== ref) throw new Error(`"${s}": lógica=${v}, referência=${ref}`); }
+        if (k === 0) return;
+        for (const c of L) rec(s + c, k - 1);
+      };
+      rec('', 5);
+    });
+    teste('decomposição soma ao valor (XIV = X + IV)', () => {
+      igual(R.textoDecomposicao(14), 'XIV = X + IV = 10 + 4 = 14');
+      for (let n = 1; n <= R.ROMAN_MAX; n++) { const p = R.decomporRomano(n); igual(p.reduce((s, x) => s + x.valor, 0), n, 'n=' + n); igual(p.map(x => x.simbolo).join(''), R.paraRomano(n), 'símbolos n=' + n); }
+    });
+    teste('distratores: 3, diferentes, nunca valem o número pedido', () => {
+      for (let n = 1; n <= R.ROMAN_MAX; n++) {
+        const d = R.distratoresRomanos(n);
+        igual(d.length, 3, 'n=' + n);
+        verdade(new Set(d).size === 3, 'repetidos n=' + n);
+        for (const s of d) { verdade(s !== R.paraRomano(n), 'igual ao certo n=' + n); verdade(R.deRomano(s) !== n, `"${s}" vale ${n}`); }
+      }
+    });
+    teste('distratores comuns aparecem (IIII, VV, IL, XXXX)', () => {
+      verdade(R.distratoresRomanos(4).includes('IIII'));
+      verdade(R.distratoresRomanos(10).includes('VV'));
+      verdade(R.distratoresRomanos(49).includes('IL'));
+      verdade(R.distratoresRomanos(40).includes('XXXX'));
+    });
+    teste('peso extra nos números com subtração (≥ 50% dos sorteios)', () => {
+      const rng = R.criarRng(7); let sub = 0; const N = 4000;
+      for (let i = 0; i < N; i++) if (R.COM_SUBTRACAO.includes(R.sortearRomano(rng))) sub++;
+      verdade(sub / N > 0.5, 'proporção ' + (sub / N).toFixed(2));
+      verdade(R.COM_SUBTRACAO.includes(4) && R.COM_SUBTRACAO.includes(49) && !R.COM_SUBTRACAO.includes(15));
+    });
+    teste('peças disponíveis cobrem todo o intervalo', () => {
+      for (let n = 1; n <= R.ROMAN_MAX; n++) for (const c of R.paraRomano(n)) verdade(R.SIMBOLOS.includes(c), c);
+      verdade(!R.SIMBOLOS.includes('C') || R.ROMAN_MAX >= 90, 'C só se precisar');
+    });
+
+    secao('Revisão — horas');
+    teste('somar minutos (casos da prova)', () => {
+      igual(R.somarMinutos(10, 10, 40), { h: 10, m: 50 });
+      igual(R.somarMinutos(10, 30, 40), { h: 11, m: 10 });
+      igual(R.somarMinutos(10, 50, 15), { h: 11, m: 5 });
+      igual(R.somarMinutos(11, 45, 45), { h: 12, m: 30 });
+      igual(R.somarMinutos(9, 0, 60), { h: 10, m: 0 });
+      igual(R.somarMinutos(23, 50, 20), { h: 0, m: 10 });
+    });
+    teste('somar minutos = Date para todo horário × durações', () => {
+      for (let h = 0; h < 24; h++) for (let m = 0; m < 60; m += 5) for (const d of [5, 10, 15, 20, 30, 40, 45, 60, 75, 90]) igual(R.somarMinutos(h, m, d), horaRef(h, m, d), `${h}:${m}+${d}`);
+    });
+    teste('formato da escola (10h10, 11h)', () => { igual(R.formatarHora(10, 10), '10h10'); igual(R.formatarHora(11, 0), '11h'); igual(R.formatarHora(11, 5), '11h05'); });
+    teste('linha do tempo pula de 10 em 10 e termina no horário certo', () => {
+      for (let h = 7; h < 18; h++) for (let m = 0; m < 60; m += 5) for (const d of [15, 20, 30, 40, 45, 60]) {
+        const p = R.linhaDoTempo(h, m, d), fim = p[p.length - 1];
+        igual({ h: fim.h, m: fim.m }, horaRef(h, m, d), `${h}:${m}+${d}`);
+        verdade(p.slice(1).every((x, i, a) => x.pulo === 10 || (i === a.length - 1 && x.pulo < 10)), 'pulos');
+        igual(p.slice(1).reduce((s, x) => s + x.pulo, 0), d, 'soma dos pulos');
+      }
+    });
+    teste('12h ↔ 24h', () => { igual(R.para24h(7), 19); igual(R.para24h(1), 13); igual(R.para24h(11), 23); igual(R.para12h(19), 7); igual(R.para12h(0), 12); igual(R.para12h(12), 12); });
+
+    secao('Revisão — calendário');
+    teste('contar meses para a frente, com virada de ano', () => {
+      igual(R.MESES[R.avancarMeses(1, 4)], 'junho', 'fevereiro + 4');
+      igual(R.MESES[R.avancarMeses(9, 5)], 'março', 'outubro + 5');
+      igual(R.MESES[R.avancarMeses(11, 1)], 'janeiro', 'dezembro + 1');
+      igual(R.avancarMeses(3, 12), 3, '+12');
+      for (let i = 0; i < 12; i++) for (let k = -12; k <= 24; k++) igual(R.avancarMeses(i, k), mesRef(i, k), `${i}+${k}`);
+    });
+    teste('sequência dos dias da semana', () => {
+      igual(R.DIAS[R.avancarDias(6, 1)], 'domingo', 'depois do sábado');
+      igual(R.DIAS[R.avancarDias(0, -1)], 'sábado', 'antes do domingo');
+      igual(R.DIAS[R.avancarDias(3, 1)], 'quinta-feira', 'depois da quarta');
+      igual(R.DIAS[R.avancarDias(0, 6)], 'sábado', 'domingo, terça, quinta → sábado');
+      for (let d = 0; d < 7; d++) for (let k = -7; k <= 14; k++) igual(R.avancarDias(d, k), diaRef(d, k), `${d}+${k}`);
+    });
+
+    secao('Revisão — multiplicação com reserva');
+    teste('2345 × 2 = 4690 com reservas certas', () => {
+      const c = R.passosMultiplicacao(2345, 2);
+      igual(c.resultado, 4690);
+      igual(c.passos.map(p => p.escreve), [0, 9, 6, 4]);
+      igual(c.passos.map(p => p.vai), [1, 0, 0, 0]);
+    });
+    teste('resultado = a × m para todo a de 100 a 9999, m de 2 a 5', () => {
+      for (let a = 100; a <= 9999; a++) for (let m = 2; m <= 5; m++) { const c = R.passosMultiplicacao(a, m); if (c.resultado !== a * m) throw new Error(`${a}×${m}`); }
+    });
+    teste('erro típico "sem reserva" é diferente quando há reserva', () => {
+      igual(R.semReserva(2345, 2), 4680);
+      for (let a = 100; a <= 9999; a += 7) for (let m = 2; m <= 5; m++) if (R.temReserva(a, m)) verdade(R.semReserva(a, m) !== a * m, `${a}×${m}`);
+    });
+
+    secao('Revisão — geradores (milhares de perguntas, resposta conferida por outro caminho)');
+    teste('todas as perguntas geradas têm a resposta certa', () => {
+      let n = 0;
+      for (let semente = 1; semente <= 300; semente++) {
+        const mis = R.criarMissao(R.criarRng(semente));
+        for (const p of mis.perguntas) {
+          n++;
+          const ctx = `semente ${semente} · ${p.tema}/${p.sub || p.tipo} · "${p.enunciado}"`;
+          if (p.tipo === 'escolha') {
+            verdade(Array.isArray(p.opcoes) && p.opcoes.length >= 2, 'opções ' + ctx);
+            igual(p.opcoes.filter(o => o === p.correta).length, 1, 'certa aparece 1 vez ' + ctx);
+            igual(new Set(p.opcoes).size, p.opcoes.length, 'opções repetidas ' + ctx);
+          }
+          const mt = p.meta;
+          switch (p.tema + '/' + (p.sub || p.tipo)) {
+            case 'romanos/r2n': case 'romanos/capitulo': case 'romanos/seculo':
+              igual(Number(p.correta), mt.n, ctx); igual(romRefInverso(mt.r || p.visual.texto), mt.n, ctx);
+              verdade(mt.n >= 1 && mt.n <= R.ROMAN_MAX, 'intervalo ' + ctx); break;
+            case 'romanos/relogio-romano': igual(Number(p.correta), p.visual.h, ctx); verdade(p.visual.h >= 1 && p.visual.h <= 12); break;
+            case 'romanos/n2r': igual(p.correta, romRef(mt.n), ctx); break;
+            case 'romanos/certo': igual(p.correta, romRef(mt.n), ctx); for (const o of p.opcoes) if (o !== p.correta) verdade(romRefInverso(o) !== mt.n, 'distrator vale n ' + ctx); break;
+            case 'romanos/comparar': igual(p.correta, romRef(Math.max(mt.n, mt.k)), ctx); verdade(mt.n !== mt.k, 'iguais ' + ctx); break;
+            case 'multiplicacao/mult': {
+              const r = mt.a * mt.m;
+              igual(Number(p.correta), r, ctx); igual(p.conta.resultado, r, ctx);
+              igual(p.sm.correta, `${mt.a} × ${mt.m}`, ctx);
+              igual(p.sm.opcoes.filter(o => o === p.sm.correta).length, 1, ctx); igual(new Set(p.sm.opcoes).size, 3, 'S.M. repetidas ' + ctx);
+              verdade(p.r.correta.includes(String(r)), 'R: sem o número ' + ctx);
+              igual(new Set(p.r.opcoes).size, 3, 'R: repetidas ' + ctx);
+              for (const o of p.r.opcoes) if (o !== p.r.correta) verdade(!(o.match(/\d+/g) || []).includes(String(r)), 'R: distrator com o número certo ' + ctx);
+              verdade(String(mt.a).length >= 3 && String(mt.a).length <= 4, '3 a 4 dígitos ' + ctx);
+              verdade([2, 3, 4, 5].includes(mt.m), 'multiplicador ' + ctx); break;
+            }
+            case 'relogio/ler': case 'relogio/ponteiros':
+              igual(p.correta, fmtRef(mt.h, mt.m), ctx); verdade(mt.m === 0 || mt.m === 30, 'hora exata ou meia ' + ctx); break;
+            case 'relogio/24h': igual(Number(p.correta), mt.h + 12, ctx); igual(p.visual.h, mt.h, ctx); break;
+            case 'relogio/24h-inv': igual(Number(p.correta), mt.h24 - 12, ctx); break;
+            case 'tempo/escolha': {
+              const f = horaRef(mt.h, mt.m, mt.dur);
+              igual(p.correta, fmtRef(f.h, f.m), ctx);
+              verdade([15, 20, 30, 40, 45, 60].includes(mt.dur), 'duração ' + ctx);
+              verdade(p.opcoes.length === 4, '4 opções ' + ctx); break;
+            }
+            case 'calendario/mes-vizinho': igual(p.correta, capRef(MESES_REF[mesRef(mt.i, mt.depois ? 1 : -1)]), ctx); break;
+            case 'calendario/dia-vizinho': igual(p.correta, capRef(DIAS_REF[diaRef(mt.i, mt.depois ? 1 : -1)]), ctx); break;
+            case 'calendario/contar-meses': igual(p.correta, capRef(MESES_REF[mesRef(mt.i, mt.k)]), ctx); break;
+            case 'calendario/dia-sim-nao': igual(p.correta, capRef(DIAS_REF[diaRef(mt.d, 6)]), ctx); break;
+            case 'calendario/vf':
+              if (mt.fixa) igual(p.correta, mt.v ? 'Verdadeiro' : 'Falso', ctx);
+              else {
+                const n = mt.ehMes ? 12 : 7, prox = (mt.i + 1) % n;
+                igual(p.correta, mt.outro === prox ? 'Verdadeiro' : 'Falso', ctx);
+              }
+              break;
+            case 'unidades/direta': case 'unidades/nome': {
+              const tabela = { quinzena: '15 dias', bimestre: '2 meses', trimestre: '3 meses', semestre: '6 meses', semana: '7 dias', ano: '12 meses', dia: '24 horas', hora: '60 minutos' };
+              const t = tabela[mt.nome]; verdade(t, ctx);
+              if (p.sub === 'direta') { igual(p.correta + ' ' + p.sufixo, t, ctx); }
+              else { igual(p.correta.toLowerCase(), mt.nome, ctx); verdade(p.enunciado.includes(t), ctx); }
+              break;
+            }
+            case 'unidades/ligar': {
+              const tabela = { Quinzena: '15 dias', Bimestre: '2 meses', Trimestre: '3 meses', Semestre: '6 meses', Semana: '7 dias', Ano: '12 meses', Dia: '24 horas', Hora: '60 minutos' };
+              for (const [e, d] of p.pares) igual(d, tabela[e], ctx);
+              igual(p.direita.slice().sort(), p.pares.map(x => x[1]).sort(), ctx); break;
+            }
+            default: throw new Error('tipo sem teste: ' + p.tema + '/' + (p.sub || p.tipo));
+          }
+        }
+      }
+      verdade(n === 9000, 'perguntas conferidas: ' + n);
+    });
+    teste('a missão tem ~30 perguntas, todos os temas, sem dois do mesmo tema seguidos', () => {
+      for (let s = 1; s <= 300; s++) {
+        const m = R.criarMissao(R.criarRng(s));
+        igual(m.perguntas.length, 30);
+        igual(new Set(m.perguntas.map(p => p.tema)).size, 6, 'temas s=' + s);
+        for (let i = 1; i < m.perguntas.length; i++) verdade(m.perguntas[i].tema !== m.perguntas[i - 1].tema, `seguidos s=${s} i=${i}`);
+        igual(new Set(m.perguntas.map(p => p.enunciado + '|' + p.correta)).size, 30, 'perguntas repetidas s=' + s);
+      }
+    });
+    teste('fila: errada volta pro fim e conta tentativas, termina só com 100%', () => {
+      const m = R.criarMissao(R.criarRng(42));
+      const primeira = m.fila[0];
+      R.registrar(m, false);
+      igual(m.fila[m.fila.length - 1], primeira, 'foi pro fim');
+      igual(m.fila.length, 30);
+      let passos = 0;
+      while (!m.finalizada) { const p = R.perguntaAtual(m); R.registrar(m, p.id % 3 !== 0 || p.tentativas >= 1); passos++; }
+      verdade(m.perguntas.every(p => p.acertou), 'todas certas');
+      igual(m.perguntas.find(p => p.id === primeira).tentativas, 2, 'tentativas da primeira');
+      const rel = R.relatorio(m);
+      igual(rel.total, 30);
+      igual(rel.dePrimeira, m.perguntas.filter(p => p.tentativas === 1).length);
+      igual(rel.repetir.length, 30 - rel.dePrimeira);
+      igual(rel.porTema.reduce((s, t) => s + t.perguntas, 0), 30);
+    });
+    teste('jogar de novo: tema com mais erros ganha mais perguntas', () => {
+      const d0 = R.distribuicao(R.BASE, null, 30);
+      igual(Object.values(d0).reduce((a, b) => a + b, 0), 30);
+      igual(d0, R.BASE, 'sem erros = base');
+      const d1 = R.distribuicao(R.BASE, { romanos: 0, multiplicacao: 0, relogio: 1, tempo: 0.5, calendario: 0, unidades: 0 }, 30);
+      igual(Object.values(d1).reduce((a, b) => a + b, 0), 30);
+      verdade(d1.relogio > R.BASE.relogio && d1.tempo > R.BASE.tempo, JSON.stringify(d1));
+      verdade(Object.values(d1).every(v => v >= 2), 'mínimo 2 por tema');
+      const mis = R.criarMissao(R.criarRng(3), { relogio: 1 });
+      igual(mis.perguntas.filter(p => p.tema === 'relogio').length, R.distribuicao(R.BASE, { relogio: 1 }, 30).relogio);
+    });
+    teste('verificação das respostas', () => {
+      verdade(R.verificar({ tipo: 'numero', correta: '19' }, '19'));
+      verdade(R.verificar({ tipo: 'numero', correta: '19' }, '019'));
+      verdade(!R.verificar({ tipo: 'numero', correta: '19' }, ''));
+      verdade(R.verificar({ tipo: 'romano', correta: 'XIV' }, 'xiv'));
+      verdade(!R.verificar({ tipo: 'romano', correta: 'XIV' }, 'XIIII'));
+    });
+    teste('explicação do porquê o romano está errado', () => {
+      verdade(/3 vezes/.test(R.porqueRomanoErrado('IIII', 4)));
+      verdade(/nunca se repetem/.test(R.porqueRomanoErrado('VV', 10)));
+      verdade(/antes do L/.test(R.porqueRomanoErrado('IL', 49)));
+      verdade(/vale 16/.test(R.porqueRomanoErrado('XVI', 14)));
+    });
+    teste('as perguntas são só dados (podem ser salvas e recarregadas)', () => {
+      const m = R.criarMissao(R.criarRng(9));
+      igual(JSON.parse(JSON.stringify(m)), m);
+    });
+  }
+
+  // ======================================================================
+  // JOGO DE MISSÕES — index.html (usa uma cópia exata da lógica da revisão)
+  // ======================================================================
+  try {
+    const html = await (await fetch('index.html', { cache: 'no-store' })).text();
+    const rev = await (await fetch('revisao-prova.html', { cache: 'no-store' })).text();
+    const bA = html.match(/<script id="logica">([\s\S]*?)<\/script>/), bB = html.match(/<script id="logica-jogo">([\s\S]*?)<\/script>/);
+    const bR = rev.match(/<script id="logica">([\s\S]*?)<\/script>/);
+    secao('Missões — sincronia com a revisão');
+    teste('a lógica da revisão dentro do index.html é idêntica à do revisao-prova.html', () => verdade(bA && bR && bA[1] === bR[1], 'divergiu: copie o bloco de novo'));
+    const { Logica: RL, Jogo: JG } = new Function(bA[1] + '\n' + bB[1] + '\nreturn { Logica, Jogo };')();
+    await window.testesJogo(JG, RL, { secao, teste, igual, verdade });
+  } catch (e) { secao('index.html'); teste('carregar lógica do jogo', () => { throw e; }); }
+
+  const resumo = document.getElementById('resumo');
+  resumo.textContent = falhas ? `${falhas} de ${total} testes FALHARAM` : `Todos os ${total} testes passaram ✔`;
+  resumo.className = falhas ? 'falha' : 'ok';
+  document.title = (falhas ? 'FALHA ' : 'OK ') + (total - falhas) + '/' + total;
+  window.RESULTADO = { total, falhas, falhos: resultados.filter(r => !r.ok) };
+})();
+</script>
+</body>
+</html>

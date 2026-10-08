@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1e1b4b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Matemática">
+<title>Matemática do Benjamin</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<style>
+  :root {
+    --fundo: #eef3ff; --cartao: #fff; --texto: #111827; --suave: #4b5563; --borda: #c7d2fe;
+    --azul: #1d4ed8; --verde: #15803d; --verde-claro: #dcfce7; --laranja: #c2410c; --laranja-claro: #ffedd5;
+    --roxo: #6d28d9; --tema: #1d4ed8; --noite: #1e1b4b;
+    --c0: #e5e7eb; --c1: #fde68a; --c2: #fcd34d; --c3: #86efac; --c4: #4ade80; --c5: #facc15;
+    --nav: 68px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { min-height: 100%; }
+  body {
+    background: var(--fundo); color: var(--texto);
+    font-family: "Segoe UI", "Nunito", system-ui, -apple-system, Roboto, sans-serif;
+    font-size: 20px; line-height: 1.35; user-select: none; -webkit-user-select: none; overflow-x: hidden;
+    padding-bottom: calc(var(--nav) + env(safe-area-inset-bottom));
+  }
+  body.sem-abas { padding-bottom: env(safe-area-inset-bottom); }
+  button, a.botao { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+  a { color: inherit; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+  /* ---------- topo ---------- */
+  header {
+    position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top)); background: var(--noite); color: #fff;
+  }
+  #logo { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; font-size: 20px; font-weight: 800; -webkit-touch-callout: none; white-space: nowrap; overflow: hidden; }
+  #logo .icone { font-size: 26px; display: inline-block; transition: transform .3s; }
+  #logo.segurando .icone { transform: scale(1.3) rotate(-15deg); }
+  @media (max-width: 420px) { #logo .longo { display: none; } }
+  .topo-btn { min-height: 46px; padding: 6px 14px; border-radius: 14px; border: 2px solid #a5b4fc; background: transparent; color: #fff; font-size: 18px; font-weight: 700; white-space: nowrap; }
+  .topo-btn[aria-pressed="true"] { background: #4338ca; border-color: #fff; }
+
+  /* ---------- abas de baixo ---------- */
+  #abas {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: grid; grid-template-columns: repeat(3, 1fr);
+    height: calc(var(--nav) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
+    background: #fff; border-top: 2px solid var(--borda); box-shadow: 0 -4px 16px rgba(30, 27, 75, .08);
+  }
+  #abas[hidden] { display: none; }
+  #abas button { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 26px; color: var(--suave); }
+  #abas button span { font-size: 14px; font-weight: 700; }
+  #abas button[aria-current="page"] { color: var(--azul); background: #eef2ff; }
+
+  /* ---------- trilha do foguete ---------- */
+  #trilha { padding: 8px 12px 0; max-width: 960px; margin: 0 auto; }
+  .pista { position: relative; height: 44px; border-radius: 22px; background: linear-gradient(90deg, #312e81, #1e1b4b); overflow: hidden; border: 3px solid #312e81; }
+  .pista .feito { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #6366f1, #a855f7); transition: width .6s ease; }
+  .pista .estrelinhas { position: absolute; inset: 0; background-image: radial-gradient(#fff 1px, transparent 1.5px); background-size: 22px 22px; opacity: .35; }
+  .pista .foguete { position: absolute; top: 50%; font-size: 28px; transform: translate(-50%, -50%) rotate(45deg); transition: left .6s ease; }
+  .pista .lua { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 28px; }
+  .contador { text-align: center; font-size: 16px; color: var(--suave); margin-top: 2px; }
+
+  /* ---------- palco ---------- */
+  main { max-width: 960px; margin: 0 auto; padding: 10px 12px 24px; display: grid; gap: 14px; }
+  .cartao { background: var(--cartao); border-radius: 22px; padding: 16px; border: 3px solid var(--borda); box-shadow: 0 5px 0 #c7d2fe, 0 10px 26px rgba(30, 27, 75, .10); }
+  h2.secao { font-size: 22px; margin: 4px 4px -4px; }
+  .selo { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: var(--tema); color: #fff; font-weight: 700; font-size: 16px; }
+  .linha-selo { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .botao-mini { min-height: 46px; min-width: 52px; padding: 4px 12px; border-radius: 14px; border: 2px solid var(--borda); background: #f5f7ff; font-size: 18px; }
+  .enunciado { font-size: clamp(22px, 5.2vw, 27px); font-weight: 600; margin: 4px 0 10px; }
+  .pergunta-etapa { font-size: clamp(20px, 4.6vw, 24px); font-weight: 700; color: var(--tema); margin-bottom: 8px; }
+  .rom, .romano-grande, .decomp, .regra .ex, .simbolo .s { font-variant-numeric: lining-nums; }
+  .rom { font-family: Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 2px; color: var(--roxo); }
+  .visual { display: flex; justify-content: center; margin: 4px 0 10px; }
+  .romano-grande { font-family: Georgia, "Times New Roman", serif; font-size: clamp(52px, 14vw, 72px); font-weight: 700; letter-spacing: 6px; color: var(--roxo); }
+  .expressao { font-size: clamp(44px, 12vw, 60px); font-weight: 800; text-align: center; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+  .expressao.texto { font-size: clamp(22px, 5.4vw, 28px); font-weight: 600; letter-spacing: 0; }
+  .lacuna { display: inline-block; min-width: 1.3em; border-bottom: 5px solid var(--tema); color: var(--tema); }
+  .corpo { display: grid; gap: 12px; }
+  @media (min-width: 760px) and (orientation: landscape), (min-width: 1000px) {
+    .corpo.duas { grid-template-columns: 1.1fr 1fr; align-items: start; }
+  }
+
+  /* ---------- entradas ---------- */
+  .visor { min-height: 68px; border-radius: 18px; border: 4px solid var(--azul); background: #f8faff; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 42px; font-weight: 800; letter-spacing: 3px; padding: 2px 12px; }
+  .visor .vazio { color: #9ca3af; font-weight: 600; font-size: 30px; letter-spacing: 0; }
+  .visor .sufixo { font-size: 22px; color: var(--suave); letter-spacing: 0; font-weight: 600; }
+  .visor.rom-visor { font-family: Georgia, "Times New Roman", serif; color: var(--roxo); }
+  .teclado { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .teclado.pecas { grid-template-columns: repeat(var(--n, 4), 1fr); }
+  .tecla { min-height: clamp(54px, 7.6vh, 68px); border-radius: 16px; border: 0; background: #e0e7ff; font-size: 30px; font-weight: 800; box-shadow: 0 4px 0 #a5b4fc; }
+  .tecla:active, .opcao:active, .botao-grande:active { transform: translateY(3px); }
+  .tecla.ok { background: var(--verde); color: #fff; box-shadow: 0 4px 0 #14532d; }
+  .tecla.apagar { background: #fee2e2; box-shadow: 0 4px 0 #fca5a5; font-size: 24px; }
+  .tecla.peca { font-family: Georgia, "Times New Roman", serif; color: var(--roxo); font-size: 36px; background: #ede9fe; box-shadow: 0 4px 0 #c4b5fd; }
+  .linha-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .opcoes { display: grid; gap: 10px; }
+  .opcoes.grade { grid-template-columns: 1fr 1fr; }
+  .opcao { min-height: 64px; padding: 8px 14px; border-radius: 18px; border: 3px solid var(--borda); background: #f8faff; font-size: 26px; font-weight: 700; text-align: center; box-shadow: 0 4px 0 #c7d2fe; }
+  .opcao.grande { font-size: 34px; font-weight: 800; }
+  .opcao.rom { font-size: 32px; font-family: Georgia, "Times New Roman", serif; color: var(--roxo); }
+  .opcao:not(.frase) { white-space: nowrap; }
+  .opcao.frase { font-size: 21px; font-weight: 600; text-align: left; }
+  .opcao.certa { background: var(--verde-claro); border-color: var(--verde); }
+  .opcao.errada { background: var(--laranja-claro); border-color: var(--laranja); }
+  .opcao:disabled { cursor: default; }
+  .ligar { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ligar .col { display: grid; gap: 8px; }
+  .ligar .opcao { font-size: 22px; }
+  .ligar .opcao.sel { border-color: var(--azul); background: #dbeafe; box-shadow: 0 0 0 4px #93c5fd; }
+  .ligar .opcao.feito { background: var(--verde-claro); border-color: var(--verde); opacity: .75; }
+  .dica-ligar { font-size: 17px; color: var(--suave); margin-bottom: 6px; }
+  .aviso { color: var(--laranja); font-weight: 700; text-align: center; min-height: 24px; font-size: 18px; }
+
+  /* ---------- conta armada ---------- */
+  .etapas { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .etapa { padding: 3px 12px; border-radius: 999px; background: #f1f5f9; color: var(--suave); font-size: 16px; font-weight: 700; border: 2px solid #e2e8f0; }
+  .etapa.agora { background: var(--tema); color: #fff; border-color: var(--tema); }
+  .etapa.ok { background: var(--verde-claro); color: var(--verde); border-color: var(--verde); }
+  .conta { --cel: clamp(40px, 11.5vw, 54px); display: grid; justify-content: center; gap: 4px 5px; margin: 2px auto; font-variant-numeric: tabular-nums; }
+  .conta .c { width: var(--cel); height: var(--cel); display: flex; align-items: center; justify-content: center; font-size: calc(var(--cel) * .74); font-weight: 800; position: relative; }
+  .conta .c.res { cursor: pointer; border: 3px solid #94a3b8; border-radius: 12px; background: #fff; }
+  .conta .c.res.ativo { border-color: var(--azul); box-shadow: 0 0 0 4px #93c5fd; }
+  .conta .c.res.certo { border-color: var(--verde); }
+  .conta .c.vai { height: calc(var(--cel) * .7); font-size: calc(var(--cel) * .44); color: var(--laranja); }
+  .conta .c.vai.caixa { cursor: pointer; border: 2px dashed #fdba74; border-radius: 10px; width: calc(var(--cel) * .8); margin: 0 auto; }
+  .conta .c.vai.caixa.ativo { border-style: solid; border-color: var(--laranja); box-shadow: 0 0 0 3px #fed7aa; }
+  .conta .c.riscado { color: #9ca3af; text-decoration: line-through; text-decoration-color: var(--laranja); }
+  .conta .traco { grid-column: 1 / -1; height: 5px; background: var(--texto); border-radius: 3px; margin: 2px 0; }
+  .ajuda-conta { font-size: 16px; color: var(--suave); text-align: center; }
+
+  /* ---------- relógio e explicações ---------- */
+  .relogio-wrap { display: grid; justify-items: center; gap: 6px; }
+  .relogio { width: min(62vw, 240px); height: auto; }
+  .legenda-relogio { display: grid; gap: 4px; font-size: 18px; }
+  .lh { color: #dc2626; font-weight: 800; } .lm { color: #2563eb; font-weight: 800; }
+  .pulsar { animation: pulsar 1.2s ease-in-out infinite; }
+  @keyframes pulsar { 50% { opacity: .45; } }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; margin: 6px 0; }
+  .chip { position: relative; padding: 6px 10px; border-radius: 12px; background: #f1f5f9; border: 2px solid #cbd5e1; font-weight: 700; font-size: 18px; }
+  .chip.inicio { background: #dbeafe; border-color: var(--azul); } .chip.conta { background: #fef9c3; border-color: #ca8a04; }
+  .chip.destino { background: var(--verde-claro); border-color: var(--verde); } .chip.marca { background: #ede9fe; border-color: var(--roxo); }
+  .chip .num { position: absolute; top: -12px; right: -8px; background: #ca8a04; color: #fff; border-radius: 999px; font-size: 13px; min-width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+  .seta { color: var(--suave); font-weight: 700; font-size: 16px; }
+  .tabela-uni { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 18px; max-width: 460px; margin: 6px auto; }
+  .tabela-uni div { padding: 6px 10px; border-radius: 10px; background: #f8fafc; }
+  .tabela-uni .hl { background: #fef9c3; font-weight: 800; }
+  .decomp { font-family: Georgia, "Times New Roman", serif; font-size: clamp(22px, 6vw, 30px); text-align: center; font-weight: 700; color: var(--roxo); margin: 6px 0; }
+  .dica { background: #fef9c3; border-radius: 14px; padding: 10px 14px; font-size: 20px; }
+  .matriz { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 6px 0; font-size: 17px; color: var(--suave); }
+  .matriz svg { max-width: 100%; height: auto; }
+
+  /* ---------- camadas ---------- */
+  #camada { position: fixed; inset: 0; display: none; z-index: 20; background: rgba(15, 23, 42, .45); align-items: flex-end; justify-content: center; }
+  #camada.aberta { display: flex; }
+  .folha { background: #fff; width: 100%; max-width: 760px; max-height: 92dvh; overflow-y: auto; border-radius: 24px 24px 0 0; padding: 16px 16px calc(18px + env(safe-area-inset-bottom)); border-top: 6px solid #f59e0b; animation: sobe .25s ease-out; }
+  @keyframes sobe { from { transform: translateY(40px); opacity: 0; } }
+  .folha h2 { font-size: 24px; margin-bottom: 4px; }
+  .resposta-certa { font-size: 24px; margin: 2px 0 8px; } .resposta-certa b { color: var(--verde); }
+  .explica { font-size: 19px; display: grid; gap: 6px; }
+  .rodape-folha { font-size: 17px; color: var(--suave); margin-top: 8px; }
+  .botao-grande { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 62px; margin-top: 12px; border: 0; border-radius: 18px; background: var(--azul); color: #fff; font-size: 23px; font-weight: 800; box-shadow: 0 5px 0 #1e3a8a; text-decoration: none; text-align: center; padding: 6px 12px; }
+  .botao-grande.verde { background: var(--verde); box-shadow: 0 5px 0 #14532d; }
+  .botao-grande.claro { background: #e0e7ff; color: var(--texto); box-shadow: 0 5px 0 #a5b4fc; }
+  #festa { position: fixed; inset: 0; display: none; z-index: 30; align-items: center; justify-content: center; pointer-events: none; }
+  #festa.aberta { display: flex; }
+  .festa-caixa { background: #fff; border-radius: 26px; padding: 16px 30px; text-align: center; border: 5px solid #facc15; box-shadow: 0 16px 50px rgba(0,0,0,.25); animation: pop .4s cubic-bezier(.2, 1.6, .5, 1); }
+  .festa-caixa .grande { font-size: 58px; } .festa-caixa .txt { font-size: 28px; font-weight: 800; color: var(--verde); }
+  @keyframes pop { from { transform: scale(.3); opacity: 0; } }
+  .brilho { position: fixed; font-size: 26px; animation: voa .9s ease-out forwards; pointer-events: none; z-index: 31; }
+  @keyframes voa { to { transform: translate(var(--dx), var(--dy)) scale(.4); opacity: 0; } }
+  .tremer { animation: tremer .35s; }
+  @keyframes tremer { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  #aviso-flutuante { position: fixed; left: 50%; bottom: calc(var(--nav) + 16px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--noite); color: #fff; padding: 10px 18px; border-radius: 14px; font-size: 17px; z-index: 40; opacity: 0; transition: opacity .3s; pointer-events: none; text-align: center; max-width: 90vw; }
+  #aviso-flutuante.ver { opacity: 1; }
+
+  /* ---------- páginas ---------- */
+  .centro { text-align: center; display: grid; gap: 12px; justify-items: center; }
+  .titulo { font-size: clamp(26px, 6.5vw, 32px); font-weight: 800; }
+  .sub { font-size: 19px; color: var(--suave); }
+  .pilha { display: grid; gap: 10px; width: 100%; max-width: 540px; }
+  .mascote { font-size: 76px; animation: flutua 2.4s ease-in-out infinite; line-height: 1.1; }
+  @keyframes flutua { 50% { transform: translateY(-8px); } }
+  .perfil { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+  .perfil .insignia { font-size: 56px; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, #312e81, #1e1b4b); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 4px #facc15; }
+  .perfil .nome-pat { font-size: 24px; font-weight: 800; }
+  .barra { height: 18px; border-radius: 999px; background: #e5e7eb; overflow: hidden; margin: 4px 0; }
+  .barra i { display: block; height: 100%; background: linear-gradient(90deg, #f59e0b, #facc15); border-radius: 999px; }
+  .placar { display: flex; flex-wrap: wrap; gap: 8px; }
+  .placar span { background: #f5f7ff; border: 2px solid var(--borda); border-radius: 999px; padding: 4px 12px; font-weight: 700; font-size: 17px; }
+  .missoes { display: grid; gap: 10px; }
+  @media (min-width: 760px) { .missoes { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } }
+  .missao { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; text-align: left; border-radius: 20px; border: 3px solid var(--borda); background: #fff; padding: 12px 14px; min-height: 92px; box-shadow: 0 4px 0 #c7d2fe; }
+  .missao .planeta { font-size: 48px; grid-row: span 2; }
+  .missao .nome { font-size: 21px; font-weight: 800; }
+  .missao .estado { font-size: 17px; color: var(--suave); font-weight: 700; }
+  .missao.feita { background: var(--verde-claro); border-color: #86efac; box-shadow: 0 4px 0 #86efac; }
+  .missao.feita .estado { color: var(--verde); }
+  .missao.proxima { border-color: var(--azul); box-shadow: 0 4px 0 #1d4ed8; }
+  .missao.proxima .estado { color: var(--azul); }
+  .degraus { display: grid; gap: 8px; }
+  .degrau { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 16px; background: #f8fafc; border: 2px solid #e5e7eb; }
+  .degrau .ic { font-size: 34px; text-align: center; }
+  .degrau.ok { background: #fefce8; border-color: #fde047; }
+  .degrau.atual { background: #eef2ff; border-color: var(--azul); box-shadow: 0 0 0 3px #c7d2fe; }
+  .degrau.trancado { opacity: .55; filter: grayscale(.6); }
+  .degrau b { font-size: 19px; } .degrau small { color: var(--suave); font-size: 15px; display: block; }
+  .grafico { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 140px; margin-top: 6px; }
+  .grafico div { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; font-size: 13px; color: var(--suave); gap: 3px; }
+  .grafico i { display: block; width: 100%; max-width: 40px; background: linear-gradient(180deg, #a855f7, #6366f1); border-radius: 8px 8px 3px 3px; min-height: 3px; }
+  .album-linha { display: grid; gap: 6px; padding: 10px 0; border-bottom: 2px dashed #e5e7eb; }
+  .album-linha:last-child { border-bottom: 0; }
+  .album-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 800; font-size: 19px; }
+  .album-cab small { font-weight: 700; color: var(--suave); font-size: 15px; }
+  .figurinhas { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
+  @media (max-width: 560px) { .figurinhas { grid-template-columns: repeat(5, 1fr); gap: 6px; } .fig { aspect-ratio: 1.25 / 1; font-size: 16px; } }
+  .fig { aspect-ratio: 1 / 1.15; border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: clamp(10px, 2.7vw, 15px); font-weight: 800; background: var(--c0); color: #6b7280; line-height: 1.1; }
+  .fig small { font-size: .85em; }
+  .fig.b1 { background: var(--c1); color: #78350f; } .fig.b2 { background: var(--c2); color: #78350f; }
+  .fig.b3 { background: var(--c3); color: #14532d; } .fig.b4 { background: var(--c4); color: #14532d; }
+  .fig.b5 { background: var(--c5); color: #713f12; box-shadow: 0 0 8px #f59e0b; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 15px; color: var(--suave); }
+  .legenda i { display: inline-block; width: 15px; height: 15px; border-radius: 4px; vertical-align: -2px; margin-right: 4px; }
+  .ganhos { display: grid; gap: 4px; width: 100%; max-width: 420px; font-size: 19px; text-align: left; }
+  .ganhos div { display: flex; justify-content: space-between; padding: 6px 12px; border-radius: 12px; background: #f8fafc; }
+  .ganhos .total { background: #fef9c3; font-weight: 800; }
+  .subiu { background: var(--verde-claro); border: 2px solid #86efac; border-radius: 14px; padding: 6px 12px; font-size: 20px; font-weight: 800; }
+  .regras { display: grid; gap: 10px; }
+  .simbolos { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .simbolo { background: #ede9fe; border: 3px solid #c4b5fd; border-radius: 16px; padding: 6px 14px; text-align: center; min-width: 80px; }
+  .simbolo .s { font-family: Georgia, "Times New Roman", serif; font-size: 40px; font-weight: 800; color: var(--roxo); line-height: 1.1; }
+  .simbolo .v { font-size: 22px; font-weight: 800; }
+  .regra { border-radius: 16px; padding: 10px 14px; background: #f8fafc; border-left: 8px solid var(--roxo); font-size: 20px; }
+  .regra .ex { font-family: Georgia, "Times New Roman", serif; font-size: 23px; font-weight: 700; margin-top: 4px; }
+  .ok-ex { color: var(--verde); } .no-ex { color: #b91c1c; text-decoration: line-through; }
+
+  /* ---------- painel do papai ---------- */
+  .painel h3 { font-size: 21px; margin: 18px 0 8px; }
+  .painel p, .painel td, .painel th, .painel label, .painel li { font-size: 16px; }
+  .painel table { width: 100%; border-collapse: collapse; }
+  .painel th, .painel td { border-bottom: 1px solid #e5e7eb; padding: 6px; text-align: left; vertical-align: top; }
+  .painel th { background: #eef2ff; }
+  .tabela-rolar { overflow-x: auto; }
+  .tema-linha { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+  .tema-linha b { font-size: 17px; } .tema-linha small { display: block; color: var(--suave); font-size: 14px; }
+  .seg { display: inline-flex; border: 2px solid var(--borda); border-radius: 12px; overflow: hidden; }
+  .seg button { min-height: 40px; padding: 4px 10px; border: 0; background: #fff; font-size: 14px; font-weight: 700; }
+  .seg button[aria-pressed="true"] { background: var(--azul); color: #fff; }
+  .seg button.desl[aria-pressed="true"] { background: #6b7280; }
+  .mapa { display: grid; grid-template-columns: 26px repeat(9, 1fr); gap: 2px; max-width: 520px; }
+  .mapa div { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: clamp(9px, 2.4vw, 13px); font-weight: 700; border-radius: 4px; }
+  .mapa .cab { background: transparent; color: var(--suave); font-weight: 800; }
+  .abas-mapa { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .abas-mapa button { min-height: 40px; padding: 4px 10px; border-radius: 10px; border: 2px solid var(--borda); background: #fff; font-size: 14px; }
+  .abas-mapa button[aria-pressed="true"] { background: var(--azul); color: #fff; }
+  .ajuste { display: grid; gap: 2px; margin: 8px 0; }
+  .ajuste input[type=range] { width: 100%; max-width: 380px; height: 32px; }
+  .acoes-pais { display: flex; flex-wrap: wrap; gap: 8px; }
+  .acoes-pais button, .acoes-pais label.botao { min-height: 46px; padding: 6px 12px; border-radius: 12px; border: 2px solid var(--borda); background: #f5f7ff; font-size: 16px; font-weight: 700; display: inline-flex; align-items: center; cursor: pointer; }
+  .acoes-pais .perigo { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
+  .item-revisar { padding: 8px 10px; border-radius: 10px; background: #fff7ed; border: 2px solid #fed7aa; margin-bottom: 6px; font-size: 16px; }
+  .item-revisar .t { font-weight: 800; color: var(--laranja); font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <button class="topo-btn" id="b-sair" hidden aria-label="Sair da missão">✕ Sair</button>
+  <div id="logo" title="Papai: segure aqui 3 segundos"><span class="icone">🚀</span><span>Matemática<span class="longo"> do Benjamin</span></span></div>
+  <button class="topo-btn" id="chave-voz" aria-pressed="false" aria-label="Ler as perguntas em voz alta sozinho">🔊</button>
+</header>
+<div id="trilha" hidden>
+  <div class="pista" aria-hidden="true">
+    <div class="feito" id="trilha-feito" style="width:0%"></div><div class="estrelinhas"></div>
+    <div class="lua">🌕</div><div class="foguete" id="trilha-foguete" style="left:7%">🚀</div>
+  </div>
+  <div class="contador" id="trilha-texto"></div>
+</div>
+<main id="palco"></main>
+<nav id="abas" aria-label="Páginas">
+  <button data-rota="missoes">🏠<span>Missões</span></button>
+  <button data-rota="patente">🏅<span>Patente</span></button>
+  <button data-rota="album">📒<span>Álbum</span></button>
+</nav>
+<div id="camada" role="dialog" aria-modal="true"><div class="folha" id="folha"></div></div>
+<div id="festa" aria-live="polite"><div class="festa-caixa" id="festa-caixa"></div></div>
+<div id="aviso-flutuante" role="status"></div>
+
+<!-- ===================== LÓGICA DA REVISÃO (cópia exata de revisao-prova.html — os testes conferem) ===================== -->
+<script id="logica">
+const ROMAN_MAX = 50;
+
+const Logica = (function () {
+  'use strict';
+
+  // ---------- aleatório (com semente opcional, para os testes) ----------
+  function criarRng(semente) {
+    let a = (semente >>> 0) || 1;
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const inteiro = (rng, min, max) => min + Math.floor(rng() * (max - min + 1));
+  const escolher = (rng, lista) => lista[Math.floor(rng() * lista.length)];
+  function embaralhar(rng, lista) {
+    const c = lista.slice();
+    for (let i = c.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [c[i], c[j]] = [c[j], c[i]]; }
+    return c;
+  }
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  // ---------- numerais romanos ----------
+  const TABELA_ROMANA = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+  const VALOR = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+
+  function paraRomano(n) {
+    if (!Number.isInteger(n) || n < 1 || n > 3999) throw new RangeError('fora do intervalo: ' + n);
+    let s = '';
+    for (const [v, sim] of TABELA_ROMANA) while (n >= v) { s += sim; n -= v; }
+    return s;
+  }
+  // valor "solto" (soma/subtrai sem checar regras); null se tiver letra estranha
+  function valorSolto(s) {
+    if (typeof s !== 'string' || !s) return null;
+    s = s.toUpperCase();
+    let total = 0;
+    for (let i = 0; i < s.length; i++) {
+      const v = VALOR[s[i]];
+      if (!v) return null;
+      const prox = VALOR[s[i + 1]] || 0;
+      total += v < prox ? -v : v;
+    }
+    return total;
+  }
+  // válido = é exatamente a forma canônica do seu valor (pega IIII, VV, IL, XXXX, VIX...)
+  function romanoValido(s) {
+    const v = valorSolto(s);
+    return v !== null && v >= 1 && v <= 3999 && paraRomano(v) === s.toUpperCase();
+  }
+  function deRomano(s) { return romanoValido(s) ? valorSolto(s) : null; }
+
+  const SIMBOLOS = ['I', 'V', 'X', 'L', 'C', 'D', 'M'].filter(c => VALOR[c] <= Math.max(ROMAN_MAX, 1) ||
+    Array.from({ length: ROMAN_MAX }, (_, i) => paraRomano(i + 1)).some(r => r.includes(c)));
+  const COM_SUBTRACAO = [];
+  for (let n = 1; n <= ROMAN_MAX; n++) if (/IV|IX|XL|XC|CD|CM/.test(paraRomano(n))) COM_SUBTRACAO.push(n);
+
+  // peso extra nos números com subtração (4, 9, 14, 19, 24, 29, 40–49...)
+  function sortearRomano(rng, min = 1, max = ROMAN_MAX) {
+    const pool = COM_SUBTRACAO.filter(n => n >= min && n <= max);
+    if (pool.length && rng() < 0.6) return escolher(rng, pool);
+    return inteiro(rng, min, max);
+  }
+
+  function decomporRomano(n) {
+    const partes = [];
+    let r = n;
+    for (const [v, s] of TABELA_ROMANA) while (r >= v) { partes.push({ simbolo: s, valor: v, subtrai: s.length === 2 }); r -= v; }
+    return partes;
+  }
+  function textoDecomposicao(n) {
+    const p = decomporRomano(n), rom = paraRomano(n);
+    if (p.length === 1) return `${rom} = ${n}`;
+    return `${rom} = ${p.map(x => x.simbolo).join(' + ')} = ${p.map(x => x.valor).join(' + ')} = ${n}`;
+  }
+  function linhasSubtracao(n) {
+    return decomporRomano(n).filter(p => p.subtrai).map(p =>
+      `${p.simbolo}: o ${p.simbolo[0]} vem ANTES do ${p.simbolo[1]}, então tira → ${VALOR[p.simbolo[1]]} − ${VALOR[p.simbolo[0]]} = ${p.valor}`);
+  }
+  function formaAditiva(n) { // sem subtração: 4 → IIII, 9 → VIIII, 40 → XXXX
+    let s = '', r = n;
+    for (const [v, sim] of [[1000, 'M'], [500, 'D'], [100, 'C'], [50, 'L'], [10, 'X'], [5, 'V'], [1, 'I']]) while (r >= v) { s += sim; r -= v; }
+    return s;
+  }
+  function romanoTrocado(n) { // troca o 1º par de subtração: XIV → XVI
+    const c = paraRomano(n);
+    const t = c.replace(/IV|IX|XL|XC|CD|CM/, m => m[1] + m[0]);
+    return t === c ? null : t;
+  }
+  function distratoresRomanos(n) {
+    const certo = paraRomano(n), cands = [];
+    const add = s => { if (s && s !== certo && !cands.includes(s) && deRomano(s) !== n) cands.push(s); };
+    add(formaAditiva(n));
+    if (n === 49) add('IL');
+    if (n === 45) add('VL');
+    if (n === 99) add('IC');
+    if (n === 95) add('VC');
+    if (n % 10 === 8) add(certo.replace(/VIII$/, 'IIX'));
+    if (n % 10 === 0 && certo.endsWith('X')) add(certo.slice(0, -1) + 'VV');
+    if (n % 10 === 5) add(certo.slice(0, -1) + 'IIIII');
+    add(romanoTrocado(n));
+    const inv = certo.split('').reverse().join('');
+    if (!romanoValido(inv)) add(inv);
+    for (const k of [n + 1, n - 1, n + 10, n - 10, n + 5, n + 2]) if (k >= 1 && k <= 3999) add(paraRomano(k));
+    return cands.slice(0, 3);
+  }
+  // por que a escolha errada está errada (para a explicação)
+  function porqueRomanoErrado(s, n) {
+    const up = s.toUpperCase();
+    if (/(I{4}|X{4}|C{4}|M{4})/.test(up)) return `${s} está errado: um símbolo pode repetir no máximo 3 vezes seguidas.`;
+    if (/(VV|LL|DD)/.test(up)) return `${s} está errado: V, L e D nunca se repetem (VV seria X).`;
+    if (/I[LCDM]|V[XLCDM]|X[DM]|L[CDM]/.test(up)) return `${s} está errado: só o I pode vir antes do V e do X, e só o X antes do L e do C.`;
+    const v = deRomano(up);
+    if (v !== null) return `${s} vale ${v}, não ${n}.`;
+    return `${s} não é um jeito certo de escrever número romano.`;
+  }
+
+  // ---------- horas ----------
+  const pad2 = n => String(n).padStart(2, '0');
+  function formatarHora(h, m) { return m === 0 ? `${h}h` : `${h}h${pad2(m)}`; }
+  function somarMinutos(h, m, minutos) {
+    const total = ((h * 60 + m + minutos) % 1440 + 1440) % 1440;
+    return { h: Math.floor(total / 60), m: total % 60 };
+  }
+  function para24h(h12) { return h12 === 12 ? 12 : h12 + 12; } // horas da tarde/noite
+  function para12h(h24) { const h = h24 % 12; return h === 0 ? 12 : h; }
+  function periodoDoDia(h24) { return h24 < 12 ? 'manhã' : h24 < 19 ? 'tarde' : 'noite'; }
+  // linha do tempo pulando de 10 em 10 (o resto num pulo menor)
+  function linhaDoTempo(h, m, minutos) {
+    const pontos = [{ h, m, pulo: 0 }];
+    let resta = minutos, atual = { h, m };
+    while (resta > 0) {
+      const pulo = Math.min(10, resta);
+      atual = somarMinutos(atual.h, atual.m, pulo);
+      pontos.push({ h: atual.h, m: atual.m, pulo });
+      resta -= pulo;
+    }
+    return pontos;
+  }
+  function textoDuracao(min) { return min === 60 ? '1 hora' : `${min} minutos`; }
+  function falaHora(h, m) { return m === 0 ? `${h} horas` : `${h} horas e ${m}`; }
+
+  // ---------- calendário ----------
+  const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+  const ARTIGO_DIA = ['o', 'a', 'a', 'a', 'a', 'a', 'o'];
+  const mod = (a, b) => ((a % b) + b) % b;
+  function avancarMeses(i, k) { return mod(i + k, 12); }
+  function avancarDias(i, k) { return mod(i + k, 7); }
+  function diaComArtigo(i) { return `${ARTIGO_DIA[i]} ${DIAS[i]}`; }
+  function deDia(i) { return (ARTIGO_DIA[i] === 'o' ? 'do ' : 'da ') + DIAS[i]; }
+  function noDia(i) { return (ARTIGO_DIA[i] === 'o' ? 'no ' : 'na ') + DIAS[i]; }
+
+  // ---------- multiplicação com reserva ----------
+  function passosMultiplicacao(a, m) {
+    const dig = String(a).split('').reverse().map(Number);
+    const passos = [];
+    let reserva = 0;
+    dig.forEach((d, i) => {
+      const produto = d * m, total = produto + reserva;
+      passos.push({ coluna: i, digito: d, produto, reserva, total, escreve: total % 10, vai: Math.floor(total / 10) });
+      reserva = Math.floor(total / 10);
+    });
+    const resultado = Number(String(reserva > 0 ? reserva : '') + passos.slice().reverse().map(p => p.escreve).join(''));
+    return { passos, reservaFinal: reserva, resultado };
+  }
+  function temReserva(a, m) { return String(a).split('').some(d => Number(d) * m >= 10); }
+  // erro típico: esquecer o "vai um" (só escreve o último algarismo de cada coluna)
+  function semReserva(a, m) { return Number(String(a).split('').map(d => (Number(d) * m) % 10).join('')); }
+  const NOMES_MULT = { 2: 'dobro', 3: 'triplo', 4: 'quádruplo (4 vezes)', 5: 'quíntuplo (5 vezes)' };
+  const NOMES_COLUNA = ['unidades', 'dezenas', 'centenas', 'unidades de milhar', 'dezenas de milhar'];
+
+  // ---------- unidades de tempo ----------
+  const UNIDADES = [
+    { nome: 'quinzena', art: 'uma', valor: 15, uni: 'dias' },
+    { nome: 'bimestre', art: 'um', valor: 2, uni: 'meses' },
+    { nome: 'trimestre', art: 'um', valor: 3, uni: 'meses' },
+    { nome: 'semestre', art: 'um', valor: 6, uni: 'meses' },
+    { nome: 'semana', art: 'uma', valor: 7, uni: 'dias' },
+    { nome: 'ano', art: 'um', valor: 12, uni: 'meses' },
+    { nome: 'dia', art: 'um', valor: 24, uni: 'horas' },
+    { nome: 'hora', art: 'uma', valor: 60, uni: 'minutos' },
+  ];
+
+  // ---------- texto → fala ----------
+  function paraFala(t) {
+    return t
+      .replace(/«([IVXLCDM]+)»/g, (_, r) => r.split('').join(' '))
+      .replace(/\b(\d{1,2})h(\d{2})\b/g, '$1 horas e $2')
+      .replace(/\b(\d{1,2})h\b/g, '$1 horas')
+      .replace(/_{2,}/g, 'quantas')
+      .replace(/×/g, ' vezes ')
+      .replace(/[«»]/g, '');
+  }
+
+  // ======================================================================
+  // GERADORES DE PERGUNTAS — cada um devolve um objeto só com dados (JSON)
+  // ======================================================================
+  const TEMAS = {
+    romanos: { nome: 'Números romanos', icone: '🏛️', cor: '#6d28d9' },
+    multiplicacao: { nome: 'Dobro e triplo', icone: '✖️', cor: '#be185d' },
+    relogio: { nome: 'Relógio', icone: '🕐', cor: '#1d4ed8' },
+    tempo: { nome: 'Quanto tempo passou', icone: '⏳', cor: '#0e7490' },
+    calendario: { nome: 'Calendário', icone: '📅', cor: '#15803d' },
+    unidades: { nome: 'Unidades de tempo', icone: '📏', cor: '#c2410c' },
+  };
+  const BASE = { romanos: 7, multiplicacao: 4, relogio: 5, tempo: 4, calendario: 6, unidades: 4 };
+
+  function q(base) {
+    const o = Object.assign({ visual: null, explicacao: { linhas: [], visual: null } }, base);
+    if (!o.fala) o.fala = paraFala(o.enunciado);
+    return o;
+  }
+
+  // ----- romanos -----
+  function romR2N(rng) {
+    const n = sortearRomano(rng), r = paraRomano(n);
+    return q({ tema: 'romanos', tipo: 'numero', sub: 'r2n', meta: { n },
+      enunciado: 'Quanto vale este número romano?', fala: `Quanto vale este número romano? ${r.split('').join(' ')}`,
+      visual: { kind: 'romano', texto: r }, correta: String(n), respostaTexto: `${r} = ${n}`,
+      explicacao: { linhas: [textoDecomposicao(n), ...linhasSubtracao(n)], visual: null } });
+  }
+  function romN2R(rng) {
+    const n = sortearRomano(rng), r = paraRomano(n);
+    return q({ tema: 'romanos', tipo: 'romano', sub: 'n2r', meta: { n },
+      enunciado: `Monte o número ${n} em romanos:`, correta: r, respostaTexto: `${n} = ${r}`,
+      explicacao: { linhas: [textoDecomposicao(n), ...linhasSubtracao(n)], visual: null } });
+  }
+  function romCerto(rng) {
+    const n = sortearRomano(rng, 4), r = paraRomano(n);
+    const opcoes = embaralhar(rng, [r, ...distratoresRomanos(n)]);
+    return q({ tema: 'romanos', tipo: 'escolha', sub: 'certo', meta: { n }, opcoesRomanas: true,
+      enunciado: `Qual destes é o jeito CERTO de escrever ${n} em romanos?`, opcoes, correta: r, respostaTexto: `${n} = ${r}`,
+      explicacao: { linhas: [textoDecomposicao(n), ...linhasSubtracao(n)], visual: null } });
+  }
+  function romComparar(rng) {
+    const n = sortearRomano(rng, 4);
+    let k;
+    const t = romanoTrocado(n), vt = t ? deRomano(t) : null;
+    if (vt && vt <= ROMAN_MAX && rng() < 0.6) k = vt;
+    else do { k = sortearRomano(rng); } while (k === n);
+    const a = paraRomano(n), b = paraRomano(k), maior = n > k ? a : b;
+    return q({ tema: 'romanos', tipo: 'escolha', sub: 'comparar', meta: { n, k }, opcoesRomanas: true,
+      enunciado: 'Qual número romano é o MAIOR?', fala: `Qual número romano é o maior? ${a.split('').join(' ')} ou ${b.split('').join(' ')}?`,
+      opcoes: embaralhar(rng, [a, b]), correta: maior, respostaTexto: `${maior} (${a} = ${n}, ${b} = ${k})`,
+      explicacao: { linhas: [textoDecomposicao(n), textoDecomposicao(k), `Então ${maior} = ${Math.max(n, k)} é o maior.`], visual: null } });
+  }
+  const SECULOS = [
+    [21, 'Nós vivemos no século «XXI».'],
+    [20, 'Os avós do Benjamin nasceram no século «XX».'],
+    [19, 'A Independência do Brasil aconteceu no século «XIX».'],
+    [16, 'A cidade do Rio de Janeiro foi fundada no século «XVI».'],
+    [15, 'Os portugueses chegaram ao Brasil no século «XV».'],
+  ];
+  function romContexto(rng) {
+    const tipo = escolher(rng, ['capitulo', 'seculo', 'relogio']);
+    if (tipo === 'seculo') {
+      const op = SECULOS.filter(s => s[0] <= ROMAN_MAX);
+      if (op.length) {
+        const [n, frase] = escolher(rng, op);
+        return q({ tema: 'romanos', tipo: 'numero', sub: 'seculo', meta: { n, r: paraRomano(n) },
+          enunciado: `${frase} Que número é «${paraRomano(n)}»?`, correta: String(n), respostaTexto: `${paraRomano(n)} = ${n}`,
+          explicacao: { linhas: [textoDecomposicao(n), ...linhasSubtracao(n)], visual: null } });
+      }
+    }
+    if (tipo === 'relogio' && ROMAN_MAX >= 12) {
+      const h = inteiro(rng, 1, 12);
+      return q({ tema: 'romanos', tipo: 'numero', sub: 'relogio-romano', meta: { n: h, r: paraRomano(h) }, sufixo: 'horas',
+        enunciado: 'Este relógio usa números romanos. Que horas ele está marcando?',
+        visual: { kind: 'relogio', h, m: 0, romano: true }, correta: String(h), respostaTexto: `${h} horas (ponteiro pequeno no ${paraRomano(h)})`,
+        explicacao: { linhas: [`O ponteiro pequeno (das horas) aponta para o ${paraRomano(h)}.`, textoDecomposicao(h), ...linhasSubtracao(h), 'O ponteiro grande está no XII: hora certinha.'], visual: { kind: 'relogio', h, m: 0, romano: true, destacar: true } } });
+    }
+    const n = sortearRomano(rng, 5), r = paraRomano(n);
+    const quem = escolher(rng, ['Joana', 'Benjamin', 'Lia', 'Pedro']);
+    return q({ tema: 'romanos', tipo: 'numero', sub: 'capitulo', meta: { n, r },
+      enunciado: `${quem} está lendo o capítulo «${r}» de um livro. Qual é o número desse capítulo?`, correta: String(n), respostaTexto: `${r} = ${n}`,
+      explicacao: { linhas: [textoDecomposicao(n), ...linhasSubtracao(n)], visual: null } });
+  }
+
+  // ----- dobro e triplo -----
+  function sortearMultiplicando(rng, m) {
+    const querReserva = rng() < 0.85;
+    for (let t = 0; t < 200; t++) {
+      const dig = inteiro(rng, 3, 4);
+      const primeiro = inteiro(rng, 1, m >= 4 ? 2 : 4);
+      let s = String(primeiro);
+      for (let i = 1; i < dig; i++) s += inteiro(rng, 0, 9);
+      const a = Number(s);
+      if (temReserva(a, m) === querReserva) return a;
+    }
+    return 2345;
+  }
+  const CONTEXTOS_MULT = [
+    { e: (a, p) => `Na fazenda, a tia de Joana colheu ${a} frutas. A prima de Joana colheu o ${p} dessa quantidade. Quantas frutas a prima de Joana colheu?`, r: n => `A prima de Joana colheu ${n} frutas.` },
+    { e: (a, p) => `Uma loja de brinquedos tem ${a} carrinhos no estoque. A loja nova tem o ${p} de carrinhos. Quantos carrinhos tem a loja nova?`, r: n => `A loja nova tem ${n} carrinhos.` },
+    { e: (a, p) => `Lucas juntou ${a} figurinhas. O primo dele juntou o ${p}. Quantas figurinhas o primo de Lucas juntou?`, r: n => `O primo de Lucas juntou ${n} figurinhas.` },
+    { e: (a, p) => `Uma fábrica fez ${a} bonecas na segunda-feira. Na terça-feira, fez o ${p}. Quantas bonecas a fábrica fez na terça-feira?`, r: n => `Na terça-feira, a fábrica fez ${n} bonecas.` },
+    { e: (a, p) => `Um mercado vendeu ${a} laranjas em março. Em abril, vendeu o ${p}. Quantas laranjas o mercado vendeu em abril?`, r: n => `Em abril, o mercado vendeu ${n} laranjas.` },
+    { e: (a, p) => `O estoque da loja tem ${a} bolas. O depósito tem o ${p} de bolas. Quantas bolas há no depósito?`, r: n => `No depósito há ${n} bolas.` },
+  ];
+  function multProblema(rng) {
+    const sorteio = rng();
+    const m = sorteio < 0.45 ? 2 : sorteio < 0.85 ? 3 : sorteio < 0.93 ? 4 : 5;
+    const a = sortearMultiplicando(rng, m);
+    const conta = passosMultiplicacao(a, m), r = conta.resultado;
+    const ctx = escolher(rng, CONTEXTOS_MULT);
+    const outroM = m === 2 ? 3 : 2;
+    let errado = semReserva(a, m);
+    if (errado === r) errado = a + m;
+    const frases = [ctx.r(r), ctx.r(errado), ctx.r(a)];
+    return q({ tema: 'multiplicacao', tipo: 'mult', meta: { a, m }, enunciado: ctx.e(a, NOMES_MULT[m]),
+      sm: { opcoes: embaralhar(rng, [`${a} × ${m}`, `${a} + ${m}`, `${a} × ${outroM}`]), correta: `${a} × ${m}` },
+      conta: { a, m, resultado: r, passos: conta.passos, reservaFinal: conta.reservaFinal },
+      r: { opcoes: embaralhar(rng, frases), correta: ctx.r(r) },
+      correta: String(r), respostaTexto: `S.M.: ${a} × ${m} = ${r} · R: ${ctx.r(r)}` });
+  }
+  function linhasConta(c) {
+    const L = c.passos.map(p => {
+      const nome = NOMES_COLUNA[p.coluna] || 'coluna';
+      let s = `${cap(nome)}: ${p.digito} × ${c.m} = ${p.produto}`;
+      if (p.reserva) s += ` + ${p.reserva} (reserva) = ${p.total}`;
+      s += p.vai ? ` → escreve ${p.escreve} e vai ${p.vai}` : ` → escreve ${p.escreve}`;
+      return s;
+    });
+    if (c.reservaFinal) L.push(`No fim, sobrou ${c.reservaFinal} de reserva → escreve ${c.reservaFinal} na frente.`);
+    L.push(`Resultado: ${c.a} × ${c.m} = ${c.resultado}`);
+    return L;
+  }
+
+  // ----- relógio -----
+  function relLer(rng) {
+    const h = inteiro(rng, 1, 12), m = rng() < 0.5 ? 0 : 30;
+    const certo = formatarHora(h, m), prox = h % 12 + 1, ant = h === 1 ? 12 : h - 1;
+    const cands = m === 0
+      ? [h !== 12 ? `12h${pad2(h * 5)}` : null, formatarHora(prox, 0), formatarHora(ant, 0), formatarHora(h, 30)]
+      : [formatarHora(prox, 30), h !== 6 ? `6h${pad2(h * 5)}` : null, formatarHora(h, 0), formatarHora(ant, 30)];
+    const dis = cands.filter((c, i, arr) => c && c !== certo && arr.indexOf(c) === i).slice(0, 3);
+    return q({ tema: 'relogio', tipo: 'escolha', sub: 'ler', meta: { h, m },
+      enunciado: 'Que horas o relógio está marcando?', visual: { kind: 'relogio', h, m },
+      opcoes: embaralhar(rng, [certo, ...dis]), correta: certo, respostaTexto: certo, explicacao: explicaRelogio(h, m) });
+  }
+  function explicaRelogio(h, m) {
+    const prox = h % 12 + 1;
+    return { linhas: [
+      m === 0 ? `O ponteiro PEQUENO (vermelho) marca a HORA: está no ${h}.` : `O ponteiro PEQUENO (vermelho) marca a HORA: já passou do ${h} e está indo para o ${prox}. Então ainda são ${h} e pouco.`,
+      m === 0 ? 'O ponteiro GRANDE (azul) marca os MINUTOS: no 12 quer dizer hora certinha (0 minutos).' : 'O ponteiro GRANDE (azul) marca os MINUTOS: no 6 quer dizer 30 minutos (meia hora).',
+      `São ${formatarHora(h, m)}.`,
+    ], visual: { kind: 'relogio', h, m, destacar: true } };
+  }
+  function rel24(rng) {
+    const h = inteiro(rng, 1, 11), m = rng() < 0.25 ? 30 : 0, h24 = para24h(h), per = periodoDoDia(h24);
+    const inverso = rng() < 0.3;
+    const txtM = m ? 'h30' : ' horas', falaM = m ? ' horas e 30' : ' horas';
+    if (inverso) {
+      return q({ tema: 'relogio', tipo: 'numero', sub: '24h-inv', meta: { h, m, h24, inverso: true }, sufixo: m ? 'h30' : 'horas',
+        enunciado: `São ${h24}${txtM}. Isso é o mesmo que ___${txtM} da ${per}.`, fala: `São ${h24}${falaM}. Isso é o mesmo que quantas${falaM} da ${per}?`, visual: { kind: 'relogio', h, m },
+        correta: String(h), respostaTexto: `${h24}${txtM} = ${h}${txtM} da ${per}`,
+        explicacao: { linhas: [`Depois do meio-dia, para voltar ao relógio de ponteiros a gente tira 12: ${h24} − 12 = ${h}.`, `Então ${h24}${txtM} = ${h}${txtM} da ${per}.`], visual: null } });
+    }
+    return q({ tema: 'relogio', tipo: 'numero', sub: '24h', meta: { h, m, h24 }, sufixo: m ? 'h30' : 'horas',
+      enunciado: `O relógio mostra uma hora da ${per}: ${h}${txtM} ou ___${txtM}.`, fala: `O relógio mostra uma hora da ${per}: ${h}${falaM} ou quantas${falaM}?`, visual: { kind: 'relogio', h, m },
+      correta: String(h24), respostaTexto: `${h}${txtM} da ${per} = ${h24}${txtM}`,
+      explicacao: { linhas: [`Depois do meio-dia, a gente soma 12: ${h} + 12 = ${h24}.`, `Então ${h}${txtM} da ${per} = ${h24}${txtM}.`], visual: null } });
+  }
+  function relPonteiros(rng) {
+    const h = inteiro(rng, 1, 12), m = rng() < 0.6 ? 0 : 30, prox = h % 12 + 1, ant = h === 1 ? 12 : h - 1;
+    const certo = formatarHora(h, m);
+    let enunciado, cands;
+    if (m === 0) {
+      enunciado = `O ponteiro menor está no ${h} e o maior está no 12. Que horas são?`;
+      cands = [h !== 12 ? `12h${pad2(h * 5)}` : null, formatarHora(prox, 0), formatarHora(ant, 0), formatarHora(h, 30)];
+    } else {
+      enunciado = `O ponteiro menor está entre o ${h} e o ${prox}, e o maior está no 6. Que horas são?`;
+      cands = [formatarHora(prox, 30), h !== 6 ? `6h${pad2(h * 5)}` : null, formatarHora(h, 0), formatarHora(ant, 30)];
+    }
+    const dis = cands.filter((c, i, arr) => c && c !== certo && arr.indexOf(c) === i).slice(0, 3);
+    return q({ tema: 'relogio', tipo: 'escolha', sub: 'ponteiros', meta: { h, m }, enunciado,
+      opcoes: embaralhar(rng, [certo, ...dis]), correta: certo, respostaTexto: certo, explicacao: explicaRelogio(h, m) });
+  }
+
+  // ----- tempo decorrido -----
+  const CONTEXTOS_TEMPO = [
+    (ini, d) => `O bolo precisa de ${d} no forno e entrou às ${ini}. A que horas o forno desliga?`,
+    (ini, d) => `A aula de natação começa às ${ini} e dura ${d}. A que horas a aula termina?`,
+    (ini, d) => `Benjamin começou a jogar bola às ${ini} e jogou por ${d}. A que horas ele parou?`,
+    (ini, d) => `O desenho começou às ${ini} e durou ${d}. A que horas o desenho terminou?`,
+    (ini, d) => `O pão leva ${d} para assar. Ele entrou no forno às ${ini}. A que horas fica pronto?`,
+  ];
+  function tempoDecorrido(rng) {
+    const dur = escolher(rng, [15, 20, 30, 40, 45, 60]);
+    const virar = rng() < 0.55;
+    let h, m;
+    for (let t = 0; t < 100; t++) {
+      h = inteiro(rng, 7, 17);
+      m = escolher(rng, [0, 10, 15, 20, 30, 40, 45, 50]);
+      if ((m + dur >= 60) === virar) break;
+    }
+    const fim = somarMinutos(h, m, dur), certo = formatarHora(fim.h, fim.m), inicioMin = h * 60 + m;
+    const candMin = [fim.h * 60 + fim.m - 10, fim.h * 60 + fim.m + 10, (h + 1) * 60 + m, fim.h * 60 + fim.m + 20, fim.h * 60 + fim.m - 20, inicioMin + dur - 60];
+    const dis = [];
+    for (const c of candMin) {
+      if (c <= inicioMin) continue;
+      const t = formatarHora(Math.floor(c / 60), c % 60);
+      if (t !== certo && !dis.includes(t)) dis.push(t);
+      if (dis.length === 3) break;
+    }
+    const ini = formatarHora(h, m), d = textoDuracao(dur);
+    const pontos = linhaDoTempo(h, m, dur);
+    const pulos10 = Math.floor(dur / 10), resto = dur % 10;
+    const linhas = [`Comece em ${ini} e vá pulando de 10 em 10 minutos.`,
+      dur === 60 ? '1 hora = 60 minutos = 6 pulos de 10.' : resto ? `${dur} minutos = ${pulos10} pulo${pulos10 > 1 ? 's' : ''} de 10 + 1 pulo de ${resto}.` : `${dur} minutos = ${pulos10} pulos de 10.`];
+    if (m + dur >= 60) linhas.push('Quando os minutos chegam a 60, vira a próxima hora (60 minutos = 1 hora).');
+    linhas.push(`Termina às ${certo}.`);
+    return q({ tema: 'tempo', tipo: 'escolha', meta: { h, m, dur }, enunciado: escolher(rng, CONTEXTOS_TEMPO)(ini, d),
+      opcoes: embaralhar(rng, [certo, ...dis]), correta: certo, respostaTexto: `${ini} + ${d} = ${certo}`,
+      explicacao: { linhas, visual: { kind: 'linha', pontos: pontos.map(p => ({ t: formatarHora(p.h, p.m), pulo: p.pulo })) } } });
+  }
+
+  // ----- calendário -----
+  function opcoesCiclicas(rng, lista, certoIdx, deltas, n = 4) {
+    const idx = [certoIdx];
+    for (const d of deltas) { const i = mod(certoIdx + d, lista.length); if (!idx.includes(i)) idx.push(i); if (idx.length === n) break; }
+    return embaralhar(rng, idx.map(i => cap(lista[i])));
+  }
+  function calVizinho(rng) {
+    const ehMes = rng() < 0.5, depois = rng() < 0.6;
+    const lista = ehMes ? MESES : DIAS, n = lista.length;
+    const i = inteiro(rng, 0, n - 1), alvo = mod(i + (depois ? 1 : -1), n);
+    const nome = ehMes ? lista[i] : DIAS[i];
+    const enunciado = ehMes ? `Que mês vem ${depois ? 'DEPOIS' : 'ANTES'} de ${nome}?` : `Que dia da semana vem ${depois ? 'DEPOIS' : 'ANTES'} ${deDia(i)}?`;
+    return q({ tema: 'calendario', tipo: 'escolha', sub: ehMes ? 'mes-vizinho' : 'dia-vizinho', meta: { ehMes, i, depois },
+      enunciado, opcoes: opcoesCiclicas(rng, lista, alvo, [depois ? -2 : 2, depois ? 1 : -1, 3]), correta: cap(lista[alvo]), respostaTexto: cap(lista[alvo]),
+      explicacao: { linhas: [ehMes ? 'Os meses em ordem:' : 'Os dias da semana em ordem:'], visual: { kind: 'sequencia', itens: lista.map(cap), destaques: { [i]: 'inicio', [alvo]: 'destino' } } } });
+  }
+  const CONTEXTOS_MESES = [
+    (ini, k) => [`O ano escolar começou em ${ini}. As férias são daqui a ${k} meses. Em que mês são as férias?`],
+    (ini, k) => [`Estamos em ${ini}. O aniversário da vovó é daqui a ${k} meses. Em que mês é o aniversário?`],
+    (ini, k) => [`Benjamin plantou uma semente em ${ini}. Ela vai dar flor daqui a ${k} meses. Em que mês?`],
+    (ini, k) => [`A viagem da família é daqui a ${k} meses. Hoje é ${ini}. Em que mês é a viagem?`],
+  ];
+  function calContarMeses(rng) {
+    const k = inteiro(rng, 2, 7), virar = rng() < 0.45;
+    let i;
+    if (virar) i = inteiro(rng, 12 - k, 11); else i = inteiro(rng, 0, 11 - k);
+    const alvo = avancarMeses(i, k);
+    const ctx = (i === 1 && !virar && rng() < 0.5) ? CONTEXTOS_MESES[0] : escolher(rng, CONTEXTOS_MESES.slice(1));
+    const caminho = [{ texto: cap(MESES[i]), marca: 'inicio' }];
+    for (let s = 1; s <= k; s++) caminho.push({ texto: cap(MESES[avancarMeses(i, s)]), marca: s === k ? 'destino' : 'conta', num: s });
+    return q({ tema: 'calendario', tipo: 'escolha', sub: 'contar-meses', meta: { i, k },
+      enunciado: ctx(MESES[i], k)[0], opcoes: opcoesCiclicas(rng, MESES, alvo, [-1, 1, 2]), correta: cap(MESES[alvo]),
+      respostaTexto: `${cap(MESES[i])} + ${k} meses = ${cap(MESES[alvo])}`,
+      explicacao: { linhas: [`Comece em ${MESES[i]} e conte ${k} meses para a frente (não conte o mês de partida!).`, ...(i + k > 11 ? ['Depois de dezembro, o ano vira e volta para janeiro.'] : [])], visual: { kind: 'caminho', itens: caminho } } });
+  }
+  function calDiaSimDiaNao(rng) {
+    const d = inteiro(rng, 0, 6), quem = escolher(rng, ['Ana', 'Benjamin', 'O vovô', 'Lia']);
+    const atividade = escolher(rng, ['caminhou', 'nadou', 'andou de bicicleta', 'treinou futebol']);
+    const certo = avancarDias(d, 6);
+    const caminho = [];
+    for (let s = 0; s <= 6; s++) caminho.push({ texto: cap(DIAS[avancarDias(d, s)]), marca: s === 6 ? 'destino' : s % 2 === 0 ? 'marca' : '' });
+    return q({ tema: 'calendario', tipo: 'escolha', sub: 'dia-sim-nao', meta: { d },
+      enunciado: `${quem} ${atividade} ${noDia(d)}, ${noDia(avancarDias(d, 2))} e ${noDia(avancarDias(d, 4))}. É sempre dia sim, dia não. Qual é o próximo dia?`,
+      opcoes: opcoesCiclicas(rng, DIAS, certo, [-1, 1, 2]), correta: cap(DIAS[certo]), respostaTexto: cap(DIAS[certo]),
+      explicacao: { linhas: ['Dia sim, dia não = pula 1 dia de cada vez.', `Depois ${deDia(avancarDias(d, 4))} vem ${diaComArtigo(avancarDias(d, 5))} (não) e depois ${diaComArtigo(certo)} (sim!).`], visual: { kind: 'caminho', itens: caminho } } });
+  }
+  const VF_FIXAS = [
+    ['A semana tem 7 dias e o primeiro é domingo.', true, 'A semana tem 7 dias: domingo, segunda, terça, quarta, quinta, sexta e sábado.'],
+    ['Todos os meses têm 30 dias.', false, 'Os meses podem ter 28, 29, 30 ou 31 dias. Fevereiro é o menor.'],
+    ['O ano tem 12 meses.', true, 'De janeiro a dezembro são 12 meses.'],
+    ['O ano tem 10 meses.', false, 'O ano tem 12 meses, de janeiro a dezembro.'],
+    ['A semana tem 5 dias.', false, 'A semana tem 7 dias.'],
+    ['Fevereiro é o mês mais curto do ano.', true, 'Fevereiro tem só 28 dias (ou 29 em alguns anos).'],
+    ['Dezembro é o último mês do ano.', true, 'Dezembro é o 12º mês, o último.'],
+    ['Março é o segundo mês do ano.', false, 'O segundo mês é fevereiro. Março é o terceiro.'],
+    ['Sábado e domingo formam o fim de semana.', true, 'Sábado e domingo são o fim de semana.'],
+    ['Janeiro é o primeiro mês do ano.', true, 'O ano começa em janeiro.'],
+  ];
+  function calVF(rng) {
+    if (rng() < 0.5) {
+      const [frase, v, porque] = escolher(rng, VF_FIXAS);
+      return q({ tema: 'calendario', tipo: 'escolha', sub: 'vf', meta: { fixa: true, v }, enunciado: `Verdadeiro ou falso? ${frase}`,
+        opcoes: ['Verdadeiro', 'Falso'], correta: v ? 'Verdadeiro' : 'Falso', respostaTexto: `${frase} → ${v ? 'V' : 'F'}`,
+        explicacao: { linhas: [porque], visual: null } });
+    }
+    const ehMes = rng() < 0.5, lista = ehMes ? MESES : DIAS, n = lista.length;
+    const i = inteiro(rng, 0, n - 1), v = rng() < 0.5;
+    const outro = v ? mod(i + 1, n) : mod(i + (rng() < 0.6 ? -1 : 2), n);
+    const frase = ehMes ? `Depois de ${lista[i]} vem ${lista[outro]}.` : `Depois ${deDia(i)} vem ${diaComArtigo(outro)}.`;
+    const certoIdx = mod(i + 1, n);
+    return q({ tema: 'calendario', tipo: 'escolha', sub: 'vf', meta: { fixa: false, ehMes, i, outro, v }, enunciado: `Verdadeiro ou falso? ${frase}`,
+      opcoes: ['Verdadeiro', 'Falso'], correta: v ? 'Verdadeiro' : 'Falso', respostaTexto: `${frase} → ${v ? 'V' : 'F'}`,
+      explicacao: { linhas: [`Depois de ${lista[i]} vem ${lista[certoIdx]}.`], visual: { kind: 'sequencia', itens: lista.map(cap), destaques: { [i]: 'inicio', [certoIdx]: 'destino' } } } });
+  }
+
+  // ----- unidades de tempo -----
+  function uniDireta(rng) {
+    const u = escolher(rng, UNIDADES);
+    return q({ tema: 'unidades', tipo: 'numero', sub: 'direta', meta: { nome: u.nome }, sufixo: u.uni,
+      enunciado: `Quantos ${u.uni} tem ${u.art} ${u.nome}?`, correta: String(u.valor), respostaTexto: `${u.art} ${u.nome} = ${u.valor} ${u.uni}`,
+      explicacao: { linhas: [`${cap(u.art)} ${u.nome} tem ${u.valor} ${u.uni}.`], visual: { kind: 'unidades', destaque: u.nome } } });
+  }
+  function uniNome(rng) {
+    const u = escolher(rng, UNIDADES.slice(0, 4));
+    const outros = embaralhar(rng, UNIDADES.filter(x => x.nome !== u.nome).slice(0, 5)).slice(0, 3);
+    return q({ tema: 'unidades', tipo: 'escolha', sub: 'nome', meta: { nome: u.nome },
+      enunciado: `Um tempo de ${u.valor} ${u.uni} se chama:`, opcoes: embaralhar(rng, [u, ...outros].map(x => cap(x.nome))),
+      correta: cap(u.nome), respostaTexto: `${u.valor} ${u.uni} = ${u.nome}`,
+      explicacao: { linhas: [`${u.valor} ${u.uni} = ${u.art} ${u.nome}.`], visual: { kind: 'unidades', destaque: u.nome } } });
+  }
+  function uniLigar(rng) {
+    const us = embaralhar(rng, UNIDADES).slice(0, 4);
+    const pares = us.map(u => [cap(u.nome), `${u.valor} ${u.uni}`]);
+    return q({ tema: 'unidades', tipo: 'ligar', sub: 'ligar', meta: {},
+      enunciado: 'Ligue cada palavra ao tempo certo:', fala: 'Ligue cada palavra ao tempo certo. Toque numa palavra e depois no tempo.',
+      pares, direita: embaralhar(rng, pares.map(p => p[1])), correta: pares.map(p => p.join(' = ')).join('; '),
+      respostaTexto: pares.map(p => p.join(' = ')).join(' · '),
+      explicacao: { linhas: pares.map(p => `${p[0]} = ${p[1]}`), visual: { kind: 'unidades', destaque: null } } });
+  }
+
+  const GERADORES = {
+    romanos: [romR2N, romN2R, romCerto, romComparar, romContexto],
+    multiplicacao: [multProblema],
+    relogio: [relLer, rel24, relPonteiros],
+    tempo: [tempoDecorrido],
+    calendario: [calVizinho, calContarMeses, calDiaSimDiaNao, calVF],
+    unidades: [uniLigar, uniDireta, uniNome, uniDireta],
+  };
+  function gerarLista(tema, qtd, rng) {
+    const ger = GERADORES[tema], out = [], vistos = new Set();
+    let ciclo = [];
+    for (let k = 0; k < qtd; k++) {
+      if (!ciclo.length) ciclo = tema === 'unidades' ? [ger[0], ...embaralhar(rng, ger.slice(1))] : embaralhar(rng, ger);
+      const g = ciclo.shift();
+      let pergunta;
+      for (let t = 0; t < 30; t++) { pergunta = g(rng); if (!vistos.has(pergunta.enunciado + '|' + pergunta.correta)) break; }
+      vistos.add(pergunta.enunciado + '|' + pergunta.correta);
+      out.push(pergunta);
+    }
+    return out;
+  }
+
+  // distribuição das ~30 perguntas: temas com mais erros ganham mais perguntas
+  function distribuicao(base, erros, total) {
+    const temas = Object.keys(base);
+    const pesos = temas.map(t => base[t] * (1 + 2 * Math.min(1, (erros && erros[t]) || 0)));
+    const soma = pesos.reduce((a, b) => a + b, 0);
+    const brutos = pesos.map(p => p / soma * total);
+    const cont = brutos.map(Math.floor);
+    let falta = total - cont.reduce((a, b) => a + b, 0);
+    const ordem = brutos.map((b, i) => [b - Math.floor(b), i]).sort((x, y) => y[0] - x[0]);
+    for (let k = 0; falta > 0; k++, falta--) cont[ordem[k % ordem.length][1]]++;
+    for (let i = 0; i < cont.length; i++) {
+      while (cont[i] < 2) {
+        const j = cont.indexOf(Math.max(...cont));
+        if (cont[j] <= 2) break;
+        cont[j]--; cont[i]++;
+      }
+    }
+    const out = {};
+    temas.forEach((t, i) => { out[t] = cont[i]; });
+    return out;
+  }
+  // intercala os temas: nunca dois do mesmo tema seguidos (quando possível)
+  function intercalar(listas, rng) {
+    const rest = {};
+    for (const t in listas) rest[t] = listas[t].slice();
+    const out = [];
+    let ultimo = null;
+    const restantes = () => Object.keys(rest).filter(t => rest[t].length);
+    while (restantes().length) {
+      let cands = restantes().filter(t => t !== ultimo);
+      if (!cands.length) cands = restantes();
+      const max = Math.max(...cands.map(t => rest[t].length));
+      const totalRest = restantes().reduce((s, t) => s + rest[t].length, 0);
+      const critico = cands.find(t => rest[t].length * 2 > totalRest);
+      const perto = critico ? [critico] : cands.filter(t => rest[t].length >= max - 1);
+      const t = escolher(rng, perto);
+      out.push(rest[t].shift());
+      ultimo = t;
+    }
+    return out;
+  }
+
+  // ---------- a missão (fila até 100%) ----------
+  function criarMissao(rng, errosPorTema, total = 30) {
+    const cont = distribuicao(BASE, errosPorTema, total);
+    const listas = {};
+    for (const t in cont) listas[t] = gerarLista(t, cont[t], rng);
+    const perguntas = intercalar(listas, rng).map((p, i) => Object.assign(p, { id: i + 1, tentativas: 0, acertou: false }));
+    return { perguntas, fila: perguntas.map(p => p.id), regrasVistas: false, finalizada: false, criadaEm: Date.now() };
+  }
+  function perguntaAtual(missao) { return missao.perguntas.find(p => p.id === missao.fila[0]) || null; }
+  function registrar(missao, acertou) {
+    const id = missao.fila.shift();
+    const p = missao.perguntas.find(x => x.id === id);
+    p.tentativas++;
+    if (acertou) p.acertou = true; else missao.fila.push(id);
+    if (!missao.fila.length) missao.finalizada = true;
+    return missao;
+  }
+  function progresso(missao) {
+    const feitas = missao.perguntas.filter(p => p.acertou).length;
+    return { feitas, total: missao.perguntas.length };
+  }
+  function verificar(p, resposta) {
+    if (p.tipo === 'numero') return resposta !== '' && Number(resposta) === Number(p.correta);
+    if (p.tipo === 'romano') return String(resposta).toUpperCase() === p.correta;
+    return resposta === p.correta;
+  }
+  function relatorio(missao) {
+    const porTema = Object.keys(TEMAS).map(t => {
+      const ps = missao.perguntas.filter(p => p.tema === t);
+      return { tema: t, nome: TEMAS[t].nome, icone: TEMAS[t].icone, perguntas: ps.length,
+        dePrimeira: ps.filter(p => p.tentativas === 1).length, repetidas: ps.filter(p => p.tentativas > 1).length };
+    }).filter(r => r.perguntas > 0);
+    const repetir = missao.perguntas.filter(p => p.tentativas > 1)
+      .sort((a, b) => b.tentativas - a.tentativas)
+      .map(p => ({ tema: TEMAS[p.tema].nome, enunciado: p.enunciado.replace(/[«»]/g, ''), visual: p.visual && p.visual.kind === 'romano' ? p.visual.texto : (p.visual && p.visual.kind === 'relogio' ? `relógio marcando ${formatarHora(p.visual.h, p.visual.m)}` : ''), resposta: p.respostaTexto, tentativas: p.tentativas }));
+    const total = missao.perguntas.length, dePrimeira = missao.perguntas.filter(p => p.tentativas === 1).length;
+    return { porTema, repetir, total, dePrimeira, data: new Date().toLocaleDateString('pt-BR') };
+  }
+  function errosPorTema(missao) {
+    const out = {};
+    for (const t of Object.keys(TEMAS)) {
+      const ps = missao.perguntas.filter(p => p.tema === t);
+      out[t] = ps.length ? ps.filter(p => p.tentativas > 1).length / ps.length : 0;
+    }
+    return out;
+  }
+  function relatorioTexto(r) {
+    const L = [`Relatório da Missão Prova de Matemática — ${r.data}`, `Total: ${r.total} perguntas · ${r.dePrimeira} certas de primeira`, ''];
+    for (const t of r.porTema) L.push(`${t.nome}: ${t.perguntas} perguntas · ${t.dePrimeira} de primeira · ${t.repetidas} precisaram repetir`);
+    L.push('', 'Para revisar no papel:');
+    if (!r.repetir.length) L.push('(nenhuma — acertou tudo de primeira!)');
+    r.repetir.forEach((x, i) => L.push(`${i + 1}. [${x.tema}] ${x.enunciado}${x.visual ? ' (' + x.visual + ')' : ''} — resposta: ${x.resposta} — ${x.tentativas} tentativas`));
+    return L.join('\n');
+  }
+
+  return {
+    ROMAN_MAX, criarRng, embaralhar, cap,
+    paraRomano, deRomano, romanoValido, valorSolto, decomporRomano, textoDecomposicao, linhasSubtracao, formaAditiva,
+    distratoresRomanos, porqueRomanoErrado, SIMBOLOS, COM_SUBTRACAO, sortearRomano,
+    formatarHora, somarMinutos, para24h, para12h, periodoDoDia, linhaDoTempo, falaHora,
+    MESES, DIAS, avancarMeses, avancarDias,
+    passosMultiplicacao, temReserva, semReserva, linhasConta, UNIDADES, paraFala,
+    TEMAS, BASE, GERADORES, gerarLista, distribuicao, intercalar,
+    criarMissao, perguntaAtual, registrar, progresso, verificar, relatorio, errosPorTema, relatorioTexto,
+  };
+})();
+</script>
+
+<!-- ===================== LÓGICA DO JOGO (pura; testada em tests.html) ===================== -->
+<script id="logica-jogo">
+const Jogo = (function (R) {
+  'use strict';
+  const inteiro = (rng, min, max) => min + Math.floor(rng() * (max - min + 1));
+  const escolher = (rng, lista) => lista[Math.floor(rng() * lista.length)];
+  const embaralhar = R.embaralhar, cap = R.cap;
+
+  // ======================================================================
+  // TEMAS — ligar/desligar e o peso ficam no painel do papai
+  // (para criar um tema novo: entrada aqui + gerador em GERAR)
+  // ======================================================================
+  const TEMAS = [
+    { id: 'tabuada', nome: 'Tabuada', icone: '✖️', cor: '#047857', desc: 'Memorizar de 2×2 a 10×10 (repetição espaçada)', ligado: true, peso: 'muito' },
+    { id: 'adicao', nome: 'Adição', icone: '➕', cor: '#1d4ed8', desc: 'Contas armadas com reserva e contas de cabeça', ligado: true, peso: 'normal' },
+    { id: 'subtracao', nome: 'Subtração', icone: '➖', cor: '#b45309', desc: 'Contas armadas com empréstimo e de cabeça', ligado: true, peso: 'normal' },
+    { id: 'provareal', nome: 'Prova real', icone: '🔍', cor: '#7c3aed', desc: 'Conferir uma conta com a operação inversa', ligado: true, peso: 'normal' },
+    { id: 'multiplicacao', nome: 'Multiplicação armada', icone: '🧮', cor: '#be185d', desc: 'Conta armada (× 2 a 9) e problemas de dobro e triplo', ligado: true, peso: 'normal' },
+    { id: 'romanos', nome: R.TEMAS.romanos.nome, icone: R.TEMAS.romanos.icone, cor: R.TEMAS.romanos.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
+    { id: 'relogio', nome: R.TEMAS.relogio.nome, icone: R.TEMAS.relogio.icone, cor: R.TEMAS.relogio.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
+    { id: 'tempo', nome: R.TEMAS.tempo.nome, icone: R.TEMAS.tempo.icone, cor: R.TEMAS.tempo.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
+    { id: 'calendario', nome: R.TEMAS.calendario.nome, icone: R.TEMAS.calendario.icone, cor: R.TEMAS.calendario.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
+    { id: 'unidades', nome: R.TEMAS.unidades.nome, icone: R.TEMAS.unidades.icone, cor: R.TEMAS.unidades.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
+  ];
+  const TEMA = Object.fromEntries(TEMAS.map(t => [t.id, t]));
+  const PESOS = { pouco: 1, normal: 2, muito: 5 };
+
+  // ======================================================================
+  // CONTAS ARMADAS (adição com reserva, subtração com empréstimo)
+  // ======================================================================
+  const NOMES_COLUNA = ['unidades', 'dezenas', 'centenas', 'unidades de milhar', 'dezenas de milhar'];
+  const digitos = n => String(n).split('').reverse().map(Number);
+
+  function passosAdicao(a, b) {
+    const da = digitos(a), db = digitos(b), n = Math.max(da.length, db.length), passos = [];
+    let reserva = 0;
+    for (let r = 0; r < n; r++) {
+      const x = da[r] || 0, y = db[r] || 0, total = x + y + reserva;
+      passos.push({ coluna: r, x, y, reserva, total, escreve: total % 10, vai: Math.floor(total / 10) });
+      reserva = Math.floor(total / 10);
+    }
+    const resultado = Number((reserva ? String(reserva) : '') + passos.slice().reverse().map(p => p.escreve).join(''));
+    return { passos, reservaFinal: reserva, resultado };
+  }
+  // empréstimo do jeito da escola (casa a casa; zeros no meio viram 9)
+  function passosSubtracao(a, b) {
+    if (b > a) throw new RangeError('b maior que a');
+    const d = digitos(a), e = digitos(b), orig = d.slice(), ev = d.map(() => []), passos = [];
+    for (let r = 0; r < d.length; r++) {
+      const y = e[r] || 0;
+      if (d[r] < y) {
+        let j = r + 1;
+        while (d[j] === 0) j++;
+        d[j] -= 1; ev[j].push('emprestou');
+        for (let k = j - 1; k > r; k--) { d[k] += 10; ev[k].push('recebeu'); d[k] -= 1; ev[k].push('emprestou'); }
+        d[r] += 10; ev[r].push('recebeu');
+      }
+      passos.push({ coluna: r, original: orig[r], valor: d[r], y, escreve: d[r] - y, eventos: ev[r].slice() });
+    }
+    const resultado = Number(passos.slice().reverse().map(p => p.escreve).join(''));
+    return { passos, reservaFinal: 0, resultado };
+  }
+  const temReservaAd = (a, b) => { const x = digitos(a), y = digitos(b); return x.some((d, i) => d + (y[i] || 0) >= 10); };
+  const temEmprestimo = (a, b) => { const x = digitos(a), y = digitos(b); return x.some((d, i) => d < (y[i] || 0)); };
+  const erroAdSemReserva = (a, b) => { const x = digitos(a), y = digitos(b), n = Math.max(x.length, y.length); let s = ''; for (let i = n - 1; i >= 0; i--) s += ((x[i] || 0) + (y[i] || 0)) % 10; return Number(s); };
+  const erroSubInvertida = (a, b) => { const x = digitos(a), y = digitos(b); let s = ''; for (let i = x.length - 1; i >= 0; i--) s += Math.abs(x[i] - (y[i] || 0)); return Number(s); };
+
+  function linhasAdicao(c) {
+    const L = c.passos.map(p => {
+      let s = `${cap(NOMES_COLUNA[p.coluna] || 'coluna')}: ${p.x} + ${p.y}`;
+      if (p.reserva) s += ` + ${p.reserva} (reserva)`;
+      s += ` = ${p.total}`;
+      s += p.vai ? ` → escreve ${p.escreve} e vai ${p.vai}` : ` → escreve ${p.escreve}`;
+      return s;
+    });
+    if (c.reservaFinal) L.push(`No fim, sobrou ${c.reservaFinal} de reserva → escreve ${c.reservaFinal} na frente.`);
+    L.push(`Resultado: ${c.a} + ${c.b} = ${c.resultado}`);
+    return L;
+  }
+  function linhasSubtracao(c) {
+    const L = [];
+    if (c.passos.some(p => p.eventos.length)) L.push('Quando o número de cima é menor, ele pede 1 emprestado da casa da esquerda (1 dezena = 10 unidades).');
+    for (const p of c.passos) {
+      if (p.coluna === c.passos.length - 1 && p.valor === 0 && p.y === 0 && c.passos.length > 1) {
+        L.push(`${cap(NOMES_COLUNA[p.coluna])}: o ${p.original} emprestou 1 e virou 0 → não precisa escrever.`); continue;
+      }
+      let v = p.original;
+      const partes = [];
+      for (const e of p.eventos) {
+        if (e === 'emprestou') { partes.push(`emprestou 1 (${v} → ${v - 1})`); v -= 1; }
+        else { partes.push(`ganhou 10 (${v} → ${v + 10})`); v += 10; }
+      }
+      L.push(`${cap(NOMES_COLUNA[p.coluna] || 'coluna')}: ${partes.length ? partes.join(', ') + '; ' : ''}${p.valor} − ${p.y} = ${p.escreve}`);
+    }
+    L.push(`Resultado: ${c.a} − ${c.b} = ${c.resultado}`);
+    return L;
+  }
+  function falaConta(t) { return R.paraFala(t).replace(/−/g, ' menos ').replace(/\+/g, ' mais '); }
+  function montarConta(op, a, b) {
+    const p = op === '+' ? passosAdicao(a, b) : op === '−' ? passosSubtracao(a, b) : R.passosMultiplicacao(a, b);
+    const conta = { op, a, b, resultado: p.resultado, passos: p.passos, reservaFinal: p.reservaFinal || 0 };
+    const linhas = op === '+' ? linhasAdicao(conta) : op === '−' ? linhasSubtracao(conta)
+      : R.linhasConta({ a, m: b, passos: p.passos, reservaFinal: p.reservaFinal, resultado: p.resultado });
+    return { conta, linhas };
+  }
+  function contaQ(tema, op, a, b, contexto) {
+    const { conta, linhas } = montarConta(op, a, b);
+    const enunciado = contexto || `Arme e faça a conta:`;
+    return { tema, tipo: 'conta', meta: { op, a, b }, enunciado, fala: falaConta(contexto || `Arme e faça a conta: ${a} ${op} ${b}`),
+      conta, correta: String(conta.resultado), respostaTexto: `${a} ${op} ${b} = ${conta.resultado}`, explicacao: { linhas, visual: null } };
+  }
+  function numeroAleatorio(rng, dig) { let s = String(inteiro(rng, 1, 9)); for (let i = 1; i < dig; i++) s += inteiro(rng, 0, 9); return Number(s); }
+
+  const CONTEXTOS_AD = [
+    (a, b) => `Joana tinha ${a} figurinhas e ganhou mais ${b}. Quantas figurinhas ela tem agora?`,
+    (a, b) => `Uma escola tem ${a} alunos de manhã e ${b} à tarde. Quantos alunos a escola tem ao todo?`,
+    (a, b) => `Na feira foram vendidas ${a} laranjas no sábado e ${b} no domingo. Quantas laranjas nos dois dias?`,
+    (a, b) => `Um livro tem ${a} páginas e outro tem ${b}. Quantas páginas os dois têm juntos?`,
+    (a, b) => `Benjamin fez ${a} pontos na 1ª fase do jogo e ${b} na 2ª. Quantos pontos ele fez ao todo?`,
+  ];
+  const CONTEXTOS_SUB = [
+    (a, b) => `Uma loja tinha ${a} bolas e vendeu ${b}. Quantas bolas sobraram?`,
+    (a, b) => `Benjamin tem ${a} pontos no jogo e o primo tem ${b}. Quantos pontos Benjamin tem a mais?`,
+    (a, b) => `Um estádio tem ${a} lugares. Já chegaram ${b} pessoas. Quantos lugares ainda estão vazios?`,
+    (a, b) => `A biblioteca tinha ${a} livros e emprestou ${b}. Quantos livros ficaram?`,
+    (a, b) => `Faltam ${a} metros para a chegada. O carro andou ${b} metros. Quantos metros ainda faltam?`,
+  ];
+  function cabecaQ(tema, op, rng) {
+    const tipo = inteiro(rng, 1, 3);
+    let a, b, linhas;
+    if (tipo === 1) { // dezenas exatas
+      const x = inteiro(rng, 2, 9), y = op === '+' ? inteiro(rng, 1, 9) : inteiro(rng, 1, x - 1);
+      a = x * 10; b = y * 10;
+      linhas = [`Pense em dezenas: ${x} dezenas ${op === '+' ? '+' : '−'} ${y} dezenas = ${op === '+' ? x + y : x - y} dezenas = ${op === '+' ? a + b : a - b}.`];
+    } else if (tipo === 2) { // número de 2 algarismos ± dezena exata
+      const u = inteiro(rng, 1, 9), dz = inteiro(rng, 2, 8);
+      a = dz * 10 + u; const y = op === '+' ? inteiro(rng, 1, 9 - dz) : inteiro(rng, 1, dz - 1); b = y * 10;
+      linhas = [`Mexa só nas dezenas: ${dz * 10} ${op} ${b} = ${op === '+' ? (dz + y) * 10 : (dz - y) * 10}.`, `Depois junte as ${u} unidades: ${op === '+' ? a + b : a - b}.`];
+    } else { // centenas exatas
+      const x = inteiro(rng, 2, 8), y = op === '+' ? inteiro(rng, 1, 9 - x) : inteiro(rng, 1, x - 1);
+      a = x * 100; b = y * 100;
+      linhas = [`Pense em centenas: ${x} centenas ${op} ${y} centenas = ${op === '+' ? x + y : x - y} centenas = ${op === '+' ? a + b : a - b}.`];
+    }
+    const r = op === '+' ? a + b : a - b;
+    return { tema, tipo: 'numero', sub: 'cabeca', meta: { op, a, b, cabeca: true }, enunciado: 'Faça de cabeça:', fala: `Faça de cabeça: ${a} ${op === '+' ? 'mais' : 'menos'} ${b}`,
+      visual: { kind: 'expressao', texto: `${a} ${op} ${b} = ?` }, correta: String(r), respostaTexto: `${a} ${op} ${b} = ${r}`, explicacao: { linhas, visual: null } };
+  }
+  function gerarAdicao(rng) {
+    if (rng() < 0.2) return cabecaQ('adicao', '+', rng);
+    const querReserva = rng() < 0.85;
+    let a = 0, b = 0;
+    for (let t = 0; t < 300; t++) {
+      const la = rng() < 0.6 ? 3 : 4, lb = la === 4 && rng() < 0.5 ? 4 : 3;
+      a = numeroAleatorio(rng, la); b = numeroAleatorio(rng, lb);
+      if (a + b < 10000 && temReservaAd(a, b) === querReserva) break;
+    }
+    return contaQ('adicao', '+', a, b, rng() < 0.35 ? escolher(rng, CONTEXTOS_AD)(a, b) : null);
+  }
+  function gerarSubtracao(rng) {
+    if (rng() < 0.2) return cabecaQ('subtracao', '−', rng);
+    const querEmp = rng() < 0.85, zeroMeio = querEmp && rng() < 0.25;
+    let a = 0, b = 0;
+    for (let t = 0; t < 500; t++) {
+      const la = rng() < 0.6 ? 3 : 4;
+      a = numeroAleatorio(rng, la);
+      if (zeroMeio) a = Number(String(a).slice(0, 1) + '0' + String(a).slice(2));
+      b = numeroAleatorio(rng, rng() < 0.7 ? la : la - 1);
+      if (b < a && temEmprestimo(a, b) === querEmp && (!zeroMeio || String(a)[1] === '0')) break;
+    }
+    if (b >= a) { a = 503; b = 278; }
+    return contaQ('subtracao', '−', a, b, rng() < 0.35 ? escolher(rng, CONTEXTOS_SUB)(a, b) : null);
+  }
+  function gerarMultiplicacao(rng) {
+    if (rng() < 0.35) { const q = R.GERADORES.multiplicacao[0](rng); q.tema = 'multiplicacao'; return q; } // S.M. → Cálculo → R:
+    const m = inteiro(rng, 2, 9);
+    const dig = m <= 3 ? (rng() < 0.5 ? 3 : 4) : m <= 5 ? 3 : (rng() < 0.5 ? 2 : 3);
+    const a = numeroAleatorio(rng, dig);
+    return contaQ('multiplicacao', '×', a, m, null);
+  }
+  function gerarProvaReal(rng) {
+    const op = rng() < 0.5 ? '+' : '−';
+    const quem = escolher(rng, ['Lia', 'Pedro', 'Joana', 'Davi', 'Benjamin', 'Ana']);
+    let a, b, certo, c;
+    if (op === '−') {
+      do { a = numeroAleatorio(rng, 3); b = numeroAleatorio(rng, rng() < 0.8 ? 3 : 2); } while (b >= a || !temEmprestimo(a, b));
+      certo = a - b;
+    } else {
+      do { a = numeroAleatorio(rng, 3); b = numeroAleatorio(rng, 3); } while (!temReservaAd(a, b));
+      certo = a + b;
+    }
+    const acertou = rng() < 0.5;
+    if (acertou) c = certo;
+    else {
+      const erros = (op === '−' ? [erroSubInvertida(a, b)] : [erroAdSemReserva(a, b)]).concat([certo + 10, certo - 10, certo + 100]);
+      c = erros.find(x => x !== certo && x > 0 && (op === '+' ? x > b : true));
+    }
+    const inv = op === '+' ? '−' : '+';
+    const provaA = c, provaB = b;
+    const { conta: provaConta, linhas: linhasProva } = montarConta(inv, provaA, provaB);
+    const prova = provaConta.resultado;
+    const certa = prova === a;
+    const opcoes1 = embaralhar(rng, [`${c} ${inv} ${b}`, `${c} ${op} ${b}`, `${a} ${inv} ${b}`, `${a} ${op} ${c}`, `${b} ${op} ${a}`]
+      .filter((x, i, arr) => arr.indexOf(x) === i).slice(0, 3));
+    return { tema: 'provareal', tipo: 'prova', meta: { op, a, b, c, certo, quem },
+      enunciado: `${quem} fez a conta ${a} ${op} ${b} = ${c}. Vamos conferir com a prova real!`,
+      fala: falaConta(`${quem} fez a conta ${a} ${op} ${b} igual a ${c}. Vamos conferir com a prova real!`),
+      etapa1: { opcoes: opcoes1, correta: `${c} ${inv} ${b}`,
+        linhas: [op === '−' ? 'A prova real da SUBTRAÇÃO é uma ADIÇÃO: resultado + o número que foi tirado.' : 'A prova real da ADIÇÃO é uma SUBTRAÇÃO: resultado − um dos números somados.', `Então: ${c} ${inv} ${b}`] },
+      provaConta, linhasProva,
+      etapa3: { opcoes: ['Certa ✔', 'Errada ✘'], correta: certa ? 'Certa ✔' : 'Errada ✘',
+        linhas: [`Se a prova real volta ao número do começo (${a}), a conta está certa.`, `A prova deu ${prova}${certa ? ' = ' : ' ≠ '}${a}, então a conta está ${certa ? 'CERTA' : 'ERRADA'}.`].concat(certa ? [] : [`O certo era ${a} ${op} ${b} = ${certo}.`]) },
+      correta: certa ? 'Certa ✔' : 'Errada ✘', respostaTexto: `${a} ${op} ${b} = ${c} → prova ${c} ${inv} ${b} = ${prova} → ${certa ? 'certa' : `errada (o certo é ${certo})`}` };
+  }
+
+  // ======================================================================
+  // TABUADA — repetição espaçada (caixas de Leitner), todos os fatos de 2 a 10
+  // ======================================================================
+  const INTERVALOS = { 1: 0, 2: 2, 3: 4, 4: 7, 5: 14 };
+  const FRACAO_FRACOS = 0.7;
+  const chave = (a, b) => `${a}x${b}`;
+  const partes = k => k.split('x').map(Number);
+  const ligado = k => { const [a, b] = partes(k); return chave(b, a); };
+  function diaDe(data) { return Math.floor(Date.UTC(data.getFullYear(), data.getMonth(), data.getDate()) / 86400000); }
+  function cartoesIniciais() {
+    const c = {};
+    for (let a = 2; a <= 10; a++) for (let b = 2; b <= 10; b++)
+      c[chave(a, b)] = { a, b, caixa: 1, vence: null, acertos: 0, erros: 0, tempoTotal: 0, nTempo: 0, ultimaVez: null };
+    return c; // vence = null → ainda não apareceu
+  }
+  const novo = c => c.vence === null;
+  function vencido(c, hoje) { return c.vence !== null && c.vence <= hoje; }
+  function limiarEfetivo(formato, limiarMs) { return formato === 'problema' ? limiarMs * 2 : formato === 'lacuna' ? limiarMs * 1.5 : limiarMs; }
+  function responderCartao(cartao, r) {
+    const c = Object.assign({}, cartao);
+    const antes = Math.max(1, c.caixa);
+    const rapido = r.correto && r.ms < r.limiarMs;
+    if (r.correto) { c.acertos++; c.tempoTotal += r.ms; c.nTempo++; } else c.erros++;
+    c.ultimaVez = r.hoje;
+    if (r.manutencao && r.correto) return { cartao: c, subiu: false, rapido };
+    if (!r.correto) c.caixa = 1;
+    else if (rapido) c.caixa = Math.min(5, antes + 1);
+    else c.caixa = antes;
+    c.vence = r.hoje + INTERVALOS[c.caixa];
+    return { cartao: c, subiu: c.caixa > antes, rapido };
+  }
+  function separarLigados(lista) {
+    const resto = lista.slice(), out = [];
+    const briga = (x, y) => x !== undefined && y !== undefined && x === ligado(y);
+    while (resto.length) {
+      const i = resto.findIndex(k => !briga(k, out[out.length - 1]));
+      if (i >= 0) { out.push(resto.splice(i, 1)[0]); continue; }
+      const k = resto.shift();
+      const p = out.findIndex((x, j) => !briga(k, x) && !briga(k, out[j - 1]));
+      if (p < 0) out.push(k); else out.splice(p, 0, k);
+    }
+    return out;
+  }
+  // escolhe n fatos: ~70% vencidos/fracos/novos + ~30% já sabidos (manutenção)
+  function escolherFatos(cartoes, hoje, n, rng, novosPermitidos) {
+    const ks = Object.keys(cartoes);
+    const peso = k => { const c = cartoes[k]; return c.caixa * 10 - Math.min(9, c.erros); };
+    const devidos = embaralhar(rng, ks.filter(k => vencido(cartoes[k], hoje))).sort((x, y) => peso(x) - peso(y));
+    const novos = embaralhar(rng, ks.filter(k => novo(cartoes[k])));
+    const sabidos = embaralhar(rng, ks.filter(k => !novo(cartoes[k]) && !vencido(cartoes[k], hoje)));
+    const fracos = devidos.concat(novos.slice(0, Math.max(0, novosPermitidos)));
+    const nF = Math.round(n * FRACAO_FRACOS);
+    let pegaF = fracos.slice(0, nF), pegaS = sabidos.slice(0, n - nF);
+    if (pegaF.length < nF) pegaS = sabidos.slice(0, n - pegaF.length);
+    if (pegaS.length < n - nF) pegaF = fracos.slice(0, n - pegaS.length);
+    let lista = pegaF.concat(pegaS);
+    if (lista.length < n) lista = lista.concat(novos.filter(k => !lista.includes(k)).slice(0, n - lista.length));
+    return separarLigados(embaralhar(rng, lista)).map(k => ({ chave: k, manutencao: !novo(cartoes[k]) && !vencido(cartoes[k], hoje), novo: novo(cartoes[k]) }));
+  }
+  const FORMATOS = [['digitar', 50], ['escolha', 20], ['lacuna', 15], ['problema', 15]];
+  function escolherFormato(rng) { let r = rng() * 100; for (const [f, p] of FORMATOS) { if (r < p) return f; r -= p; } return 'digitar'; }
+  function opcoesEscolha(a, b, rng) {
+    const p = a * b, cands = [];
+    for (const v of [a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b, p + 10, p - 10, a + b, p + 2, p - 1])
+      if (v > 0 && v !== p && !cands.includes(v)) cands.push(v);
+    return embaralhar(rng, [p, ...embaralhar(rng, cands.slice(0, 6)).slice(0, 3)]);
+  }
+  const PROBLEMAS = [
+    { cont: ['caixa', 'caixas'], item: ['lápis', 'lápis'], fim: 'Quantos lápis ao todo?' },
+    { cont: ['pacote', 'pacotes'], item: ['figurinha', 'figurinhas'], fim: 'Quantas figurinhas ao todo?' },
+    { cont: ['saquinho', 'saquinhos'], item: ['bala', 'balas'], fim: 'Quantas balas ao todo?' },
+    { cont: ['vaso', 'vasos'], item: ['flor', 'flores'], fim: 'Quantas flores ao todo?' },
+    { cont: ['prato', 'pratos'], item: ['biscoito', 'biscoitos'], fim: 'Quantos biscoitos ao todo?' },
+    { cont: ['time', 'times'], item: ['jogador', 'jogadores'], fim: 'Quantos jogadores ao todo?' },
+  ];
+  function montarFato(k, formato, rng) {
+    const [a, b] = partes(k), p = a * b;
+    const base = { tema: 'tabuada', tipo: 'fato', chave: k, formato, meta: { a, b }, respostaTexto: `${a} × ${b} = ${p}` };
+    if (formato === 'escolha') return Object.assign(base, { expr: `${a} × ${b} = ?`, enunciado: `${a} × ${b}`, fala: `${a} vezes ${b}`, opcoes: opcoesEscolha(a, b, rng).map(String), correta: String(p) });
+    if (formato === 'lacuna') {
+      if (rng() < 0.5) return Object.assign(base, { antes: `${a} × `, depois: ` = ${p}`, enunciado: `${a} × __ = ${p}`, fala: `${a} vezes quanto é igual a ${p}?`, correta: String(b) });
+      return Object.assign(base, { antes: '', depois: ` × ${b} = ${p}`, enunciado: `__ × ${b} = ${p}`, fala: `Quanto vezes ${b} é igual a ${p}?`, correta: String(a) });
+    }
+    if (formato === 'problema') {
+      const t = escolher(rng, PROBLEMAS);
+      const texto = `${a} ${t.cont[1]} com ${b} ${t.item[1]} em cada. ${t.fim}`;
+      return Object.assign(base, { texto, enunciado: texto, fala: texto, correta: String(p) });
+    }
+    return Object.assign(base, { formato: 'digitar', expr: `${a} × ${b} = ?`, enunciado: `${a} × ${b}`, fala: `${a} vezes ${b}`, correta: String(p) });
+  }
+  const PRIORIDADE = [1, 10, 2, 5, 9, 4, 3, 6, 8, 7];
+  function estrategia(a, b) {
+    const f = PRIORIDADE.find(x => x === a || x === b), n = f === a ? b : a;
+    const dez = Number(String(n) + '0');
+    let texto, resultado;
+    switch (f) {
+      case 1: resultado = n; texto = `×1: qualquer número vezes 1 é ele mesmo → ${n}.`; break;
+      case 10: resultado = dez; texto = `×10: é só colocar um zero no fim → ${n} vira ${resultado}.`; break;
+      case 2: resultado = n + n; texto = `×2 é o DOBRO: ${n} + ${n} = ${resultado}.`; break;
+      case 5: resultado = dez / 2; texto = `×5 é a METADE do ×10: ${n} × 10 = ${dez}, e a metade de ${dez} é ${resultado}.`; break;
+      case 9: resultado = dez - n; texto = `×9 é o ×10 MENOS o número: ${n} × 10 = ${dez}, e ${dez} − ${n} = ${resultado}.`; break;
+      case 4: { const d = n + n; resultado = d + d; texto = `×4 é o DOBRO DO DOBRO: ${n} → ${d} → ${resultado}.`; break; }
+      case 3: { const d = n + n; resultado = d + n; texto = `×3 é o DOBRO + MAIS UMA VEZ: ${n} + ${n} = ${d}, e ${d} + ${n} = ${resultado}.`; break; }
+      case 6: { const c5 = dez / 2; resultado = c5 + n; texto = `×6 é o ×5 + MAIS UMA VEZ: ${n} × 5 = ${c5}, e ${c5} + ${n} = ${resultado}.`; break; }
+      case 8: { const q = (n + n) * 2; resultado = q + q; texto = `×8 é o DOBRO do ×4: ${n} × 4 = ${q}, e ${q} + ${q} = ${resultado}.`; break; }
+      case 7: { const c5 = dez / 2, d2 = n + n; resultado = c5 + d2; texto = `×7 é o ×5 + o ×2: ${n} × 5 = ${c5}, ${n} × 2 = ${d2}, e ${c5} + ${d2} = ${resultado}.`; break; }
+    }
+    return { fator: f, n, texto, resultado };
+  }
+  function textoComutativo(a, b) {
+    if (a === b) return `${a} × ${a} = ${a * a}: os dois números são iguais!`;
+    return `Se ${a} × ${b} = ${a * b}, então ${b} × ${a} = ${a * b} também! A ordem não muda o resultado.`;
+  }
+
+  // ======================================================================
+  // ESTADO, DIA, MISSÕES, XP E PATENTES
+  // ======================================================================
+  const CONFIG_PADRAO = { missoesPorDia: 3, perguntasPorMissao: 12, limiarMs: 4000, novosPorDia: 15 };
+  const NOMES_MISSAO = [['🪐', 'Decolagem'], ['🌍', 'Órbita'], ['🌙', 'Pouso na Lua'], ['☄️', 'Cometa'], ['🔭', 'Observatório']];
+  const XP = { primeira: 10, depois: 4, missao: 25, diaCompleto: 50 };
+  const PATENTES = [
+    { nome: 'Cadete', icone: '🧑‍🚀', xp: 0 },
+    { nome: 'Piloto Aprendiz', icone: '🛩️', xp: 500 },
+    { nome: 'Piloto', icone: '✈️', xp: 1200 },
+    { nome: 'Navegador', icone: '🧭', xp: 2500 },
+    { nome: 'Capitão', icone: '🚀', xp: 4500 },
+    { nome: 'Comandante', icone: '🛸', xp: 7000 },
+    { nome: 'Explorador da Lua', icone: '🌕', xp: 10000 },
+    { nome: 'Explorador de Marte', icone: '🔴', xp: 14000 },
+    { nome: 'Almirante das Estrelas', icone: '🌟', xp: 19000 },
+    { nome: 'Lenda da Galáxia', icone: '🌌', xp: 25000 },
+  ];
+  const XP_LENDA = 6000; // depois da última patente: Lenda nível 2, 3, ...
+  function patenteDe(xp) {
+    let i = 0;
+    while (i + 1 < PATENTES.length && xp >= PATENTES[i + 1].xp) i++;
+    const p = PATENTES[i];
+    if (i === PATENTES.length - 1) {
+      const nivel = 1 + Math.floor((xp - p.xp) / XP_LENDA), base = p.xp + (nivel - 1) * XP_LENDA;
+      return { indice: i, nivel, nome: nivel > 1 ? `${p.nome} nível ${nivel}` : p.nome, icone: p.icone, xpMin: base,
+        proxima: { nome: `${p.nome} nível ${nivel + 1}`, xp: base + XP_LENDA }, progresso: (xp - base) / XP_LENDA, falta: base + XP_LENDA - xp };
+    }
+    const prox = PATENTES[i + 1];
+    return { indice: i, nivel: 1, nome: p.nome, icone: p.icone, xpMin: p.xp, proxima: { nome: prox.nome, xp: prox.xp, icone: prox.icone },
+      progresso: (xp - p.xp) / (prox.xp - p.xp), falta: prox.xp - xp };
+  }
+
+  function estadoInicial() {
+    return completarEstado({});
+  }
+  // preenche o que faltar (importante quando entram temas novos numa versão futura)
+  function completarEstado(e) {
+    e.versao = 1;
+    e.config = Object.assign({}, CONFIG_PADRAO, e.config || {});
+    e.temas = e.temas || {};
+    for (const t of TEMAS) e.temas[t.id] = Object.assign({ ligado: t.ligado, peso: t.peso }, e.temas[t.id] || {});
+    e.estat = e.estat || {};
+    for (const t of TEMAS) if (!Array.isArray(e.estat[t.id])) e.estat[t.id] = [];
+    e.cartoes = e.cartoes && Object.keys(e.cartoes).length === 81 ? e.cartoes : cartoesIniciais();
+    e.xp = e.xp || 0;
+    e.dias = Array.isArray(e.dias) ? e.dias : [];
+    e.historico = Array.isArray(e.historico) ? e.historico : [];
+    e.novos = e.novos || { dia: null, n: 0 };
+    e.dia = e.dia || null;
+    e.missaoAtiva = e.missaoAtiva || null;
+    e.prefs = Object.assign({ voz: false, som: true }, e.prefs || {});
+    return e;
+  }
+  function garantirDia(e, hoje) {
+    if (!e.dia || e.dia.n !== hoje) {
+      e.dia = { n: hoje, missoes: Array.from({ length: e.config.missoesPorDia }, (_, i) => ({ numero: i + 1, feita: false, xp: 0 })), bonus: false, extras: 0, revisar: [] };
+      if (e.missaoAtiva && e.missaoAtiva.dia !== hoje) e.missaoAtiva = null;
+    }
+    while (e.dia.missoes.length < e.config.missoesPorDia) e.dia.missoes.push({ numero: e.dia.missoes.length + 1, feita: false, xp: 0 });
+    if (e.novos.dia !== hoje) e.novos = { dia: hoje, n: 0 };
+    return e.dia;
+  }
+  function nomeMissao(numero) {
+    if (numero === 'extra') return { icone: '✨', nome: 'Missão extra' };
+    const [icone, nome] = NOMES_MISSAO[(numero - 1) % NOMES_MISSAO.length];
+    return { icone, nome: `Missão ${numero} · ${nome}` };
+  }
+  function taxaErro(e, tema) { const h = e.estat[tema] || []; if (h.length < 4) return 0; return 1 - h.reduce((s, x) => s + x, 0) / h.length; }
+  function alocar(pesos, n, rng) {
+    const k = pesos.length, cont = Array(k).fill(0);
+    if (!k) return cont;
+    let resto = n;
+    if (n >= k) { cont.fill(1); resto -= k; }
+    const soma = pesos.reduce((a, b) => a + b, 0) || 1;
+    const brutos = pesos.map(p => p / soma * resto);
+    brutos.forEach((b, i) => { cont[i] += Math.floor(b); });
+    let falta = n - cont.reduce((a, b) => a + b, 0);
+    const ordem = brutos.map((b, i) => [b - Math.floor(b) + rng() * 1e-6, i]).sort((x, y) => y[0] - x[0]);
+    for (let t = 0; falta > 0; t++, falta--) cont[ordem[t % k][1]]++;
+    return cont;
+  }
+  function temasLigados(e) { const l = TEMAS.filter(t => e.temas[t.id].ligado); return l.length ? l : [TEMA.tabuada]; }
+  function distribuicaoMissao(e, rng) {
+    const ts = temasLigados(e);
+    const pesos = ts.map(t => PESOS[e.temas[t.id].peso] * (1 + 1.5 * taxaErro(e, t.id)));
+    const cont = alocar(pesos, e.config.perguntasPorMissao, rng);
+    const out = {};
+    ts.forEach((t, i) => { if (cont[i]) out[t.id] = cont[i]; });
+    return out;
+  }
+  const GERAR = { adicao: gerarAdicao, subtracao: gerarSubtracao, multiplicacao: gerarMultiplicacao, provareal: gerarProvaReal };
+  function gerarDoTema(e, tema, qtd, hoje, rng) {
+    if (tema === 'tabuada') {
+      const permitidos = Math.max(0, e.config.novosPorDia - e.novos.n);
+      const fatos = escolherFatos(e.cartoes, hoje, qtd, rng, permitidos);
+      e.novos.n += fatos.filter(f => f.novo).length;
+      return fatos.map(f => Object.assign(montarFato(f.chave, escolherFormato(rng), rng), { manutencao: f.manutencao }));
+    }
+    if (GERAR[tema]) {
+      const out = [], vistos = new Set();
+      for (let i = 0; i < qtd; i++) {
+        let q;
+        for (let t = 0; t < 20; t++) { q = GERAR[tema](rng); if (!vistos.has(q.enunciado + q.correta)) break; }
+        vistos.add(q.enunciado + q.correta); out.push(q);
+      }
+      return out;
+    }
+    return R.gerarLista(tema, qtd, rng).map(q => Object.assign(q, { tema }));
+  }
+  // cria a missão (altera e.novos: os fatos novos de hoje)
+  function criarMissao(e, hoje, rng, numero) {
+    garantirDia(e, hoje);
+    const dist = distribuicaoMissao(e, rng);
+    const listas = {};
+    for (const t in dist) listas[t] = gerarDoTema(e, t, dist[t], hoje, rng);
+    const perguntas = R.intercalar(listas, rng).map((q, i) => Object.assign(q, { id: i + 1, tentativas: 0, acertou: false }));
+    return { numero, dia: hoje, perguntas, fila: perguntas.map(q => q.id), finalizada: false, xp: 0, subiram: [], regrasVistas: false };
+  }
+  function perguntaAtual(m) { return m.perguntas.find(q => q.id === m.fila[0]) || null; }
+  function progresso(m) { return { feitas: m.perguntas.filter(q => q.acertou).length, total: m.perguntas.length }; }
+  // registra a resposta da pergunta atual. Erro: volta 3 a 5 perguntas depois.
+  function registrar(e, m, res, hoje, rng) {
+    const id = m.fila.shift();
+    const q = m.perguntas.find(x => x.id === id);
+    const primeira = q.tentativas === 0;
+    q.tentativas++;
+    if (q.tema === 'tabuada' && primeira && e.cartoes[q.chave]) {
+      const r = responderCartao(e.cartoes[q.chave], { correto: res.acertou, ms: res.ms || 0, limiarMs: limiarEfetivo(q.formato, e.config.limiarMs), hoje, manutencao: q.manutencao });
+      e.cartoes[q.chave] = r.cartao;
+      if (r.subiu && !m.subiram.includes(q.chave)) m.subiram.push(q.chave);
+      if (!res.acertou) m.subiram = m.subiram.filter(k => k !== q.chave);
+    }
+    if (primeira) { const h = e.estat[q.tema] || (e.estat[q.tema] = []); h.push(res.acertou ? 1 : 0); if (h.length > 40) h.shift(); }
+    if (res.acertou) { q.acertou = true; m.xp += primeira ? XP.primeira : XP.depois; }
+    else m.fila.splice(Math.min(m.fila.length, inteiro(rng, 2, 4)), 0, id);
+    if (!m.fila.length) m.finalizada = true;
+    return { primeira };
+  }
+  function registrarDia(e, hoje) { if (!e.dias.includes(hoje)) { e.dias.push(hoje); e.dias.sort((x, y) => x - y); } }
+  function sequenciaDias(dias, hoje) { const s = new Set(dias); let d = s.has(hoje) ? hoje : hoje - 1, n = 0; while (s.has(d)) { n++; d--; } return n; }
+  function finalizarMissao(e, m, hoje) {
+    const dia = garantirDia(e, hoje);
+    const antes = patenteDe(e.xp);
+    const ganhos = [{ rotulo: 'Perguntas', xp: m.xp }, { rotulo: 'Missão cumprida', xp: XP.missao }];
+    if (m.numero === 'extra') dia.extras++;
+    else { const md = dia.missoes.find(x => x.numero === m.numero); if (md) { md.feita = true; md.xp = m.xp + XP.missao; } }
+    if (!dia.bonus && dia.missoes.every(x => x.feita)) { dia.bonus = true; ganhos.push({ rotulo: 'Todas as missões do dia', xp: XP.diaCompleto }); }
+    const total = ganhos.reduce((s, g) => s + g.xp, 0);
+    e.xp += total;
+    registrarDia(e, hoje);
+    let h = e.historico.find(x => x.dia === hoje);
+    if (!h) { h = { dia: hoje, xp: 0, missoes: 0, perguntas: 0, dePrimeira: 0 }; e.historico.push(h); }
+    h.xp += total; h.missoes++; h.perguntas += m.perguntas.length; h.dePrimeira += m.perguntas.filter(q => q.tentativas === 1).length;
+    if (e.historico.length > 400) e.historico = e.historico.slice(-400);
+    for (const q of m.perguntas.filter(x => x.tentativas > 1)) {
+      dia.revisar.push({ tema: TEMA[q.tema] ? TEMA[q.tema].nome : q.tema, enunciado: textoPergunta(q), resposta: q.respostaTexto || q.correta, tentativas: q.tentativas });
+    }
+    if (dia.revisar.length > 60) dia.revisar = dia.revisar.slice(-60);
+    e.missaoAtiva = null;
+    const depois = patenteDe(e.xp);
+    return { ganhos, total, antes, depois, subiuPatente: depois.nome !== antes.nome, subiram: m.subiram.slice(), diaCompleto: dia.missoes.every(x => x.feita) };
+  }
+  function textoPergunta(q) {
+    let t = String(q.enunciado || '').replace(/[«»]/g, '');
+    if (q.tipo === 'conta') t = `${q.conta.a} ${q.conta.op} ${q.conta.b}` + (q.enunciado.startsWith('Arme') ? '' : ` — ${t}`);
+    else if (q.visual && q.visual.kind === 'expressao') t = q.visual.texto;
+    else if (q.visual && q.visual.kind === 'romano') t += ` (${q.visual.texto})`;
+    else if (q.visual && q.visual.kind === 'relogio') t += ` (relógio marcando ${R.formatarHora(q.visual.h, q.visual.m)})`;
+    return t;
+  }
+  function verificar(q, resposta) {
+    if (q.tipo === 'fato' || q.tipo === 'numero' || q.tipo === 'conta') return resposta !== '' && Number(resposta) === Number(q.correta);
+    return R.verificar(q, resposta);
+  }
+
+  // ---------- painel ----------
+  function maisErrados(e, n = 8) { return Object.values(e.cartoes).filter(c => c.erros > 0).sort((x, y) => y.erros - x.erros || x.acertos - y.acertos).slice(0, n); }
+  function tempoMedio(c) { return c.nTempo ? c.tempoTotal / c.nTempo : null; }
+  function maisLentos(e, n = 8) { return Object.values(e.cartoes).filter(c => c.nTempo > 0).sort((x, y) => tempoMedio(y) - tempoMedio(x)).slice(0, n); }
+  function validarImportacao(texto) {
+    const d = JSON.parse(texto);
+    if (!d || typeof d !== 'object' || !d.cartoes || Object.keys(d.cartoes).length !== 81) throw new Error('Arquivo não parece um progresso deste jogo.');
+    for (let a = 2; a <= 10; a++) for (let b = 2; b <= 10; b++) {
+      const c = d.cartoes[chave(a, b)];
+      if (!c || c.a !== a || c.b !== b || !(c.caixa >= 1 && c.caixa <= 5)) throw new Error('Cartão inválido: ' + chave(a, b));
+    }
+    return completarEstado(d);
+  }
+
+  return {
+    TEMAS, TEMA, PESOS, NOMES_COLUNA, CONFIG_PADRAO, PATENTES, XP, INTERVALOS, FRACAO_FRACOS,
+    passosAdicao, passosSubtracao, linhasAdicao, linhasSubtracao, temReservaAd, temEmprestimo, erroAdSemReserva, erroSubInvertida, montarConta,
+    gerarAdicao, gerarSubtracao, gerarMultiplicacao, gerarProvaReal, cabecaQ,
+    chave, partes, ligado, diaDe, cartoesIniciais, novo, vencido, limiarEfetivo, responderCartao, separarLigados, escolherFatos,
+    escolherFormato, opcoesEscolha, montarFato, estrategia, textoComutativo,
+    patenteDe, estadoInicial, completarEstado, garantirDia, nomeMissao, taxaErro, alocar, temasLigados, distribuicaoMissao, gerarDoTema,
+    criarMissao, perguntaAtual, progresso, registrar, registrarDia, sequenciaDias, finalizarMissao, textoPergunta, verificar,
+    maisErrados, tempoMedio, maisLentos, validarImportacao,
+  };
+})(Logica);
+</script>
+
+<!-- ===================== INTERFACE ===================== -->
+<script>
+(function () {
+  'use strict';
+  const R = Logica, J = Jogo;
+  const $ = s => document.querySelector(s);
+  const palco = $('#palco');
+  const CHAVE = 'matematica-benjamin-v1';
+  const hoje = () => J.diaDe(new Date());
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const marcarRomanos = s => esc(s).replace(/«([IVXLCDM]+)»/g, '<span class="rom">$1</span>');
+
+  // ---------- estado salvo ----------
+  function carregar() { try { const t = localStorage.getItem(CHAVE); return t ? J.validarImportacao(t) : null; } catch (e) { return null; } }
+  function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) { /* sem armazenamento: segue */ } }
+  let estado = carregar() || J.estadoInicial();
+  J.garantirDia(estado, hoje());
+  salvar();
+
+  // ---------- voz e som ----------
+  const temVoz = 'speechSynthesis' in window;
+  let vozBR = null;
+  function acharVoz() { if (!temVoz) return; const vs = speechSynthesis.getVoices(); vozBR = vs.find(v => v.lang === 'pt-BR') || vs.find(v => /^pt/i.test(v.lang)) || null; }
+  if (temVoz) { acharVoz(); speechSynthesis.onvoiceschanged = acharVoz; }
+  function falar(texto, aoTerminar) {
+    if (!temVoz || !texto) { aoTerminar && aoTerminar(); return; }
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(texto);
+      u.lang = 'pt-BR'; u.rate = 0.93; if (vozBR) u.voice = vozBR;
+      let feito = false; const fim = () => { if (!feito) { feito = true; aoTerminar && aoTerminar(); } };
+      u.onend = fim; u.onerror = fim; setTimeout(fim, 5000);
+      speechSynthesis.speak(u);
+    } catch (e) { aoTerminar && aoTerminar(); }
+  }
+  function calar() { if (temVoz) try { speechSynthesis.cancel(); } catch (e) {} }
+  let audio = null;
+  function plim() {
+    if (!estado.prefs.som) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      [523.25, 659.25, 783.99].forEach((f, i) => {
+        const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + i * 0.08;
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+        o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.35);
+      });
+    } catch (e) {}
+  }
+  const chaveVoz = $('#chave-voz');
+  chaveVoz.hidden = !temVoz;
+  const pintarChave = () => chaveVoz.setAttribute('aria-pressed', String(!!estado.prefs.voz));
+  chaveVoz.onclick = () => { estado.prefs.voz = !estado.prefs.voz; if (!estado.prefs.voz) calar(); salvar(); pintarChave(); avisar(estado.prefs.voz ? '🔊 Vou ler as perguntas' : '🔇 Leitura desligada (toque no 🔊 da pergunta)'); };
+  pintarChave();
+  let tAviso = null;
+  function avisar(txt) { const a = $('#aviso-flutuante'); a.textContent = txt; a.classList.add('ver'); clearTimeout(tAviso); tAviso = setTimeout(() => a.classList.remove('ver'), 2200); }
+
+  // ---------- teclado físico ----------
+  let teclas = null;
+  document.addEventListener('keydown', ev => {
+    if ($('#camada').classList.contains('aberta')) {
+      if (ev.key === 'Enter' || ev.key === ' ') { const b = $('#folha .botao-grande'); if (b) { ev.preventDefault(); b.click(); } }
+      return;
+    }
+    if (!teclas) return;
+    if (/^[0-9]$/.test(ev.key) && teclas.digito) { teclas.digito(ev.key); ev.preventDefault(); }
+    else if (/^[1-9]$/.test(ev.key) && teclas.opcao) { teclas.opcao(Number(ev.key) - 1); ev.preventDefault(); }
+    else if (/^[ivxlcdm]$/i.test(ev.key) && teclas.letra) { teclas.letra(ev.key.toUpperCase()); ev.preventDefault(); }
+    else if (ev.key === 'Backspace' && teclas.apagar) { teclas.apagar(); ev.preventDefault(); }
+    else if (ev.key === 'Enter' && teclas.ok) { teclas.ok(); ev.preventDefault(); }
+  });
+
+  // ---------- navegação (hash: o botão voltar do celular funciona) ----------
+  const ROTAS = ['missoes', 'patente', 'album', 'missao', 'painel'];
+  let painelLiberado = false;
+  function ir(rota) { if (location.hash !== '#/' + rota) location.hash = '#/' + rota; else render(); }
+  function rotaAtual() { const r = (location.hash || '').replace(/^#\/?/, ''); return ROTAS.includes(r) ? r : 'missoes'; }
+  window.addEventListener('hashchange', render);
+  $('#abas').addEventListener('click', ev => { const b = ev.target.closest('button[data-rota]'); if (b) ir(b.dataset.rota); });
+  $('#b-sair').onclick = () => { ir('missoes'); avisar('Sua missão ficou guardada. Continue quando quiser! 🚀'); };
+  const logo = $('#logo');
+  let segurar = null;
+  const soltar = () => { clearTimeout(segurar); segurar = null; logo.classList.remove('segurando'); };
+  logo.addEventListener('pointerdown', ev => { ev.preventDefault(); logo.classList.add('segurando'); segurar = setTimeout(() => { soltar(); painelLiberado = true; ir('painel'); }, 3000); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => logo.addEventListener(t, soltar));
+  logo.addEventListener('contextmenu', ev => ev.preventDefault());
+
+  function render() {
+    calar(); teclas = null;
+    $('#camada').classList.remove('aberta'); $('#festa').classList.remove('aberta');
+    J.garantirDia(estado, hoje());
+    let rota = rotaAtual();
+    if ((rota === 'painel' && !painelLiberado) || (rota === 'missao' && !estado.missaoAtiva)) {
+      rota = 'missoes';
+      try { history.replaceState(null, '', '#/missoes'); } catch (e) {}
+    }
+    const emMissao = rota === 'missao';
+    $('#abas').hidden = emMissao || rota === 'painel';
+    document.body.classList.toggle('sem-abas', emMissao || rota === 'painel');
+    $('#b-sair').hidden = !emMissao;
+    $('#trilha').hidden = !emMissao;
+    $('#abas').querySelectorAll('button').forEach(b => b.setAttribute('aria-current', b.dataset.rota === rota ? 'page' : 'false'));
+    document.documentElement.style.setProperty('--tema', '#1d4ed8');
+    window.scrollTo(0, 0);
+    if (rota === 'patente') return telaPatente();
+    if (rota === 'album') return telaAlbum();
+    if (rota === 'painel') return telaPainel();
+    if (rota === 'missao') return proxima();
+    return telaMissoes();
+  }
+
+  // ======================================================================
+  // PÁGINAS
+  // ======================================================================
+  function cartaoPerfil() {
+    const p = J.patenteDe(estado.xp), seq = J.sequenciaDias(estado.dias, hoje());
+    return `<div class="cartao perfil">
+      <div class="insignia">${p.icone}</div>
+      <div><div class="sub" style="font-size:16px">Oi, Benjamin! Sua patente:</div>
+        <div class="nome-pat">${esc(p.nome)}</div>
+        <div class="barra" aria-hidden="true"><i style="width:${Math.round(p.progresso * 100)}%"></i></div>
+        <div class="sub" style="font-size:15px">⭐ ${estado.xp} XP · faltam ${p.falta} para <b>${esc(p.proxima.nome)}</b></div>
+      </div></div>
+      <div class="placar">${seq >= 2 ? `<span>🔥 ${seq} dias seguidos</span>` : ''}<span>📅 ${estado.dias.length} dia${estado.dias.length === 1 ? '' : 's'} de treino</span><span>🏅 ${Object.values(estado.cartoes).filter(c => c.caixa === 5).length} de 81 na memória</span></div>`;
+  }
+  function telaMissoes() {
+    const dia = estado.dia, ativa = estado.missaoAtiva;
+    const proximaNum = (dia.missoes.find(m => !m.feita) || {}).numero;
+    const cards = dia.missoes.map(md => {
+      const n = J.nomeMissao(md.numero);
+      const andando = ativa && ativa.numero === md.numero && !md.feita;
+      const estadoTxt = md.feita ? `✔ Cumprida · +${md.xp} XP` : andando ? `▶ Continuar (${J.progresso(ativa).feitas} de ${J.progresso(ativa).total})` : '▶ Começar';
+      return `<button class="missao ${md.feita ? 'feita' : md.numero === proximaNum ? 'proxima' : ''}" data-missao="${md.numero}" ${md.feita ? 'aria-disabled="true"' : ''}>
+        <span class="planeta">${n.icone}</span><span class="nome">${esc(n.nome)}</span><span class="estado">${estadoTxt}</span></button>`;
+    }).join('');
+    const tudo = dia.missoes.every(m => m.feita);
+    const extraAndando = ativa && ativa.numero === 'extra';
+    palco.innerHTML = `${cartaoPerfil()}
+      <h2 class="secao">Missões de hoje</h2>
+      <div class="missoes">${cards}</div>
+      ${tudo ? `<div class="cartao centro"><div class="titulo" style="font-size:24px">🎉 Missões de hoje cumpridas!</div><div class="sub">Amanhã tem missões novas. Quer treinar mais?</div>
+        <div class="pilha"><button class="botao-grande claro" data-missao="extra">✨ ${extraAndando ? 'Continuar a missão extra' : 'Missão extra'}</button></div></div>` : ''}
+      <a class="cartao" href="revisao-prova.html" style="text-decoration:none;display:flex;gap:12px;align-items:center"><span style="font-size:40px">📝</span><span><b>Revisão da prova</b><br><span class="sub" style="font-size:16px">A missão especial do 2º trimestre</span></span></a>`;
+    palco.querySelectorAll('[data-missao]').forEach(b => { b.onclick = () => {
+      const num = b.dataset.missao === 'extra' ? 'extra' : Number(b.dataset.missao);
+      const md = dia.missoes.find(x => x.numero === num);
+      if (md && md.feita) { avisar('Essa missão já foi cumprida hoje! ✔'); return; }
+      abrirMissao(num);
+    }; });
+  }
+  function telaPatente() {
+    const p = J.patenteDe(estado.xp), seq = J.sequenciaDias(estado.dias, hoje());
+    const melhor = estado.historico.reduce((m, h) => Math.max(m, h.xp), 0);
+    const totalPerg = estado.historico.reduce((s, h) => s + h.perguntas, 0);
+    const h = hoje(), dias7 = [];
+    for (let d = h - 6; d <= h; d++) { const x = estado.historico.find(y => y.dia === d); dias7.push({ d, xp: x ? x.xp : 0 }); }
+    const max7 = Math.max(50, ...dias7.map(x => x.xp));
+    const nomeDia = d => ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'][new Date(d * 86400000 + 12 * 3600000).getUTCDay()];
+    palco.innerHTML = `${cartaoPerfil()}
+      <div class="cartao"><h2 class="secao" style="margin:0 0 6px">Meus recordes</h2>
+        <div class="placar"><span>🏆 Melhor dia: ${melhor} XP</span><span>🔥 Sequência: ${seq} dia${seq === 1 ? '' : 's'}</span><span>✅ ${totalPerg} perguntas respondidas</span></div>
+        <div class="grafico" aria-label="XP dos últimos 7 dias">${dias7.map(x => `<div><b style="color:#111827">${x.xp || ''}</b><i style="height:${Math.round(x.xp / max7 * 100)}%"></i>${x.d === h ? 'hoje' : nomeDia(x.d)}</div>`).join('')}</div>
+      </div>
+      <h2 class="secao">Patentes</h2>
+      <div class="degraus">${J.PATENTES.map((pt, i) => {
+        const cls = i < p.indice ? 'ok' : i === p.indice ? 'atual' : 'trancado';
+        return `<div class="degrau ${cls}"><span class="ic">${pt.icone}</span><span><b>${esc(pt.nome)}</b><small>${pt.xp} XP</small></span><span>${i < p.indice ? '✔' : i === p.indice ? '⭐ você' : '🔒'}</span></div>`;
+      }).join('')}</div>`;
+  }
+  function telaAlbum() {
+    let linhas = '';
+    for (let a = 2; a <= 10; a++) {
+      const cs = []; for (let b = 2; b <= 10; b++) cs.push(estado.cartoes[J.chave(a, b)]);
+      const dom = cs.filter(c => c.caixa === 5).length;
+      linhas += `<div class="album-linha"><div class="album-cab">Tabuada do ${a}<small>${dom ? '⭐'.repeat(Math.min(dom, 9)) + ' ' : ''}${dom} de 9 na memória</small></div>
+        <div class="figurinhas">${cs.map(c => J.novo(c)
+          ? `<div class="fig" title="ainda não apareceu">${c.a}×${c.b}<small>?</small></div>`
+          : `<div class="fig b${c.caixa}" title="${c.a}×${c.b}">${c.a}×${c.b}<small>${c.caixa >= 3 ? '= ' + c.a * c.b : '…'}${c.caixa === 5 ? '⭐' : ''}</small></div>`).join('')}</div></div>`;
+    }
+    palco.innerHTML = `<div class="cartao"><div class="titulo" style="font-size:26px">📒 Álbum da Tabuada</div>
+      <p class="sub" style="font-size:17px;margin:4px 0 8px">Cada figurinha é uma conta. Ela vai ficando mais forte quando você acerta <b>rápido</b> em dias diferentes. Dourada ⭐ = você sabe de cor!</p>
+      <div class="legenda"><span><i style="background:var(--c0)"></i>ainda não apareceu</span><span><i style="background:var(--c1)"></i>treinando</span><span><i style="background:var(--c3)"></i>quase lá</span><span><i style="background:var(--c5)"></i>de cor ⭐</span></div>
+      ${linhas}</div>`;
+  }
+
+  // ======================================================================
+  // MISSÃO
+  // ======================================================================
+  function abrirMissao(num) {
+    const h = hoje();
+    if (!estado.missaoAtiva || estado.missaoAtiva.numero !== num || estado.missaoAtiva.dia !== h) {
+      if (estado.missaoAtiva && !confirm('Você tem outra missão pela metade. Começar esta mesmo assim? (a outra recomeça do zero depois)')) { num = estado.missaoAtiva.numero; }
+      else estado.missaoAtiva = J.criarMissao(estado, h, Math.random, num);
+      salvar();
+    }
+    ir('missao');
+  }
+  function pintarTrilha() {
+    const m = estado.missaoAtiva; if (!m) return;
+    const { feitas, total } = J.progresso(m), pct = total ? feitas / total : 0;
+    $('#trilha-feito').style.width = (pct * 100) + '%';
+    $('#trilha-foguete').style.left = (7 + pct * 80) + '%';
+    $('#trilha-texto').textContent = `${J.nomeMissao(m.numero).nome} · ${feitas} de ${total}`;
+  }
+  function proxima() {
+    const m = estado.missaoAtiva;
+    if (!m) return ir('missoes');
+    pintarTrilha();
+    if (m.finalizada) return telaFimMissao();
+    const q = J.perguntaAtual(m);
+    if (q.tema === 'romanos' && !m.regrasVistas) return telaRegras(() => { m.regrasVistas = true; salvar(); proxima(); });
+    renderPergunta(q);
+  }
+  function emMissao() { return rotaAtual() === 'missao' && estado.missaoAtiva; }
+
+  // ---------- desenhos ----------
+  function svgRelogio(o) {
+    const { h, m, romano = false, destacar = false } = o;
+    const nums = romano ? ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'] : [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    let s = `<svg class="relogio" viewBox="0 0 200 200" role="img" aria-label="Relógio de ponteiros"><circle cx="100" cy="100" r="95" fill="#fff" stroke="#1f2937" stroke-width="5"/>`;
+    for (let i = 0; i < 60; i++) { const f = i % 5 === 0; s += `<line x1="100" y1="${f ? 13 : 9}" x2="100" y2="5" stroke="#374151" stroke-width="${f ? 3 : 1.2}" transform="rotate(${i * 6} 100 100)"/>`; }
+    nums.forEach((n, k) => {
+      const a = k * 30 * Math.PI / 180, r = romano ? 70 : 72, x = 100 + r * Math.sin(a), y = 100 - r * Math.cos(a);
+      s += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${romano ? (String(n).length > 2 ? 13 : 16) : 21}" font-weight="700" font-family="${romano ? 'Georgia, serif' : 'Segoe UI, sans-serif'}" fill="#111827">${n}</text>`;
+    });
+    s += `<line class="${destacar ? 'pulsar' : ''}" x1="100" y1="100" x2="100" y2="58" stroke="#dc2626" stroke-width="11" stroke-linecap="round" transform="rotate(${((h % 12) + m / 60) * 30} 100 100)"/>`;
+    s += `<line x1="100" y1="100" x2="100" y2="36" stroke="#2563eb" stroke-width="5" stroke-linecap="round" transform="rotate(${m * 6} 100 100)"/><circle cx="100" cy="100" r="7" fill="#111827"/></svg>`;
+    if (!destacar) return `<div class="relogio-wrap">${s}</div>`;
+    return `<div class="relogio-wrap">${s}<div class="legenda-relogio"><div class="lh">● ponteiro PEQUENO e grosso = HORA</div><div class="lm">● ponteiro GRANDE e fino = MINUTOS</div></div></div>`;
+  }
+  function htmlVisual(v) {
+    if (!v) return '';
+    if (v.kind === 'romano') return `<div class="romano-grande">${esc(v.texto)}</div>`;
+    if (v.kind === 'expressao') return `<div class="expressao">${esc(v.texto)}</div>`;
+    if (v.kind === 'relogio') return svgRelogio(v);
+    if (v.kind === 'linha') return `<div class="chips">` + v.pontos.map((p, i) => (i ? `<span class="seta">+${p.pulo} →</span>` : '') + `<span class="chip ${i === 0 ? 'inicio' : i === v.pontos.length - 1 ? 'destino' : 'conta'}">${esc(p.t)}</span>`).join('') + `</div>`;
+    if (v.kind === 'sequencia') return `<div class="chips">` + v.itens.map((t, i) => `<span class="chip ${v.destaques[i] || ''}">${esc(t)}</span>`).join('') + `</div>`;
+    if (v.kind === 'caminho') return `<div class="chips">` + v.itens.map((it, i) => (i ? '<span class="seta">→</span>' : '') + `<span class="chip ${it.marca || ''}">${esc(it.texto)}${it.num ? `<span class="num">${it.num}</span>` : ''}</span>`).join('') + `</div>`;
+    if (v.kind === 'unidades') return `<div class="tabela-uni">` + R.UNIDADES.map(u => { const hl = v.destaque === u.nome ? ' class="hl"' : ''; return `<div${hl}>${esc(R.cap(u.nome))}</div><div${hl}>${u.valor} ${esc(u.uni)}</div>`; }).join('') + `</div>`;
+    return '';
+  }
+  function matrizSVG(a, b) {
+    const passo = 24, larg = b * passo + 8, alt = a * passo + 8;
+    let s = `<svg viewBox="0 0 ${larg} ${alt}" width="${Math.min(larg * 1.15, 290)}" role="img" aria-label="${a} fileiras de ${b} bolinhas">`;
+    for (let i = 0; i < a; i++) for (let j = 0; j < b; j++) s += `<circle cx="${4 + passo / 2 + j * passo}" cy="${4 + passo / 2 + i * passo}" r="8" fill="${j < 5 ? '#059669' : '#f59e0b'}"/>`;
+    return s + '</svg>';
+  }
+
+  // ---------- comemoração e explicação ----------
+  const ELOGIOS = ['Muito bem!', 'Isso aí!', 'Mandou bem!', 'Perfeito!', 'Arrasou!', 'Show!', 'Acertou!'];
+  function festa(msg, depois, curto) {
+    plim();
+    $('#festa-caixa').innerHTML = `<div class="grande">${['⭐', '🌟', '🚀', '🎯'][Math.floor(Math.random() * 4)]}</div><div class="txt">${esc(msg || ELOGIOS[Math.floor(Math.random() * ELOGIOS.length)])}</div>`;
+    $('#festa').classList.add('aberta');
+    if (!curto) for (let i = 0; i < 8; i++) {
+      const b = document.createElement('div');
+      b.className = 'brilho'; b.textContent = ['✨', '⭐', '💫'][i % 3]; b.style.left = '50%'; b.style.top = '45%';
+      const ang = i / 8 * Math.PI * 2;
+      b.style.setProperty('--dx', Math.cos(ang) * 160 + 'px'); b.style.setProperty('--dy', Math.sin(ang) * 140 + 'px');
+      document.body.appendChild(b); setTimeout(() => b.remove(), 950);
+    }
+    setTimeout(() => { $('#festa').classList.remove('aberta'); if (emMissao() || !depois.soEmMissao) depois(); }, curto ? 650 : 1000);
+  }
+  function abrirFolha(html, aoFechar, rotulo = 'Entendi 👍') {
+    $('#folha').innerHTML = html + `<button class="botao-grande">${rotulo}</button>`;
+    $('#camada').classList.add('aberta');
+    $('#folha').scrollTop = 0;
+    $('#folha .botao-grande').onclick = () => { calar(); $('#camada').classList.remove('aberta'); aoFechar && aoFechar(); };
+  }
+  function explicar(certaHtml, linhas, visual, extra, aoFechar, rodape) {
+    abrirFolha(`<h2>Vamos ver juntos 💡</h2><div class="resposta-certa">A resposta certa é: <b>${certaHtml}</b></div>${extra || ''}
+      <div class="visual">${visual || ''}</div><div class="explica">${linhas.map(l => `<p>${marcarRomanos(l)}</p>`).join('')}</div>
+      ${rodape ? `<p class="rodape-folha">${rodape}</p>` : ''}`, aoFechar);
+    if (estado.prefs.voz) falar('A resposta certa é ' + R.paraFala(certaHtml.replace(/<[^>]+>/g, '')).replace(/−/g, ' menos ') + '. ' + linhas.map(l => R.paraFala(l).replace(/−/g, ' menos ')).join('. '));
+  }
+
+  function cabecalho(q) {
+    const t = J.TEMA[q.tema] || { nome: q.tema, icone: '❓', cor: '#1d4ed8' };
+    document.documentElement.style.setProperty('--tema', t.cor);
+    return `<div class="linha-selo"><span class="selo">${t.icone} ${esc(t.nome)}</span>
+      <span>${q.tema === 'romanos' ? '<button class="botao-mini" id="b-regras">📜 Regras</button> ' : ''}${temVoz ? '<button class="botao-mini" id="b-falar" aria-label="Ler a pergunta">🔊</button>' : ''}</span></div>`;
+  }
+  function ligarCabecalho(q, fala) {
+    const bf = $('#b-falar'); if (bf) bf.onclick = () => falar(fala || q.fala);
+    const br = $('#b-regras'); if (br) br.onclick = () => telaRegras(() => renderPergunta(q));
+  }
+
+  function renderPergunta(q) {
+    calar(); teclas = null;
+    window.scrollTo(0, 0);
+    if (q.tipo === 'fato') return renderFato(q);
+    if (q.tipo === 'mult' || q.tipo === 'prova' || q.tipo === 'conta') return renderEtapas(q);
+    const temVisual = !!q.visual;
+    palco.innerHTML = `<div class="cartao">${cabecalho(q)}
+      <div class="corpo ${temVisual || q.tipo !== 'escolha' ? 'duas' : ''}">
+        <div><div class="enunciado">${marcarRomanos(q.enunciado)}</div>${temVisual ? `<div class="visual">${htmlVisual(q.visual)}</div>` : ''}</div>
+        <div id="area"></div></div></div>`;
+    ligarCabecalho(q);
+    const area = $('#area');
+    if (q.tipo === 'numero') entradaNumero(area, q.sufixo, v => concluir(q, J.verificar(q, v), v));
+    else if (q.tipo === 'romano') entradaRomano(area, v => concluir(q, J.verificar(q, v), v));
+    else if (q.tipo === 'escolha') entradaEscolha(area, q.opcoes, q.correta, { romanas: q.opcoesRomanas }, v => concluir(q, v === q.correta, v));
+    else if (q.tipo === 'ligar') entradaLigar(area, q);
+    if (estado.prefs.voz) falar(q.fala);
+  }
+
+  // ----- tabuada (o tempo é medido em silêncio; nunca aparece) -----
+  function renderFato(q) {
+    let enun;
+    if (q.formato === 'lacuna') enun = `<div class="expressao">${esc(q.antes)}<span class="lacuna">?</span>${esc(q.depois)}</div>`;
+    else if (q.formato === 'problema') enun = `<div class="expressao texto">${esc(q.texto)}</div>`;
+    else enun = `<div class="expressao">${esc(q.expr)}</div>`;
+    palco.innerHTML = `<div class="cartao">${cabecalho(q)}<div class="corpo duas"><div style="display:flex;align-items:center;justify-content:center;min-height:120px">${enun}</div><div id="area"></div></div></div>`;
+    ligarCabecalho(q);
+    let t0 = performance.now();
+    const responder = v => { const ms = performance.now() - t0; concluir(q, J.verificar(q, v), v, ms); };
+    const area = $('#area');
+    if (q.formato === 'escolha') entradaEscolha(area, q.opcoes, q.correta, { grande: true }, responder);
+    else entradaNumero(area, '', responder, 3);
+    if (estado.prefs.voz) falar(q.fala, () => { t0 = performance.now(); });
+  }
+
+  // ----- entradas -----
+  function entradaNumero(area, sufixo, aoOk, max = 5) {
+    let valor = '';
+    area.innerHTML = `<div class="visor" id="visor"></div>
+      <div class="teclado">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button class="tecla" data-d="${n}">${n}</button>`).join('')}
+      <button class="tecla apagar" data-a="1" aria-label="Apagar">⌫</button><button class="tecla" data-d="0">0</button><button class="tecla ok" data-ok="1">OK</button></div>`;
+    const visor = area.querySelector('#visor');
+    const pintar = () => { visor.innerHTML = (valor ? esc(valor) : '<span class="vazio">?</span>') + (sufixo ? ` <span class="sufixo">${esc(sufixo)}</span>` : ''); };
+    teclas = {
+      digito: d => { if (valor.length < max) { valor = (valor === '0' ? '' : valor) + d; pintar(); } },
+      apagar: () => { valor = valor.slice(0, -1); pintar(); },
+      ok: () => { if (!valor) { visor.classList.remove('tremer'); void visor.offsetWidth; visor.classList.add('tremer'); return; } teclas = null; aoOk(valor); },
+    };
+    area.querySelector('.teclado').onclick = ev => { const b = ev.target.closest('button'); if (!b || !teclas) return; if (b.dataset.d) teclas.digito(b.dataset.d); else if (b.dataset.a) teclas.apagar(); else if (b.dataset.ok) teclas.ok(); };
+    pintar();
+  }
+  function entradaRomano(area, aoOk) {
+    let valor = '';
+    const sims = R.SIMBOLOS;
+    area.innerHTML = `<div class="visor rom-visor" id="visor"></div>
+      <div class="teclado pecas" style="--n:${sims.length}">${sims.map(s => `<button class="tecla peca" data-l="${s}">${s}</button>`).join('')}</div>
+      <div class="linha-acoes"><button class="tecla apagar" data-a="1">⌫ Apagar</button><button class="tecla ok" data-ok="1">OK</button></div>`;
+    const visor = area.querySelector('#visor');
+    const pintar = () => { visor.innerHTML = valor ? esc(valor) : '<span class="vazio">toque nas peças</span>'; };
+    teclas = {
+      letra: l => { if (sims.includes(l) && valor.length < 12) { valor += l; pintar(); } },
+      apagar: () => { valor = valor.slice(0, -1); pintar(); },
+      ok: () => { if (!valor) { visor.classList.remove('tremer'); void visor.offsetWidth; visor.classList.add('tremer'); return; } teclas = null; aoOk(valor); },
+    };
+    area.onclick = ev => { const b = ev.target.closest('button'); if (!b || !teclas) return; if (b.dataset.l) teclas.letra(b.dataset.l); else if (b.dataset.a) teclas.apagar(); else if (b.dataset.ok) teclas.ok(); };
+    pintar();
+  }
+  function entradaEscolha(area, opcoes, correta, o, aoEscolher) {
+    const curtas = opcoes.every(x => String(x).length <= 7);
+    const cls = o.romanas ? 'rom' : o.frase ? 'frase' : o.grande ? 'grande' : '';
+    area.innerHTML = `<div class="opcoes ${curtas ? 'grade' : ''}">${opcoes.map((x, i) => `<button class="opcao ${cls}" data-i="${i}">${esc(x)}</button>`).join('')}</div>`;
+    const botoes = Array.from(area.querySelectorAll('.opcao'));
+    const escolher = i => {
+      if (i < 0 || i >= opcoes.length || !teclas) return;
+      teclas = null;
+      botoes.forEach(b => { b.disabled = true; });
+      const v = opcoes[i];
+      botoes[i].classList.add(v === correta ? 'certa' : 'errada');
+      if (v !== correta) botoes[opcoes.indexOf(correta)].classList.add('certa');
+      setTimeout(() => aoEscolher(v), v === correta ? 120 : 650);
+    };
+    teclas = { opcao: escolher };
+    area.querySelector('.opcoes').onclick = ev => { const b = ev.target.closest('.opcao'); if (b && !b.disabled) escolher(Number(b.dataset.i)); };
+  }
+  function entradaLigar(area, q) {
+    const esq = q.pares.map(x => x[0]), dir = q.direita, mapa = Object.fromEntries(q.pares);
+    area.innerHTML = `<div class="dica-ligar">Toque numa palavra e depois no tempo que combina.</div>
+      <div class="ligar"><div class="col">${esq.map((t, i) => `<button class="opcao" data-lado="e" data-i="${i}">${esc(t)}</button>`).join('')}</div>
+      <div class="col">${dir.map((t, i) => `<button class="opcao" data-lado="d" data-i="${i}">${esc(t)}</button>`).join('')}</div></div>`;
+    let sel = null, feitos = 0, encerrado = false;
+    area.querySelector('.ligar').onclick = ev => {
+      const b = ev.target.closest('.opcao'); if (!b || b.disabled || encerrado) return;
+      if (!sel || sel.dataset.lado === b.dataset.lado) { if (sel) sel.classList.remove('sel'); sel = b; b.classList.add('sel'); return; }
+      const e = sel.dataset.lado === 'e' ? sel : b, d = sel.dataset.lado === 'e' ? b : sel;
+      sel.classList.remove('sel'); sel = null;
+      const te = esq[Number(e.dataset.i)], td = dir[Number(d.dataset.i)];
+      if (mapa[te] === td) { e.classList.add('feito'); d.classList.add('feito'); e.disabled = d.disabled = true; if (++feitos === esq.length) { encerrado = true; concluir(q, true, ''); } }
+      else { encerrado = true; e.classList.add('errada'); d.classList.add('errada'); setTimeout(() => concluir(q, false, `${te} = ${td}`), 650); }
+    };
+  }
+
+  // ----- conta armada (+, −, ×) -----
+  function normConta(c) { return { op: c.op || '×', a: c.a, b: c.b !== undefined ? c.b : c.m, resultado: c.resultado, passos: c.passos, reservaFinal: c.reservaFinal || 0 }; }
+  function geometria(c) {
+    const la = String(c.a).length, lb = String(c.b).length;
+    const cols = c.op === '−' ? la : c.op === '+' ? Math.max(la, lb) + 1 : la + 1;
+    const maxl = c.op === '−' ? la : c.op === '+' ? Math.max(la, lb) : la;
+    // caixinhas de rascunho (reserva / empréstimo) acima de cada coluna que pode recebê-las
+    const temCaixa = r => c.op === '−' ? r < la : (r >= 1 && r < maxl);
+    return { cols, temCaixa };
+  }
+  function htmlConta(c, modo, est) {
+    const { cols, temCaixa } = geometria(c);
+    const pad = (n) => String(n).padStart(cols, ' ');
+    const sa = pad(c.a), sb = pad(c.b), sres = pad(c.resultado);
+    const rascunho = r => {
+      const p = c.passos[r];
+      if (!p) return '';
+      if (c.op === '−') return p.eventos.length ? p.valor : '';
+      return r >= 1 && p.reserva ? p.reserva : '';
+    };
+    let h = `<div class="conta" style="grid-template-columns: repeat(${cols + 1}, var(--cel))"><div class="c vai"></div>`;
+    for (let i = 0; i < cols; i++) {
+      const r = cols - 1 - i;
+      if (!temCaixa(r)) { h += '<div class="c vai"></div>'; continue; }
+      if (modo === 'entrada') h += `<div class="c vai caixa ${est.ativo.lin === 'v' && est.ativo.i === i ? 'ativo' : ''}" data-v="${i}">${esc(est.vai[i] || '')}</div>`;
+      else h += `<div class="c vai">${rascunho(r)}</div>`;
+    }
+    h += `<div class="c"></div>`;
+    for (let i = 0; i < cols; i++) {
+      const r = cols - 1 - i, ch = sa[i].trim();
+      const riscar = modo !== 'entrada' && c.op === '−' && c.passos[r] && c.passos[r].eventos.length;
+      h += `<div class="c ${riscar ? 'riscado' : ''}">${ch}</div>`;
+    }
+    h += `<div class="c">${c.op}</div>` + Array.from(sb).map(ch => `<div class="c">${ch.trim()}</div>`).join('');
+    h += `<div class="traco"></div><div class="c"></div>`;
+    for (let i = 0; i < cols; i++) {
+      if (modo === 'entrada') h += `<div class="c res ${est.ativo.lin === 'r' && est.ativo.i === i ? 'ativo' : ''}" data-r="${i}">${esc(est.res[i] || '')}</div>`;
+      else h += sres[i].trim() ? `<div class="c res certo">${sres[i]}</div>` : '<div class="c"></div>';
+    }
+    return h + '</div>';
+  }
+  function entradaConta(area, c, aoOk) {
+    const { cols } = geometria(c);
+    const est = { res: Array(cols).fill(''), vai: Array(cols).fill(''), ativo: { lin: 'r', i: cols - 1 } };
+    const ajuda = c.op === '−' ? 'Comece pela DIREITA ⬅️ · o quadradinho de cima é para o empréstimo' : 'Comece pela DIREITA ⬅️ · o quadradinho de cima é para a reserva (o "vai um")';
+    const pintar = (aviso) => {
+      area.innerHTML = `${htmlConta(c, 'entrada', est)}<div class="ajuda-conta">${ajuda}</div>
+        <div class="teclado">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button class="tecla" data-d="${k}">${k}</button>`).join('')}
+        <button class="tecla apagar" data-a="1" aria-label="Apagar">⌫</button><button class="tecla" data-d="0">0</button><button class="tecla ok" data-ok="1">OK</button></div>
+        <div class="aviso">${aviso || ''}</div>`;
+    };
+    const proximoVazio = () => { for (let i = cols - 1; i >= 0; i--) if (!est.res[i]) return i; return 0; };
+    teclas = {
+      digito: d => {
+        if (est.ativo.lin === 'v') { est.vai[est.ativo.i] = (est.vai[est.ativo.i].length < 2 ? est.vai[est.ativo.i] : '') + d; if (c.op !== '−' || est.vai[est.ativo.i].length >= 2) est.ativo = { lin: 'r', i: proximoVazio() }; }
+        else { est.res[est.ativo.i] = d; if (est.ativo.i > 0) est.ativo = { lin: 'r', i: est.ativo.i - 1 }; }
+        pintar();
+      },
+      apagar: () => {
+        if (est.ativo.lin === 'v') est.vai[est.ativo.i] = '';
+        else if (est.res[est.ativo.i]) est.res[est.ativo.i] = '';
+        else if (est.ativo.i < cols - 1) { est.ativo.i++; est.res[est.ativo.i] = ''; }
+        pintar();
+      },
+      ok: () => {
+        const f = est.res.findIndex(x => x !== '');
+        if (f < 0 || est.res.slice(f).some(x => x === '')) { pintar('Complete os quadradinhos da direita para a esquerda 🙂'); return; }
+        teclas = null;
+        aoOk(Number(est.res.join('')));
+      },
+    };
+    area.onclick = ev => {
+      const b = ev.target.closest('[data-d],[data-a],[data-ok],[data-r],[data-v]'); if (!b || !teclas) return;
+      if (b.dataset.d) teclas.digito(b.dataset.d); else if (b.dataset.a) teclas.apagar(); else if (b.dataset.ok) teclas.ok();
+      else if (b.dataset.r !== undefined) { est.ativo = { lin: 'r', i: Number(b.dataset.r) }; pintar(); }
+      else if (b.dataset.v !== undefined) { est.ativo = { lin: 'v', i: Number(b.dataset.v) }; pintar(); }
+    };
+    pintar();
+  }
+
+  // ----- perguntas em etapas (conta · S.M./Cálculo/R: · prova real) -----
+  function etapasDe(q) {
+    if (q.tipo === 'conta') return [{ nome: 'Cálculo', kind: 'conta', pergunta: `Arme e faça: ${q.conta.a} ${q.conta.op} ${q.conta.b}`, conta: q.conta, linhas: q.explicacao.linhas }];
+    if (q.tipo === 'mult') {
+      const m = q.meta.m;
+      const nomeVezes = m === 2 ? 'Dobro = 2 vezes' : m === 3 ? 'Triplo = 3 vezes' : `${m} vezes`;
+      return [
+        { nome: 'S.M.', kind: 'escolha', pergunta: 'S.M. — Qual é a sentença matemática?', opcoes: q.sm.opcoes, correta: q.sm.correta, linhas: [`${nomeVezes}. Quando é "vezes", a conta é de MULTIPLICAÇÃO (×), não de mais (+).`, `Então: ${q.sm.correta}`] },
+        { nome: 'Cálculo', kind: 'conta', pergunta: `Cálculo — Arme e faça: ${q.meta.a} × ${m}`, conta: normConta(q.conta), linhas: R.linhasConta(q.conta) },
+        { nome: 'R:', kind: 'escolha', frase: true, pergunta: 'R: — Qual é a resposta completa?', opcoes: q.r.opcoes, correta: q.r.correta, linhas: ['A resposta precisa ter o número certo da conta e responder o que a pergunta quer saber.', `${q.meta.a} × ${m} = ${q.conta.resultado}`] },
+      ];
+    }
+    const pc = q.provaConta;
+    return [
+      { nome: 'Qual prova?', kind: 'escolha', pergunta: 'Qual conta tira a prova real?', opcoes: q.etapa1.opcoes, correta: q.etapa1.correta, linhas: q.etapa1.linhas },
+      { nome: 'Prova', kind: 'conta', pergunta: `Faça a prova real: ${pc.a} ${pc.op} ${pc.b}`, conta: pc, linhas: q.linhasProva },
+      { nome: 'Certa?', kind: 'escolha', pergunta: `A prova real deu ${pc.resultado}. A conta de ${q.meta.quem} está…`, opcoes: q.etapa3.opcoes, correta: q.etapa3.correta, linhas: q.etapa3.linhas },
+    ];
+  }
+  function renderEtapas(q) {
+    const etapas = etapasDe(q), st = { k: 0, errou: false };
+    const desenhar = () => {
+      const e = etapas[st.k];
+      const pills = etapas.length > 1 ? `<div class="etapas">${etapas.map((x, i) => `<span class="etapa ${i === st.k ? 'agora' : i < st.k ? 'ok' : ''}">${i + 1} ${esc(x.nome)}</span>`).join('')}</div>` : '';
+      const mostraEnunciado = q.tipo !== 'conta' || !q.enunciado.startsWith('Arme');
+      palco.innerHTML = `<div class="cartao">${cabecalho(q)}${pills}
+        <div class="corpo duas"><div>${mostraEnunciado ? `<div class="enunciado" style="font-size:clamp(19px,4.6vw,23px)">${esc(q.enunciado)}</div>` : ''}<div class="pergunta-etapa">${esc(e.pergunta)}</div></div><div id="area"></div></div></div>`;
+      ligarCabecalho(q, (st.k === 0 ? q.fala + '. ' : '') + R.paraFala(e.pergunta).replace(/−/g, ' menos '));
+      const area = $('#area');
+      if (e.kind === 'conta') entradaConta(area, e.conta, v => fimEtapa(v === e.conta.resultado, String(e.conta.resultado), e.linhas, htmlConta(e.conta, 'solucao')));
+      else entradaEscolha(area, e.opcoes, e.correta, { frase: e.frase }, v => fimEtapa(v === e.correta, esc(e.correta), e.linhas, ''));
+      if (estado.prefs.voz) falar((st.k === 0 && mostraEnunciado ? q.fala + '. ' : '') + R.paraFala(e.pergunta).replace(/−/g, ' menos '));
+    };
+    const fimEtapa = (ok, certa, linhas, visual) => {
+      if (!ok) st.errou = true;
+      const ultima = st.k === etapas.length - 1;
+      const seguir = () => {
+        if (!emMissao()) return;
+        if (!ultima) { st.k++; desenhar(); return; }
+        J.registrar(estado, estado.missaoAtiva, { acertou: !st.errou }, hoje(), Math.random); salvar();
+        if (!st.errou) festa(etapas.length > 1 ? 'Resolvido! 🏆' : null, Object.assign(proxima, { soEmMissao: true }));
+        else proxima();
+      };
+      if (ok) { if (!ultima) { plim(); setTimeout(seguir, 400); } else seguir(); }
+      else explicar(certa, linhas, visual, '', seguir, ultima ? 'Essa pergunta volta daqui a pouquinho para você treinar de novo. 💪' : 'Agora vamos para a próxima etapa.');
+    };
+    desenhar();
+  }
+
+  // ----- depois de responder (perguntas de uma etapa) -----
+  function concluir(q, acertou, resposta, ms) {
+    J.registrar(estado, estado.missaoAtiva, { acertou, ms }, hoje(), Math.random);
+    salvar();
+    const seguir = Object.assign(() => { if (emMissao()) proxima(); }, { soEmMissao: true });
+    if (acertou) { festa(null, seguir, q.tema === 'tabuada'); return; }
+    if (q.tipo === 'fato') return explicarFato(q, seguir);
+    let linhas = q.explicacao.linhas.slice(), extra = '';
+    if (q.sub === 'certo' && resposta) linhas.unshift(R.porqueRomanoErrado(resposta, q.meta.n));
+    if (q.tema === 'romanos' && q.tipo === 'romano' && resposta) { const v = R.deRomano(resposta); linhas.unshift(v !== null ? `Você montou ${resposta}, que vale ${v}.` : R.porqueRomanoErrado(resposta, q.meta.n)); }
+    if (q.tipo === 'ligar') extra = `<p>${esc(resposta)} não combina. Veja os pares certos:</p>`;
+    const certa = q.tipo === 'ligar' ? 'os pares abaixo' : q.tipo === 'romano' || q.opcoesRomanas ? `<span class="rom">${esc(q.correta)}</span>` : esc(q.correta) + (q.sufixo ? ' ' + esc(q.sufixo) : '');
+    let decomp = '';
+    if (q.tema === 'romanos' && q.sub !== 'comparar') { const d = R.textoDecomposicao(q.meta.n); decomp = `<div class="decomp">${esc(d)}</div>`; linhas = linhas.filter(l => l !== d); }
+    explicar(certa, linhas, decomp + htmlVisual(q.explicacao.visual), extra, seguir, 'Essa pergunta volta daqui a pouquinho. 💪');
+  }
+  function explicarFato(q, seguir) {
+    const { a, b } = q.meta, p = a * b, est = J.estrategia(a, b);
+    abrirFolha(`<h2>Vamos ver juntos 💡</h2><div class="resposta-certa"><b>${a} × ${b} = ${p}</b></div>
+      ${q.formato === 'lacuna' ? `<p style="font-size:19px">O número que faltava era <b>${esc(q.correta)}</b>.</p>` : ''}
+      <div class="matriz">${matrizSVG(a, b)}<span>${a} fileiras de ${b} bolinhas = ${p}</span></div>
+      <div class="explica"><div class="dica">💡 ${esc(est.texto)}</div><p>🔄 ${esc(J.textoComutativo(a, b))}</p></div>
+      <p class="rodape-folha">Essa conta vai aparecer de novo daqui a pouquinho. 💪</p>`, seguir);
+    if (estado.prefs.voz) falar(`${a} vezes ${b} é ${p}. ${est.texto.replace(/×/g, ' vezes ').replace(/−/g, ' menos ')}`);
+  }
+
+  function telaRegras(depois) {
+    teclas = { ok: depois };
+    const temC = R.ROMAN_MAX >= 100;
+    const sims = [['I', 1], ['V', 5], ['X', 10], ['L', 50]].concat(temC ? [['C', 100]] : []);
+    document.documentElement.style.setProperty('--tema', '#6d28d9');
+    palco.innerHTML = `<div class="cartao regras">
+      <div class="linha-selo"><span class="selo" style="background:#6d28d9">🏛️ Cartão de regras — números romanos</span></div>
+      <div class="simbolos">${sims.map(([s, v]) => `<div class="simbolo"><div class="s">${s}</div><div class="v">${v}</div></div>`).join('')}</div>
+      <div class="regra">1️⃣ Um símbolo repete <b>no máximo 3 vezes</b>.<div class="ex"><span class="ok-ex">III = 3 ✔</span> &nbsp; <span class="no-ex">IIII</span> ✘ &nbsp; <span class="ok-ex">XXX = 30 ✔</span></div></div>
+      <div class="regra">2️⃣ Menor <b>DEPOIS</b> do maior: <b>SOMA</b>.<div class="ex">VI = 5 + 1 = 6 · XI = 11 · XV = 15</div></div>
+      <div class="regra">3️⃣ Menor <b>ANTES</b> do maior: <b>SUBTRAI</b>.<div class="ex">IV = 5 − 1 = 4 · IX = 9 · XL = 40${temC ? ' · XC = 90' : ''}</div></div>
+      <div class="regra">⭐ V e L nunca se repetem: <span class="no-ex">VV</span> ✘ (o certo é X).</div>
+      <button class="botao-grande verde" id="b-sei">Já sei, vamos! 👍</button></div>`;
+    $('#b-sei').onclick = depois;
+  }
+
+  function telaFimMissao() {
+    teclas = null; calar();
+    const m = estado.missaoAtiva;
+    const r = J.finalizarMissao(estado, m, hoje());
+    salvar();
+    $('#b-sair').hidden = true; $('#trilha').hidden = true;
+    const dia = estado.dia, falta = dia.missoes.find(x => !x.feita);
+    const subiram = r.subiram.map(k => estado.cartoes[k]).sort((x, y) => y.caixa - x.caixa).slice(0, 3);
+    palco.innerHTML = `<div class="cartao centro">
+      <div class="mascote">${r.subiuPatente ? r.depois.icone : '🧑‍🚀'}</div>
+      <div class="titulo">${r.subiuPatente ? 'NOVA PATENTE!' : 'Missão cumprida! 🎉'}</div>
+      ${r.subiuPatente ? `<div class="subiu" style="background:#fef9c3;border-color:#facc15">Agora você é ${esc(r.depois.nome)} ${r.depois.icone}</div>` : ''}
+      <div class="ganhos">${r.ganhos.map(g => `<div><span>${esc(g.rotulo)}</span><b>+${g.xp} XP</b></div>`).join('')}<div class="total"><span>Total</span><span>+${r.total} XP</span></div></div>
+      <div style="width:100%;max-width:420px"><div class="barra"><i style="width:${Math.round(r.depois.progresso * 100)}%"></i></div><div class="sub" style="font-size:15px">faltam ${r.depois.falta} XP para ${esc(r.depois.proxima.nome)}</div></div>
+      ${subiram.length ? `<div class="sub">Na tabuada, subiram de nível:</div>${subiram.map(c => `<div class="subiu">${c.a} × ${c.b} = ${c.a * c.b} ${c.caixa === 5 ? '⭐ de cor!' : '⬆️'}</div>`).join('')}` : ''}
+      ${r.diaCompleto && m.numero !== 'extra' ? '<div class="sub"><b>Todas as missões de hoje cumpridas!</b> Que esforço bonito! 💪</div>' : ''}
+      <div class="pilha">
+        ${falta ? `<button class="botao-grande verde" id="b-prox">▶ ${esc(J.nomeMissao(falta.numero).nome)}</button>` : ''}
+        <button class="botao-grande ${falta ? 'claro' : ''}" id="b-menu">🏠 Voltar às missões</button>
+      </div></div>`;
+    if (falta) $('#b-prox').onclick = () => abrirMissao(falta.numero);
+    $('#b-menu').onclick = () => ir('missoes');
+    festa(r.subiuPatente ? 'Nova patente!' : 'Missão cumprida!', () => {});
+    if (estado.prefs.voz) setTimeout(() => falar(r.subiuPatente ? `Nova patente! Agora você é ${r.depois.nome}!` : `Missão cumprida! Você ganhou ${r.total} pontos.`), 1100);
+  }
+
+  // ======================================================================
+  // PAINEL DO PAPAI (segurar o logo 3 s)
+  // ======================================================================
+  let modoMapa = 'caixa';
+  const COR_CAIXA = ['var(--c0)', 'var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)'];
+  function telaPainel() {
+    const e = estado, dia = e.dia;
+    const fmtDia = d => new Date(d * 86400000 + 12 * 3600000).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' });
+    const mapa = () => {
+      let h = '<div class="mapa"><div class="cab">×</div>';
+      for (let b = 2; b <= 10; b++) h += `<div class="cab">${b}</div>`;
+      for (let a = 2; a <= 10; a++) {
+        h += `<div class="cab">${a}</div>`;
+        for (let b = 2; b <= 10; b++) {
+          const c = e.cartoes[J.chave(a, b)], tm = J.tempoMedio(c);
+          let cor, txt;
+          if (modoMapa === 'caixa') { cor = J.novo(c) ? '#f3f4f6' : COR_CAIXA[c.caixa]; txt = J.novo(c) ? '' : c.caixa; }
+          else if (modoMapa === 'tempo') { const t = tm === null ? null : Math.min(1, tm / (e.config.limiarMs * 2)); cor = t === null ? '#f3f4f6' : `hsl(${Math.round(140 - 140 * t)},75%,${70 - 10 * t}%)`; txt = tm === null ? '' : (tm / 1000).toFixed(1); }
+          else { const tot = c.acertos + c.erros, t = tot ? c.erros / tot : null; cor = t === null ? '#f3f4f6' : `hsl(${Math.round(140 - 140 * Math.min(1, t * 2))},75%,68%)`; txt = c.erros || ''; }
+          h += `<div style="background:${cor}" title="${a}×${b}: caixa ${c.caixa}, ${c.acertos} acertos, ${c.erros} erros">${txt}</div>`;
+        }
+      }
+      return h + '</div>';
+    };
+    const errados = J.maisErrados(e), lentos = J.maisLentos(e);
+    palco.innerHTML = `<div class="cartao painel">
+      <div class="linha-selo"><div class="titulo" style="font-size:24px">👨‍👦 Painel do papai</div><button class="botao-mini" id="p-voltar">← Voltar ao jogo</button></div>
+      <p>Patente: <b>${esc(J.patenteDe(e.xp).nome)}</b> · ${e.xp} XP · ${e.dias.length} dias de treino · ${Object.values(e.cartoes).filter(c => c.caixa === 5).length}/81 fatos na caixa 5</p>
+
+      <h3>Hoje — para revisar no papel</h3>
+      <p>${dia.missoes.filter(m => m.feita).length} de ${dia.missoes.length} missões${dia.extras ? ` + ${dia.extras} extra` : ''}.</p>
+      ${dia.revisar.length ? dia.revisar.slice().reverse().map(x => `<div class="item-revisar"><div class="t">${esc(x.tema)} · ${x.tentativas} tentativas</div>${esc(x.enunciado)}<br><b>Resposta:</b> ${esc(x.resposta)}</div>`).join('') : '<p>Nada ainda (ou acertou tudo de primeira).</p>'}
+
+      <h3>Temas (ligar, desligar e quanto aparece)</h3>
+      ${J.TEMAS.map(t => {
+        const cfg = e.temas[t.id], h = e.estat[t.id] || [];
+        const taxa = h.length ? Math.round(h.reduce((s, x) => s + x, 0) / h.length * 100) + '% de primeira (últimas ' + h.length + ')' : 'sem dados';
+        return `<div class="tema-linha"><div><b>${t.icone} ${esc(t.nome)}</b><small>${esc(t.desc)} · ${taxa}</small></div>
+          <div class="seg" data-tema="${t.id}"><button class="desl" data-p="off" aria-pressed="${!cfg.ligado}">Desl.</button>${['pouco', 'normal', 'muito'].map(p => `<button data-p="${p}" aria-pressed="${cfg.ligado && cfg.peso === p}">${p[0].toUpperCase() + p.slice(1)}</button>`).join('')}</div></div>`;
+      }).join('')}
+      <p>"Muito" aparece mais vezes em cada missão. Temas com mais erros ganham um pouco mais de perguntas sozinhos.</p>
+
+      <h3>Tabuada (2×2 a 10×10)</h3>
+      <div class="abas-mapa">${[['caixa', 'Caixa 1–5'], ['tempo', 'Tempo médio (s)'], ['erros', 'Erros']].map(([k, n]) => `<button data-m="${k}" aria-pressed="${modoMapa === k}">${n}</button>`).join('')}</div>
+      ${mapa()}
+      <p>Linha = 1º fator, coluna = 2º. Cinza = ainda não apareceu. Caixa 1 = novo/errou · sobe 1 caixa a cada acerto rápido em dia de revisão · caixa 5 = sabe de cor (revisa a cada 14 dias).</p>
+      <div class="tabela-rolar"><table><tr><th>Mais errados</th><th>Erros</th><th>Caixa</th><th>Mais lentos</th><th>Média</th></tr>
+      ${Array.from({ length: Math.max(errados.length, lentos.length, 1) }, (_, i) => `<tr><td>${errados[i] ? `${errados[i].a}×${errados[i].b}=${errados[i].a * errados[i].b}` : ''}</td><td>${errados[i] ? errados[i].erros : ''}</td><td>${errados[i] ? errados[i].caixa : ''}</td><td>${lentos[i] ? `${lentos[i].a}×${lentos[i].b}` : ''}</td><td>${lentos[i] ? (J.tempoMedio(lentos[i]) / 1000).toFixed(1) + ' s' : ''}</td></tr>`).join('')}</table></div>
+
+      <h3>Histórico</h3>
+      ${e.historico.length ? `<div class="tabela-rolar"><table><tr><th>Dia</th><th>Missões</th><th>XP</th><th>De primeira</th></tr>${e.historico.slice(-20).reverse().map(h => `<tr><td>${fmtDia(h.dia)}</td><td>${h.missoes}</td><td>${h.xp}</td><td>${h.perguntas ? Math.round(h.dePrimeira / h.perguntas * 100) : 0}%</td></tr>`).join('')}</table></div>` : '<p>Nenhuma missão ainda.</p>'}
+
+      <h3>Ajustes</h3>
+      ${[['missoesPorDia', 'Missões por dia', 1, 5, 1, ''], ['perguntasPorMissao', 'Perguntas por missão', 6, 24, 1, ''], ['novosPorDia', 'Fatos novos da tabuada por dia', 5, 40, 5, ''], ['limiarMs', 'Limiar de resposta rápida (tabuada)', 2000, 10000, 500, 's']].map(([k, n, mi, ma, pa, u]) =>
+        `<label class="ajuste">${n}: <b id="v-${k}">${u === 's' ? (e.config[k] / 1000).toFixed(1) + ' s' : e.config[k]}</b><input type="range" data-cfg="${k}" min="${mi}" max="${ma}" step="${pa}" value="${e.config[k]}"></label>`).join('')}
+      <p>Lacuna conta 1,5× o limiar e probleminha 2× (precisa ler). A criança nunca vê o tempo. Mudar "missões por dia" vale a partir de amanhã (ou se aumentar, já hoje).</p>
+      <label class="ajuste"><span><input type="checkbox" id="p-som" ${e.prefs.som ? 'checked' : ''}> Som de comemoração</span></label>
+
+      <h3>Progresso</h3>
+      <div class="acoes-pais">
+        <button id="p-exportar">⬇️ Exportar (JSON)</button>
+        <label class="botao">⬆️ Importar<input type="file" id="p-importar" accept=".json,application/json" hidden></label>
+        <button class="perigo" id="p-zerar">🗑️ Zerar tudo</button>
+      </div>
+      <div class="aviso" id="p-aviso" style="text-align:left"></div>
+    </div>`;
+    $('#p-voltar').onclick = () => { painelLiberado = false; ir('missoes'); };
+    palco.querySelectorAll('.seg').forEach(s => s.onclick = ev => {
+      const b = ev.target.closest('button'); if (!b) return;
+      const cfg = e.temas[s.dataset.tema];
+      if (b.dataset.p === 'off') cfg.ligado = false; else { cfg.ligado = true; cfg.peso = b.dataset.p; }
+      if (!J.TEMAS.some(t => e.temas[t.id].ligado)) { e.temas.tabuada.ligado = true; avisar('Pelo menos um tema precisa ficar ligado.'); }
+      salvar(); telaPainel();
+    });
+    palco.querySelectorAll('.abas-mapa button').forEach(b => { b.onclick = () => { modoMapa = b.dataset.m; telaPainel(); }; });
+    palco.querySelectorAll('[data-cfg]').forEach(inp => { inp.oninput = () => {
+      const k = inp.dataset.cfg; e.config[k] = Number(inp.value);
+      $('#v-' + k).textContent = k === 'limiarMs' ? (e.config[k] / 1000).toFixed(1) + ' s' : e.config[k];
+      if (k === 'missoesPorDia') J.garantirDia(e, hoje());
+      salvar();
+    }; });
+    $('#p-som').onchange = ev => { e.prefs.som = ev.target.checked; salvar(); };
+    $('#p-exportar').onclick = () => {
+      const blob = new Blob([JSON.stringify(estado, null, 1)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = `matematica-benjamin-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      $('#p-aviso').textContent = 'Arquivo salvo nos downloads. No outro aparelho: Importar.';
+    };
+    $('#p-importar').onchange = ev => {
+      const f = ev.target.files && ev.target.files[0]; if (!f) return;
+      const leitor = new FileReader();
+      leitor.onload = () => {
+        try {
+          const novo = J.validarImportacao(String(leitor.result));
+          if (!confirm('Substituir o progresso deste aparelho pelo do arquivo?')) return;
+          estado = novo; J.garantirDia(estado, hoje()); salvar(); pintarChave(); telaPainel();
+          $('#p-aviso').textContent = 'Progresso importado! ✔';
+        } catch (err) { $('#p-aviso').textContent = 'Não consegui ler: ' + err.message; }
+      };
+      leitor.readAsText(f);
+    };
+    $('#p-zerar').onclick = () => {
+      if (!confirm('Zerar TODO o progresso (XP, patente, tabuada, histórico)? Dica: exporte antes.')) return;
+      if (!confirm('Tem certeza? Não dá para desfazer.')) return;
+      estado = J.estadoInicial(); J.garantirDia(estado, hoje()); salvar(); pintarChave(); telaPainel();
+      $('#p-aviso').textContent = 'Progresso zerado.';
+    };
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
