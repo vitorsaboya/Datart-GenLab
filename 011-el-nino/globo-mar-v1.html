@@ -50,10 +50,13 @@
       font-variant-numeric: tabular-nums; color: #eef4ff; }
     #ano .mesnum { font-size: 14px; font-weight: 500; opacity: .7; margin-left: 6px; }
     #trilho { position: relative; width: 100%; height: 7px; border-radius: 4px;
-      background: rgba(120,150,200,.22); margin: 12px 0 0; cursor: pointer; pointer-events: auto; }
+      background: rgba(120,150,200,.22); margin: 24px 0 0; cursor: pointer; pointer-events: auto; }
     #preenche { position: absolute; left: 0; top: 0; height: 100%; width: 0;
       background: linear-gradient(90deg, #2b6fd6, #e0e8ff); border-radius: 4px; }
-    #marcaPico { position: absolute; top: -3px; width: 2px; height: 13px; background: #f2a01e; opacity: .85; }
+    /* picos do El Nino (D33): cada marca e um maximo do Nino3.4 >= +1.5 C; o numero acima e o dado */
+    .marcaPico { position: absolute; top: -3px; width: 2px; height: 13px; background: #f2a01e; opacity: .85; pointer-events: none; }
+    .marcaPico span { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 2px;
+      font-size: 10px; font-weight: 600; line-height: 1; color: #f2a01e; white-space: nowrap; font-variant-numeric: tabular-nums; }
     #alca { position: absolute; top: -3px; width: 13px; height: 13px; border-radius: 50%;
       background: #eef4ff; transform: translateX(-50%); box-shadow: 0 0 6px rgba(0,0,0,.7); pointer-events: none; }
     #playpause { margin-top: 8px; cursor: pointer; pointer-events: auto;
@@ -92,7 +95,7 @@
          SEM engrossar o visual; no scrub só o eixo X importa, então tocar acima/abaixo da linha funciona igual. */
       #trilho::before { content: ''; position: absolute; left: -8px; right: -8px; top: -20px; bottom: -12px; }
       #alca { width: 20px; height: 20px; top: -4px; }                      /* alça maior e bem visível pro dedo */
-      #marcaPico { height: 18px; top: -3px; }
+      .marcaPico { height: 18px; top: -3px; }
       #playpause { margin-top: 14px; padding: 9px 18px; font-size: 13px; } /* maior + afasta do trilho (área limpa) */
     }
   </style>
@@ -125,7 +128,7 @@
   </div>
   <div id="ano-wrap">
     <div id="ano">2020<span class="mesnum" id="mesnum">jan</span></div>
-    <div id="trilho"><div id="preenche"></div><div id="marcaPico"></div><div id="alca"></div></div>
+    <div id="trilho"><div id="preenche"></div><div id="alca"></div></div>
     <button id="playpause" title="play / pause">❚❚ pausar</button>
   </div>
   <div id="dica">arraste p/ girar · scroll p/ zoom · arraste a barra do tempo</div>
@@ -437,7 +440,20 @@
     });
 
     const trilho = document.getElementById('trilho');
-    document.getElementById('marcaPico').style.left = (100 * PEAK / (COUNT - 1)) + '%';
+    // picos do El Nino na linha do tempo (D33, derivado do dado): maximo local do Nino3.4 >= +1.5 C (El Nino forte)
+    // numa janela de +-12 meses. Hoje: dez/2023 (+2.32) e set/2026 (+2.53). O numero acima da marca e o valor real.
+    const PICOS = FRAMES.map((f, i) => i).filter(i => {
+      const v = FRAMES[i].nino34; if (v < 1.5) return false;
+      for (let j = Math.max(0, i - 12); j <= Math.min(COUNT - 1, i + 12); j++) if (FRAMES[j].nino34 > v) return false;
+      return true;
+    });
+    PICOS.forEach(i => {
+      const p = 100 * i / (COUNT - 1), m = document.createElement('div'), s = document.createElement('span');
+      m.className = 'marcaPico'; m.style.left = p + '%';
+      s.textContent = (FRAMES[i].nino34 >= 0 ? '+' : '') + FRAMES[i].nino34.toFixed(2) + ' °C';
+      if (p > 92) s.style.transform = 'translateX(-100%)';   // a ultima marca encosta na borda: o rotulo cresce pra esquerda
+      m.appendChild(s); trilho.insertBefore(m, document.getElementById('alca'));
+    });
     const MESES_ABBR = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
     const anoEl = document.getElementById('ano'), mesnumEl = document.getElementById('mesnum'), mesEl = document.getElementById('mes');
     function updateTempo(f) {
