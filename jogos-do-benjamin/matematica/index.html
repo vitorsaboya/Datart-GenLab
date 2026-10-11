@@ -48,6 +48,7 @@
     height: calc(var(--nav) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
     background: #fff; border-top: 2px solid var(--borda); box-shadow: 0 -4px 16px rgba(30, 27, 75, .08);
   }
+  #abas { grid-template-columns: repeat(4, 1fr); }
   #abas[hidden] { display: none; }
   #abas button { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 26px; color: var(--suave); }
   #abas button span { font-size: 14px; font-weight: 700; }
@@ -236,6 +237,33 @@
   .regra .ex { font-family: Georgia, "Times New Roman", serif; font-size: 23px; font-weight: 700; margin-top: 4px; }
   .ok-ex { color: var(--verde); } .no-ex { color: #b91c1c; text-decoration: line-through; }
 
+  /* ---------- data, diário e níveis ---------- */
+  .data-hoje { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 18px; font-weight: 700; color: var(--noite); margin: 0 4px; }
+  .data-hoje .dia-n { background: #fef9c3; border: 2px solid #fde047; border-radius: 999px; padding: 2px 12px; font-size: 16px; }
+  .cal-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .cal-topo b { font-size: 22px; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal .sem { text-align: center; font-size: 13px; font-weight: 800; color: var(--suave); padding-bottom: 2px; }
+  .cal .d { border: 2px solid #e5e7eb; background: #fff; border-radius: 12px; min-height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 3px 1px; font-size: 15px; font-weight: 800; color: #374151; }
+  .cal .d .m { font-size: 12px; line-height: 1.1; margin-top: 2px; letter-spacing: -1px; }
+  .cal .d.visitou { background: #eef2ff; border-color: #c7d2fe; }
+  .cal .d.m1 { background: #fef9c3; border-color: #fde047; }
+  .cal .d.m2 { background: #d9f99d; border-color: #a3e635; }
+  .cal .d.m3 { background: #86efac; border-color: #22c55e; }
+  .cal .d.hoje { box-shadow: 0 0 0 3px var(--azul); }
+  .cal .d.sel { outline: 3px solid #f59e0b; outline-offset: 1px; }
+  .cal .d.futuro { opacity: .4; }
+  .cal .vazio { min-height: 54px; }
+  .det-missao { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; padding: 8px 10px; border-radius: 14px; background: #f8fafc; border: 2px solid #e5e7eb; margin-top: 6px; font-size: 17px; }
+  .det-missao .ic { font-size: 28px; grid-row: span 2; }
+  .det-missao small { color: var(--suave); font-size: 14px; grid-column: 2 / 4; }
+  .niveis { display: grid; gap: 8px; }
+  .nivel-linha { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 10px; align-items: center; padding: 8px 12px; border-radius: 14px; background: #f8fafc; border: 2px solid #e5e7eb; }
+  .nivel-linha .ic { font-size: 26px; grid-row: span 2; }
+  .nivel-linha .est { font-size: 20px; letter-spacing: 1px; color: #f59e0b; }
+  .nivel-linha small { color: var(--suave); font-size: 14px; grid-column: 2 / 4; }
+  .selo .nv { background: rgba(255,255,255,.25); border-radius: 999px; padding: 0 8px; margin-left: 4px; }
+
   /* ---------- painel do papai ---------- */
   .painel h3 { font-size: 21px; margin: 18px 0 8px; }
   .painel p, .painel td, .painel th, .painel label, .painel li { font-size: 16px; }
@@ -280,6 +308,7 @@
 <main id="palco"></main>
 <nav id="abas" aria-label="Páginas">
   <button data-rota="missoes">🏠<span>Missões</span></button>
+  <button data-rota="diario">📅<span>Diário</span></button>
   <button data-rota="patente">🏅<span>Patente</span></button>
   <button data-rota="album">📒<span>Álbum</span></button>
 </nav>
@@ -948,6 +977,7 @@ const Jogo = (function (R) {
   const inteiro = (rng, min, max) => min + Math.floor(rng() * (max - min + 1));
   const escolher = (rng, lista) => lista[Math.floor(rng() * lista.length)];
   const embaralhar = R.embaralhar, cap = R.cap;
+  const unicos = l => l.filter((x, i) => l.indexOf(x) === i);
 
   // ======================================================================
   // TEMAS — ligar/desligar e o peso ficam no painel do papai
@@ -955,36 +985,68 @@ const Jogo = (function (R) {
   // ======================================================================
   const TEMAS = [
     { id: 'tabuada', nome: 'Tabuada', icone: '✖️', cor: '#047857', desc: 'Memorizar de 2×2 a 10×10 (repetição espaçada)', ligado: true, peso: 'muito' },
-    { id: 'adicao', nome: 'Adição', icone: '➕', cor: '#1d4ed8', desc: 'Contas armadas com reserva e contas de cabeça', ligado: true, peso: 'normal' },
-    { id: 'subtracao', nome: 'Subtração', icone: '➖', cor: '#b45309', desc: 'Contas armadas com empréstimo e de cabeça', ligado: true, peso: 'normal' },
+    { id: 'adicao', nome: 'Adição', icone: '➕', cor: '#1d4ed8', desc: 'Contas armadas, de cabeça, número escondido, 3 parcelas', ligado: true, peso: 'normal' },
+    { id: 'subtracao', nome: 'Subtração', icone: '➖', cor: '#b45309', desc: 'Empréstimo, zeros no meio, número escondido, 2 etapas', ligado: true, peso: 'normal' },
     { id: 'provareal', nome: 'Prova real', icone: '🔍', cor: '#7c3aed', desc: 'Conferir uma conta com a operação inversa', ligado: true, peso: 'normal' },
-    { id: 'multiplicacao', nome: 'Multiplicação armada', icone: '🧮', cor: '#be185d', desc: 'Conta armada (× 2 a 9) e problemas de dobro e triplo', ligado: true, peso: 'normal' },
-    { id: 'romanos', nome: R.TEMAS.romanos.nome, icone: R.TEMAS.romanos.icone, cor: R.TEMAS.romanos.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
-    { id: 'relogio', nome: R.TEMAS.relogio.nome, icone: R.TEMAS.relogio.icone, cor: R.TEMAS.relogio.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
-    { id: 'tempo', nome: R.TEMAS.tempo.nome, icone: R.TEMAS.tempo.icone, cor: R.TEMAS.tempo.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
-    { id: 'calendario', nome: R.TEMAS.calendario.nome, icone: R.TEMAS.calendario.icone, cor: R.TEMAS.calendario.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
-    { id: 'unidades', nome: R.TEMAS.unidades.nome, icone: R.TEMAS.unidades.icone, cor: R.TEMAS.unidades.cor, desc: 'Da revisão da prova', ligado: false, peso: 'normal' },
+    { id: 'multiplicacao', nome: 'Multiplicação armada', icone: '🧮', cor: '#be185d', desc: 'Conta armada, dobro/triplo, ×10 e ×100, 2 etapas', ligado: true, peso: 'normal' },
+    { id: 'divisao', nome: 'Divisão', icone: '➗', cor: '#0e7490', desc: 'Divisão exata pela tabuada e problemas de repartir', ligado: true, peso: 'pouco' },
+    { id: 'romanos', nome: R.TEMAS.romanos.nome, icone: R.TEMAS.romanos.icone, cor: R.TEMAS.romanos.cor, desc: 'Tema extra', ligado: false, peso: 'normal', semNivel: true },
+    { id: 'relogio', nome: R.TEMAS.relogio.nome, icone: R.TEMAS.relogio.icone, cor: R.TEMAS.relogio.cor, desc: 'Tema extra', ligado: false, peso: 'normal', semNivel: true },
+    { id: 'tempo', nome: R.TEMAS.tempo.nome, icone: R.TEMAS.tempo.icone, cor: R.TEMAS.tempo.cor, desc: 'Tema extra', ligado: false, peso: 'normal', semNivel: true },
+    { id: 'calendario', nome: R.TEMAS.calendario.nome, icone: R.TEMAS.calendario.icone, cor: R.TEMAS.calendario.cor, desc: 'Tema extra', ligado: false, peso: 'normal', semNivel: true },
+    { id: 'unidades', nome: R.TEMAS.unidades.nome, icone: R.TEMAS.unidades.icone, cor: R.TEMAS.unidades.cor, desc: 'Tema extra', ligado: false, peso: 'normal', semNivel: true },
   ];
   const TEMA = Object.fromEntries(TEMAS.map(t => [t.id, t]));
   const PESOS = { pouco: 1, normal: 2, muito: 5 };
 
   // ======================================================================
-  // CONTAS ARMADAS (adição com reserva, subtração com empréstimo)
+  // NÍVEIS (1 a 5) — sobe com 7 de 8 acertos de primeira; desce, sem alarde, com 3 ou menos
+  // ======================================================================
+  const NIVEL_MAX = 5, JANELA = 8;
+  const O_QUE_TEM = {
+    tabuada: ['contas soltas e probleminhas', 'mais contas com lacuna', 'quase sem alternativas', 'só digitando, mais lacunas', 'mestre: lacunas e probleminhas'],
+    adicao: ['contas de 3 e 4 algarismos', 'número escondido e mais "vai um"', '3 parcelas e contas de 4 algarismos', 'problemas de 2 etapas', 'tudo com 4 algarismos e muitos "vai um"'],
+    subtracao: ['contas com empréstimo', 'número escondido e zeros no meio', 'contas de 4 algarismos com zeros', 'problemas de 2 etapas e 1000 − …', 'o desafio dos zeros'],
+    provareal: ['contas de 3 algarismos', 'contas de 3 e 4 algarismos', 'contas de 4 algarismos', 'erros mais escondidos', 'zeros no meio e erros pequenos'],
+    multiplicacao: ['conta armada e dobro/triplo', 'multiplicadores maiores', 'números de 4 algarismos', '×10, ×100 e problemas de 2 etapas', 'o grande desafio do ×'],
+    divisao: ['÷2, ÷5 e ÷10', '÷3 e ÷4 também', 'todas as divisões da tabuada', 'repartir e dividir dezenas', 'mestre da divisão'],
+  };
+  function nivelDe(e, tema) { return (e.niveis && e.niveis[tema] && e.niveis[tema].n) || 1; }
+  function atualizarNivel(e, tema, acertou) {
+    if (!TEMA[tema] || TEMA[tema].semNivel) return 0;
+    const nv = e.niveis[tema] || (e.niveis[tema] = { n: 1, janela: [] });
+    nv.janela.push(acertou ? 1 : 0);
+    if (nv.janela.length > JANELA) nv.janela.shift();
+    const s = nv.janela.reduce((a, b) => a + b, 0);
+    if (nv.janela.length === JANELA && s >= 7 && nv.n < NIVEL_MAX) { nv.n++; nv.janela = []; return 1; }
+    if (nv.janela.length === JANELA && s <= 3 && nv.n > 1) { nv.n--; nv.janela = []; return -1; }
+    return 0;
+  }
+  function nivelMedio(e) {
+    const ts = temasLigados(e).filter(t => !t.semNivel);
+    return ts.length ? ts.reduce((s, t) => s + nivelDe(e, t.id), 0) / ts.length : 1;
+  }
+  // a missão cresce com o nível: +1 pergunta por nível médio acima do 1
+  function perguntasDaMissao(e) { return e.config.perguntasPorMissao + Math.floor(nivelMedio(e) - 1); }
+
+  // ======================================================================
+  // CONTAS ARMADAS (adição com 2 ou 3 parcelas, subtração com empréstimo)
   // ======================================================================
   const NOMES_COLUNA = ['unidades', 'dezenas', 'centenas', 'unidades de milhar', 'dezenas de milhar'];
   const digitos = n => String(n).split('').reverse().map(Number);
 
-  function passosAdicao(a, b) {
-    const da = digitos(a), db = digitos(b), n = Math.max(da.length, db.length), passos = [];
+  function passosAdicaoN(lista) {
+    const ds = lista.map(digitos), n = Math.max(...ds.map(d => d.length)), passos = [];
     let reserva = 0;
     for (let r = 0; r < n; r++) {
-      const x = da[r] || 0, y = db[r] || 0, total = x + y + reserva;
-      passos.push({ coluna: r, x, y, reserva, total, escreve: total % 10, vai: Math.floor(total / 10) });
+      const xs = ds.map(d => d[r] || 0), total = xs.reduce((a, b) => a + b, 0) + reserva;
+      passos.push({ coluna: r, xs, x: xs[0], y: xs[1], reserva, total, escreve: total % 10, vai: Math.floor(total / 10) });
       reserva = Math.floor(total / 10);
     }
     const resultado = Number((reserva ? String(reserva) : '') + passos.slice().reverse().map(p => p.escreve).join(''));
     return { passos, reservaFinal: reserva, resultado };
   }
+  function passosAdicao(a, b) { return passosAdicaoN([a, b]); }
   // empréstimo do jeito da escola (casa a casa; zeros no meio viram 9)
   function passosSubtracao(a, b) {
     if (b > a) throw new RangeError('b maior que a');
@@ -1005,19 +1067,21 @@ const Jogo = (function (R) {
   }
   const temReservaAd = (a, b) => { const x = digitos(a), y = digitos(b); return x.some((d, i) => d + (y[i] || 0) >= 10); };
   const temEmprestimo = (a, b) => { const x = digitos(a), y = digitos(b); return x.some((d, i) => d < (y[i] || 0)); };
+  const contarReservas = (a, b) => passosAdicao(a, b).passos.filter(p => p.vai).length;
+  const contarEmprestimos = (a, b) => passosSubtracao(a, b).passos.filter(p => p.eventos.includes('recebeu')).length;
   const erroAdSemReserva = (a, b) => { const x = digitos(a), y = digitos(b), n = Math.max(x.length, y.length); let s = ''; for (let i = n - 1; i >= 0; i--) s += ((x[i] || 0) + (y[i] || 0)) % 10; return Number(s); };
   const erroSubInvertida = (a, b) => { const x = digitos(a), y = digitos(b); let s = ''; for (let i = x.length - 1; i >= 0; i--) s += Math.abs(x[i] - (y[i] || 0)); return Number(s); };
 
   function linhasAdicao(c) {
     const L = c.passos.map(p => {
-      let s = `${cap(NOMES_COLUNA[p.coluna] || 'coluna')}: ${p.x} + ${p.y}`;
+      let s = `${cap(NOMES_COLUNA[p.coluna] || 'coluna')}: ${(p.xs || [p.x, p.y]).join(' + ')}`;
       if (p.reserva) s += ` + ${p.reserva} (reserva)`;
       s += ` = ${p.total}`;
       s += p.vai ? ` → escreve ${p.escreve} e vai ${p.vai}` : ` → escreve ${p.escreve}`;
       return s;
     });
     if (c.reservaFinal) L.push(`No fim, sobrou ${c.reservaFinal} de reserva → escreve ${c.reservaFinal} na frente.`);
-    L.push(`Resultado: ${c.a} + ${c.b} = ${c.resultado}`);
+    L.push(`Resultado: ${(c.parcelas || [c.a, c.b]).join(' + ')} = ${c.resultado}`);
     return L;
   }
   function linhasSubtracao(c) {
@@ -1038,21 +1102,28 @@ const Jogo = (function (R) {
     L.push(`Resultado: ${c.a} − ${c.b} = ${c.resultado}`);
     return L;
   }
-  function falaConta(t) { return R.paraFala(t).replace(/−/g, ' menos ').replace(/\+/g, ' mais '); }
-  function montarConta(op, a, b) {
+  function falaConta(t) { return R.paraFala(t).replace(/−/g, ' menos ').replace(/\+/g, ' mais ').replace(/÷/g, ' dividido por ').replace(/▢/g, ' quanto '); }
+  // conta pronta para armar: op '+' aceita 3 parcelas (b2)
+  function montarConta(op, a, b, b2) {
+    if (op === '+' && b2 !== undefined) {
+      const p = passosAdicaoN([a, b, b2]);
+      const conta = { op, a, b, parcelas: [a, b, b2], resultado: p.resultado, passos: p.passos, reservaFinal: p.reservaFinal };
+      return { conta, linhas: linhasAdicao(conta) };
+    }
     const p = op === '+' ? passosAdicao(a, b) : op === '−' ? passosSubtracao(a, b) : R.passosMultiplicacao(a, b);
     const conta = { op, a, b, resultado: p.resultado, passos: p.passos, reservaFinal: p.reservaFinal || 0 };
     const linhas = op === '+' ? linhasAdicao(conta) : op === '−' ? linhasSubtracao(conta)
       : R.linhasConta({ a, m: b, passos: p.passos, reservaFinal: p.reservaFinal, resultado: p.resultado });
     return { conta, linhas };
   }
-  function contaQ(tema, op, a, b, contexto) {
-    const { conta, linhas } = montarConta(op, a, b);
-    const enunciado = contexto || `Arme e faça a conta:`;
-    return { tema, tipo: 'conta', meta: { op, a, b }, enunciado, fala: falaConta(contexto || `Arme e faça a conta: ${a} ${op} ${b}`),
-      conta, correta: String(conta.resultado), respostaTexto: `${a} ${op} ${b} = ${conta.resultado}`, explicacao: { linhas, visual: null } };
+  function contaQ(tema, op, a, b, contexto, b2) {
+    const { conta, linhas } = montarConta(op, a, b, b2);
+    const termos = (conta.parcelas || [a, b]).join(` ${op} `);
+    return { tema, tipo: 'conta', meta: { op, a, b, b2 }, enunciado: contexto || `Arme e faça a conta:`, fala: falaConta(contexto || `Arme e faça a conta: ${termos}`),
+      conta, correta: String(conta.resultado), respostaTexto: `${termos} = ${conta.resultado}`, explicacao: { linhas, visual: null } };
   }
   function numeroAleatorio(rng, dig) { let s = String(inteiro(rng, 1, 9)); for (let i = 1; i < dig; i++) s += inteiro(rng, 0, 9); return Number(s); }
+  const QUEM = ['Lia', 'Pedro', 'Joana', 'Davi', 'Benjamin', 'Ana', 'Theo', 'Malu'];
 
   const CONTEXTOS_AD = [
     (a, b) => `Joana tinha ${a} figurinhas e ganhou mais ${b}. Quantas figurinhas ela tem agora?`,
@@ -1061,6 +1132,10 @@ const Jogo = (function (R) {
     (a, b) => `Um livro tem ${a} páginas e outro tem ${b}. Quantas páginas os dois têm juntos?`,
     (a, b) => `Benjamin fez ${a} pontos na 1ª fase do jogo e ${b} na 2ª. Quantos pontos ele fez ao todo?`,
   ];
+  const CONTEXTOS_AD3 = [
+    (a, b, c) => `Um cinema vendeu ${a} ingressos na sexta, ${b} no sábado e ${c} no domingo. Quantos ingressos ao todo?`,
+    (a, b, c) => `Benjamin fez ${a}, ${b} e ${c} pontos em três fases do jogo. Quantos pontos ao todo?`,
+  ];
   const CONTEXTOS_SUB = [
     (a, b) => `Uma loja tinha ${a} bolas e vendeu ${b}. Quantas bolas sobraram?`,
     (a, b) => `Benjamin tem ${a} pontos no jogo e o primo tem ${b}. Quantos pontos Benjamin tem a mais?`,
@@ -1068,82 +1143,196 @@ const Jogo = (function (R) {
     (a, b) => `A biblioteca tinha ${a} livros e emprestou ${b}. Quantos livros ficaram?`,
     (a, b) => `Faltam ${a} metros para a chegada. O carro andou ${b} metros. Quantos metros ainda faltam?`,
   ];
-  function cabecaQ(tema, op, rng) {
-    const tipo = inteiro(rng, 1, 3);
+
+  // ----- contas de cabeça (ficam mais difíceis com o nível) -----
+  function cabecaQ(tema, op, rng, nivel = 1) {
+    const tipos = nivel >= 3 ? [1, 2, 3, 4, 5, 5] : nivel >= 2 ? [1, 2, 3, 4] : [1, 2, 3];
+    const tipo = escolher(rng, tipos), mais = op === '+';
     let a, b, linhas;
     if (tipo === 1) { // dezenas exatas
-      const x = inteiro(rng, 2, 9), y = op === '+' ? inteiro(rng, 1, 9) : inteiro(rng, 1, x - 1);
+      const x = inteiro(rng, 2, 9), y = mais ? inteiro(rng, 1, 9) : inteiro(rng, 1, x - 1);
       a = x * 10; b = y * 10;
-      linhas = [`Pense em dezenas: ${x} dezenas ${op === '+' ? '+' : '−'} ${y} dezenas = ${op === '+' ? x + y : x - y} dezenas = ${op === '+' ? a + b : a - b}.`];
+      linhas = [`Pense em dezenas: ${x} dezenas ${op} ${y} dezenas = ${mais ? x + y : x - y} dezenas = ${mais ? a + b : a - b}.`];
     } else if (tipo === 2) { // número de 2 algarismos ± dezena exata
       const u = inteiro(rng, 1, 9), dz = inteiro(rng, 2, 8);
-      a = dz * 10 + u; const y = op === '+' ? inteiro(rng, 1, 9 - dz) : inteiro(rng, 1, dz - 1); b = y * 10;
-      linhas = [`Mexa só nas dezenas: ${dz * 10} ${op} ${b} = ${op === '+' ? (dz + y) * 10 : (dz - y) * 10}.`, `Depois junte as ${u} unidades: ${op === '+' ? a + b : a - b}.`];
-    } else { // centenas exatas
-      const x = inteiro(rng, 2, 8), y = op === '+' ? inteiro(rng, 1, 9 - x) : inteiro(rng, 1, x - 1);
+      a = dz * 10 + u; const y = mais ? inteiro(rng, 1, 9 - dz) : inteiro(rng, 1, dz - 1); b = y * 10;
+      linhas = [`Mexa só nas dezenas: ${dz * 10} ${op} ${b} = ${mais ? (dz + y) * 10 : (dz - y) * 10}.`, `Depois junte as ${u} unidades: ${mais ? a + b : a - b}.`];
+    } else if (tipo === 3) { // centenas exatas
+      const x = inteiro(rng, 2, 8), y = mais ? inteiro(rng, 1, 9 - x) : inteiro(rng, 1, x - 1);
       a = x * 100; b = y * 100;
-      linhas = [`Pense em centenas: ${x} centenas ${op} ${y} centenas = ${op === '+' ? x + y : x - y} centenas = ${op === '+' ? a + b : a - b}.`];
+      linhas = [`Pense em centenas: ${x} centenas ${op} ${y} centenas = ${mais ? x + y : x - y} centenas = ${mais ? a + b : a - b}.`];
+    } else if (tipo === 4) { // 3 algarismos ± dezena exata, sem passar da centena
+      const c = inteiro(rng, 1, 8), d = inteiro(rng, 1, 8), u = inteiro(rng, 0, 9);
+      a = c * 100 + d * 10 + u;
+      const y = mais ? inteiro(rng, 1, 9 - d) : inteiro(rng, 1, d); b = y * 10;
+      const dzA = Math.floor(a / 10), dzR = mais ? dzA + y : dzA - y;
+      linhas = [`${a} tem ${dzA} dezenas e ${u} unidades.`, `${dzA} dezenas ${op} ${y} dezenas = ${dzR} dezenas = ${dzR * 10}; com as ${u} unidades: ${dzR * 10 + u}.`];
+    } else { // 2 algarismos ± 2 algarismos, passando a dezena (47 + 25, 72 − 25)
+      if (mais) { do { a = inteiro(rng, 15, 79); b = inteiro(rng, 12, 99 - a); } while ((a % 10) + (b % 10) < 10); }
+      else { do { a = inteiro(rng, 31, 98); b = inteiro(rng, 12, a - 5); } while ((a % 10) >= (b % 10)); }
+      const dz = b - (b % 10), un = b % 10, meio = mais ? a + dz : a - dz;
+      linhas = [`Primeiro as dezenas: ${a} ${op} ${dz} = ${meio}.`, `Depois as unidades: ${meio} ${op} ${un} = ${mais ? meio + un : meio - un}.`];
     }
-    const r = op === '+' ? a + b : a - b;
-    return { tema, tipo: 'numero', sub: 'cabeca', meta: { op, a, b, cabeca: true }, enunciado: 'Faça de cabeça:', fala: `Faça de cabeça: ${a} ${op === '+' ? 'mais' : 'menos'} ${b}`,
+    const r = mais ? a + b : a - b;
+    return { tema, tipo: 'numero', sub: 'cabeca', meta: { op, a, b, cabeca: true }, enunciado: 'Faça de cabeça:', fala: `Faça de cabeça: ${a} ${mais ? 'mais' : 'menos'} ${b}`,
       visual: { kind: 'expressao', texto: `${a} ${op} ${b} = ?` }, correta: String(r), respostaTexto: `${a} ${op} ${b} = ${r}`, explicacao: { linhas, visual: null } };
   }
-  function gerarAdicao(rng) {
-    if (rng() < 0.2) return cabecaQ('adicao', '+', rng);
-    const querReserva = rng() < 0.85;
+
+  // ----- número escondido (345 + ▢ = 812): escolher a conta e armar -----
+  function escondidoQ(tema, rng, nivel) {
+    const dig = nivel >= 4 ? 4 : 3;
+    let forma, a, b, c, x, achar, linhas1;
+    if (tema === 'adicao') {
+      forma = 'soma'; a = numeroAleatorio(rng, dig); x = numeroAleatorio(rng, rng() < 0.5 ? dig : dig - 1); c = a + x;
+      achar = ['−', c, a];
+      linhas1 = ['O ▢ é a parte que falta. Numa adição, a parte que falta = TOTAL − a parte que já sabemos.', `Então: ${c} − ${a}`];
+      b = x;
+    } else if (rng() < 0.5) { // a − ▢ = c
+      forma = 'tirou'; a = numeroAleatorio(rng, dig); do { x = numeroAleatorio(rng, dig - (rng() < 0.5 ? 1 : 0)); } while (x >= a); c = a - x;
+      achar = ['−', a, c];
+      linhas1 = ['O ▢ é quanto foi tirado. Quanto foi tirado = o COMEÇO − o que SOBROU.', `Então: ${a} − ${c}`];
+    } else { // ▢ − b = c
+      forma = 'comeco'; b = numeroAleatorio(rng, dig - 1); c = numeroAleatorio(rng, dig - 1); x = b + c; a = x;
+      achar = ['+', c, b];
+      linhas1 = ['O ▢ é o número do começo. O começo = o que SOBROU + o que foi TIRADO.', `Então: ${c} + ${b}`];
+    }
+    const expr = forma === 'soma' ? `${a} + ▢ = ${c}` : forma === 'tirou' ? `${a} − ▢ = ${c}` : `▢ − ${b} = ${c}`;
+    const certa = `${achar[1]} ${achar[0]} ${achar[2]}`;
+    const opcoes = embaralhar(rng, unicos([certa, `${achar[1]} ${achar[0] === '+' ? '−' : '+'} ${achar[2]}`, forma === 'soma' ? `${a} + ${c}` : forma === 'tirou' ? `${a} + ${c}` : `${b} − ${c}`, `${c} + ${a}`]).slice(0, 3));
+    if (!opcoes.includes(certa)) opcoes[0] = certa;
+    const { conta, linhas } = montarConta(achar[0], achar[1], achar[2]);
+    return { tema, tipo: 'escondido', meta: { forma, a, b, c, x }, expr, enunciado: `Descubra o número escondido: ${expr}`, fala: falaConta(`Descubra o número escondido: ${expr}`),
+      etapa1: { opcoes: embaralhar(rng, opcoes), correta: certa, linhas: linhas1 }, contaAchar: conta, linhasAchar: linhas.concat([`O número escondido é ${x}: ${expr.replace('▢', x)}`]),
+      correta: String(x), respostaTexto: `${expr} → ▢ = ${x}` };
+  }
+
+  // ----- problemas de 2 etapas -----
+  function duasEtapasQ(tema, rng, nivel) {
+    const quem = escolher(rng, QUEM);
+    let enunciado, c1, c2, p1, p2;
+    if (tema === 'multiplicacao') {
+      const n = inteiro(rng, 3, 9), k = numeroAleatorio(rng, nivel >= 5 ? 3 : 2), s1 = n * k;
+      if (rng() < 0.5) {
+        const c = inteiro(rng, 10, s1 - 5);
+        enunciado = `${quem} comprou ${n} caixas com ${k} lápis em cada uma e deu ${c} lápis para a escola. Quantos lápis sobraram?`;
+        c1 = montarConta('×', k, n); c2 = montarConta('−', s1, c); p1 = `1ª conta: quantos lápis nas caixas? ${k} × ${n}`; p2 = `2ª conta: tire os que deu: ${s1} − ${c}`;
+      } else {
+        const c = numeroAleatorio(rng, 2);
+        enunciado = `Foram ${n} ônibus com ${k} pessoas em cada um, e mais ${c} pessoas foram de carro. Quantas pessoas foram ao passeio?`;
+        c1 = montarConta('×', k, n); c2 = montarConta('+', s1, c); p1 = `1ª conta: pessoas nos ônibus: ${k} × ${n}`; p2 = `2ª conta: junte as do carro: ${s1} + ${c}`;
+      }
+    } else if (tema === 'adicao' || rng() < 0.5) {
+      const dig = nivel >= 5 ? 4 : 3;
+      const a = numeroAleatorio(rng, dig), b = numeroAleatorio(rng, dig), s1 = a + b, c = inteiro(rng, Math.floor(s1 / 4), s1 - 10);
+      enunciado = `${quem} tinha ${a} figurinhas, ganhou mais ${b} e depois deu ${c} para o primo. Com quantas ficou?`;
+      c1 = montarConta('+', a, b); c2 = montarConta('−', s1, c); p1 = `1ª conta: depois de ganhar: ${a} + ${b}`; p2 = `2ª conta: depois de dar: ${s1} − ${c}`;
+    } else {
+      const a = numeroAleatorio(rng, 4), b = inteiro(rng, Math.floor(a / 5), Math.floor(a / 2)), s1 = a - b, c = inteiro(rng, Math.floor(s1 / 5), Math.floor(s1 / 2));
+      enunciado = `Uma loja tinha ${a} bolas. Vendeu ${b} de manhã e ${c} à tarde. Quantas bolas sobraram?`;
+      c1 = montarConta('−', a, b); c2 = montarConta('−', s1, c); p1 = `1ª conta: depois da manhã: ${a} − ${b}`; p2 = `2ª conta: depois da tarde: ${s1} − ${c}`;
+    }
+    const final = c2.conta.resultado;
+    return { tema, tipo: 'duas', meta: { contas: [[c1.conta.op, c1.conta.a, c1.conta.b], [c2.conta.op, c2.conta.a, c2.conta.b]] }, enunciado, fala: falaConta(enunciado),
+      etapas2: [{ pergunta: p1, conta: c1.conta, linhas: c1.linhas }, { pergunta: p2, conta: c2.conta, linhas: c2.linhas.concat([`Resposta: ${final}.`]) }],
+      correta: String(final), respostaTexto: `${p1.split(': ').pop()} = ${c1.conta.resultado}; ${p2.split(': ').pop()} = ${final}` };
+  }
+
+  // ----- geradores por tema (recebem o nível) -----
+  function gerarAdicao(rng, nivel = 1) {
+    const s = rng();
+    if (nivel >= 4 && s < 0.2) return duasEtapasQ('adicao', rng, nivel);
+    if (nivel >= 2 && s < (nivel >= 4 ? 0.35 : 0.15)) return escondidoQ('adicao', rng, nivel);
+    if (nivel >= 3 && s < (nivel >= 4 ? 0.5 : 0.35)) {
+      const dig = nivel >= 5 ? 4 : 3;
+      const a = numeroAleatorio(rng, dig), b = numeroAleatorio(rng, dig), c = numeroAleatorio(rng, dig - (rng() < 0.4 ? 1 : 0));
+      return contaQ('adicao', '+', a, b, rng() < 0.4 ? escolher(rng, CONTEXTOS_AD3)(a, b, c) : null, c);
+    }
+    if (rng() < (nivel >= 3 ? 0.12 : 0.2)) return cabecaQ('adicao', '+', rng, nivel);
+    const lens = [null, [[3, 3], [4, 3], [4, 4], [3, 3]], [[3, 3], [4, 3], [4, 4]], [[4, 3], [4, 4], [4, 4]], [[4, 4]], [[4, 4]]][nivel];
+    const minRes = nivel >= 4 ? 3 : nivel >= 2 ? 2 : 1, querReserva = nivel >= 3 || rng() < 0.85;
     let a = 0, b = 0;
-    for (let t = 0; t < 300; t++) {
-      const la = rng() < 0.6 ? 3 : 4, lb = la === 4 && rng() < 0.5 ? 4 : 3;
+    for (let t = 0; t < 400; t++) {
+      const [la, lb] = escolher(rng, lens);
       a = numeroAleatorio(rng, la); b = numeroAleatorio(rng, lb);
-      if (a + b < 10000 && temReservaAd(a, b) === querReserva) break;
+      const nr = contarReservas(a, b);
+      if ((nivel >= 4 || a + b < 10000) && (querReserva ? nr >= minRes : nr === 0)) break;
     }
     return contaQ('adicao', '+', a, b, rng() < 0.35 ? escolher(rng, CONTEXTOS_AD)(a, b) : null);
   }
-  function gerarSubtracao(rng) {
-    if (rng() < 0.2) return cabecaQ('subtracao', '−', rng);
-    const querEmp = rng() < 0.85, zeroMeio = querEmp && rng() < 0.25;
+  function gerarSubtracao(rng, nivel = 1) {
+    const s = rng();
+    if (nivel >= 4 && s < (nivel >= 5 ? 0.3 : 0.2)) return duasEtapasQ('subtracao', rng, nivel);
+    if (nivel >= 2 && s < (nivel >= 4 ? 0.4 : 0.15)) return escondidoQ('subtracao', rng, nivel);
+    if (rng() < (nivel >= 3 ? 0.12 : 0.2)) return cabecaQ('subtracao', '−', rng, nivel);
+    const querEmp = nivel >= 2 || rng() < 0.85;
+    const pZero = [0, 0.25, 0.35, 0.45, 0.5, 0.6][nivel], zeroMeio = querEmp && rng() < pZero;
+    const minEmp = nivel >= 4 ? 2 : nivel >= 2 ? 2 : 1;
     let a = 0, b = 0;
-    for (let t = 0; t < 500; t++) {
-      const la = rng() < 0.6 ? 3 : 4;
+    for (let t = 0; t < 600; t++) {
+      const la = nivel >= 3 ? 4 : rng() < 0.6 ? 3 : 4;
       a = numeroAleatorio(rng, la);
-      if (zeroMeio) a = Number(String(a).slice(0, 1) + '0' + String(a).slice(2));
+      if (zeroMeio) {
+        const sa = String(a);
+        a = nivel >= 4 && rng() < 0.5 ? Number(sa[0] + '0'.repeat(la - 2) + sa.slice(-1)) : Number(sa[0] + '0' + sa.slice(2));
+        if (nivel >= 4 && rng() < 0.2) a = Number(sa[0] + '0'.repeat(la - 1));
+      }
       b = numeroAleatorio(rng, rng() < 0.7 ? la : la - 1);
-      if (b < a && temEmprestimo(a, b) === querEmp && (!zeroMeio || String(a)[1] === '0')) break;
+      if (b >= a) continue;
+      const ne = contarEmprestimos(a, b);
+      if ((querEmp ? ne >= Math.min(minEmp, la - 1) : ne === 0) && (!zeroMeio || String(a)[1] === '0')) break;
     }
     if (b >= a) { a = 503; b = 278; }
     return contaQ('subtracao', '−', a, b, rng() < 0.35 ? escolher(rng, CONTEXTOS_SUB)(a, b) : null);
   }
-  function gerarMultiplicacao(rng) {
-    if (rng() < 0.35) { const q = R.GERADORES.multiplicacao[0](rng); q.tema = 'multiplicacao'; return q; } // S.M. → Cálculo → R:
-    const m = inteiro(rng, 2, 9);
-    const dig = m <= 3 ? (rng() < 0.5 ? 3 : 4) : m <= 5 ? 3 : (rng() < 0.5 ? 2 : 3);
+  function vezesDezQ(rng) {
+    const n = inteiro(rng, 12, 99), f = rng() < 0.6 ? 10 : 100, r = n * f;
+    return { tema: 'multiplicacao', tipo: 'numero', sub: 'vezes10', meta: { a: n, b: f, op: '×' }, enunciado: 'Faça de cabeça:', fala: `Faça de cabeça: ${n} vezes ${f}`,
+      visual: { kind: 'expressao', texto: `${n} × ${f} = ?` }, correta: String(r), respostaTexto: `${n} × ${f} = ${r}`,
+      explicacao: { linhas: [f === 10 ? `×10: coloca UM zero no fim → ${n} vira ${r}.` : `×100: coloca DOIS zeros no fim → ${n} vira ${r}.`], visual: null } };
+  }
+  function gerarMultiplicacao(rng, nivel = 1) {
+    const s = rng();
+    if (nivel >= 4 && s < (nivel >= 5 ? 0.3 : 0.2)) return duasEtapasQ('multiplicacao', rng, nivel);
+    if (nivel >= 4 && s < (nivel >= 5 ? 0.42 : 0.4)) return vezesDezQ(rng);
+    if (rng() < (nivel >= 3 ? 0.15 : 0.35)) { const q = R.GERADORES.multiplicacao[0](rng); q.tema = 'multiplicacao'; return q; } // S.M. → Cálculo → R:
+    const m = nivel >= 4 ? inteiro(rng, 6, 9) : nivel >= 2 && rng() < 0.7 ? inteiro(rng, 4, 9) : inteiro(rng, 2, 9);
+    let dig;
+    if (nivel >= 3) dig = m <= 5 || rng() < 0.6 ? 4 : 3;
+    else if (nivel === 2) dig = 3;
+    else dig = m <= 3 ? (rng() < 0.5 ? 3 : 4) : m <= 5 ? 3 : (rng() < 0.5 ? 2 : 3);
     const a = numeroAleatorio(rng, dig);
     return contaQ('multiplicacao', '×', a, m, null);
   }
-  function gerarProvaReal(rng) {
+  function gerarProvaReal(rng, nivel = 1) {
     const op = rng() < 0.5 ? '+' : '−';
-    const quem = escolher(rng, ['Lia', 'Pedro', 'Joana', 'Davi', 'Benjamin', 'Ana']);
+    const quem = escolher(rng, QUEM);
+    const dig = () => nivel >= 3 ? 4 : nivel === 2 ? (rng() < 0.5 ? 3 : 4) : 3;
     let a, b, certo, c;
-    if (op === '−') {
-      do { a = numeroAleatorio(rng, 3); b = numeroAleatorio(rng, rng() < 0.8 ? 3 : 2); } while (b >= a || !temEmprestimo(a, b));
-      certo = a - b;
-    } else {
-      do { a = numeroAleatorio(rng, 3); b = numeroAleatorio(rng, 3); } while (!temReservaAd(a, b));
-      certo = a + b;
+    for (let t = 0; t < 500; t++) {
+      if (op === '−') {
+        const la = dig();
+        a = numeroAleatorio(rng, la);
+        if (nivel >= 4 && rng() < 0.5) a = Number(String(a)[0] + '0' + String(a).slice(2));
+        b = numeroAleatorio(rng, rng() < 0.8 ? la : la - 1);
+        if (b < a && temEmprestimo(a, b)) break;
+      } else {
+        a = numeroAleatorio(rng, dig()); b = numeroAleatorio(rng, dig());
+        if (temReservaAd(a, b)) break;
+      }
     }
+    if (op === '−' && b >= a) { a = 812; b = 345; }
+    certo = op === '+' ? a + b : a - b;
     const acertou = rng() < 0.5;
     if (acertou) c = certo;
     else {
-      const erros = (op === '−' ? [erroSubInvertida(a, b)] : [erroAdSemReserva(a, b)]).concat([certo + 10, certo - 10, certo + 100]);
-      c = erros.find(x => x !== certo && x > 0 && (op === '+' ? x > b : true));
+      const tipicos = op === '−' ? [erroSubInvertida(a, b)] : [erroAdSemReserva(a, b)];
+      const lista = nivel >= 4 ? [certo + 1, certo - 1, certo + 100, ...tipicos] : [...tipicos, certo + 10, certo - 10, certo + 100];
+      c = lista.find(x => x !== certo && x > 0 && (op === '+' ? x > b : true));
     }
     const inv = op === '+' ? '−' : '+';
-    const provaA = c, provaB = b;
-    const { conta: provaConta, linhas: linhasProva } = montarConta(inv, provaA, provaB);
-    const prova = provaConta.resultado;
-    const certa = prova === a;
-    const opcoes1 = embaralhar(rng, [`${c} ${inv} ${b}`, `${c} ${op} ${b}`, `${a} ${inv} ${b}`, `${a} ${op} ${c}`, `${b} ${op} ${a}`]
-      .filter((x, i, arr) => arr.indexOf(x) === i).slice(0, 3));
+    const { conta: provaConta, linhas: linhasProva } = montarConta(inv, c, b);
+    const prova = provaConta.resultado, certa = prova === a;
+    const opcoes1 = embaralhar(rng, unicos([`${c} ${inv} ${b}`, `${c} ${op} ${b}`, `${a} ${inv} ${b}`, `${a} ${op} ${c}`, `${b} ${op} ${a}`]).slice(0, 3));
     return { tema: 'provareal', tipo: 'prova', meta: { op, a, b, c, certo, quem },
       enunciado: `${quem} fez a conta ${a} ${op} ${b} = ${c}. Vamos conferir com a prova real!`,
       fala: falaConta(`${quem} fez a conta ${a} ${op} ${b} igual a ${c}. Vamos conferir com a prova real!`),
@@ -1153,6 +1342,31 @@ const Jogo = (function (R) {
       etapa3: { opcoes: ['Certa ✔', 'Errada ✘'], correta: certa ? 'Certa ✔' : 'Errada ✘',
         linhas: [`Se a prova real volta ao número do começo (${a}), a conta está certa.`, `A prova deu ${prova}${certa ? ' = ' : ' ≠ '}${a}, então a conta está ${certa ? 'CERTA' : 'ERRADA'}.`].concat(certa ? [] : [`O certo era ${a} ${op} ${b} = ${certo}.`]) },
       correta: certa ? 'Certa ✔' : 'Errada ✘', respostaTexto: `${a} ${op} ${b} = ${c} → prova ${c} ${inv} ${b} = ${prova} → ${certa ? 'certa' : `errada (o certo é ${certo})`}` };
+  }
+  // ----- divisão exata -----
+  const DIVISORES = [null, [2, 5, 10], [2, 3, 4, 5, 10], [2, 3, 4, 5, 6, 7, 8, 9, 10], [2, 3, 4, 5, 6, 7, 8, 9, 10], [3, 4, 6, 7, 8, 9]];
+  const REPARTIR = [
+    (n, d) => `${n} balas foram repartidas igualmente entre ${d} crianças. Quantas balas cada criança ganhou?`,
+    (n, d) => `${n} figurinhas vão ser coladas em ${d} páginas, a mesma quantidade em cada. Quantas em cada página?`,
+    (n, d) => `${n} ovos vão em caixas com ${d} ovos cada. Quantas caixas ficam cheias?`,
+    (n, d) => `${n} alunos vão formar times de ${d} alunos. Quantos times?`,
+  ];
+  function gerarDivisao(rng, nivel = 1) {
+    if (nivel >= 4 && rng() < 0.3) { // divide dezenas e unidades separadas: 84 ÷ 4 = 21
+      let d, q, n;
+      do { d = inteiro(rng, 2, 4); q = inteiro(rng, 11, 33); n = d * q; } while (Math.floor(n / 10) % d !== 0 || n % 10 % d !== 0 || n > 99 || n % 10 === 0);
+      const dz = Math.floor(n / 10), un = n % 10;
+      return { tema: 'divisao', tipo: 'numero', sub: 'dezenas', meta: { n, d, q }, enunciado: 'Faça de cabeça:', fala: `${n} dividido por ${d}`,
+        visual: { kind: 'expressao', texto: `${n} ÷ ${d} = ?` }, correta: String(q), respostaTexto: `${n} ÷ ${d} = ${q}`,
+        explicacao: { linhas: [`Divida as dezenas: ${dz} dezenas ÷ ${d} = ${dz / d} dezenas = ${dz / d * 10}.`, `Divida as unidades: ${un} ÷ ${d} = ${un / d}.`, `Junte: ${dz / d * 10} + ${un / d} = ${q}.`], visual: null } };
+    }
+    const d = escolher(rng, DIVISORES[nivel] || DIVISORES[3]), q = inteiro(rng, 2, 10), n = d * q;
+    const problema = rng() < (nivel >= 4 ? 0.5 : 0.3);
+    const linhas = [`Pense na tabuada do ${d}: ${d} × ? = ${n}.`, `${d} × ${q} = ${n}, então ${n} ÷ ${d} = ${q}.`];
+    const base = { tema: 'divisao', tipo: 'numero', meta: { n, d, q }, correta: String(q), respostaTexto: `${n} ÷ ${d} = ${q}`,
+      explicacao: { linhas, visual: { kind: 'matriz', a: d, b: q, legenda: `${n} bolinhas em ${d} fileiras: ${q} em cada fileira` } } };
+    if (problema) { const t = escolher(rng, REPARTIR)(n, d); return Object.assign(base, { sub: 'repartir', enunciado: t, fala: t }); }
+    return Object.assign(base, { sub: 'conta', enunciado: 'Quanto dá?', fala: `${n} dividido por ${d}`, visual: { kind: 'expressao', texto: `${n} ÷ ${d} = ?` } });
   }
 
   // ======================================================================
@@ -1214,8 +1428,19 @@ const Jogo = (function (R) {
     if (lista.length < n) lista = lista.concat(novos.filter(k => !lista.includes(k)).slice(0, n - lista.length));
     return separarLigados(embaralhar(rng, lista)).map(k => ({ chave: k, manutencao: !novo(cartoes[k]) && !vencido(cartoes[k], hoje), novo: novo(cartoes[k]) }));
   }
-  const FORMATOS = [['digitar', 50], ['escolha', 20], ['lacuna', 15], ['problema', 15]];
-  function escolherFormato(rng) { let r = rng() * 100; for (const [f, p] of FORMATOS) { if (r < p) return f; r -= p; } return 'digitar'; }
+  // formatos por nível: quanto mais alto, menos alternativas e mais lacunas/probleminhas
+  const FORMATOS_NIVEL = [null,
+    [['digitar', 50], ['escolha', 20], ['lacuna', 15], ['problema', 15]],
+    [['digitar', 55], ['escolha', 10], ['lacuna', 20], ['problema', 15]],
+    [['digitar', 55], ['escolha', 5], ['lacuna', 25], ['problema', 15]],
+    [['digitar', 50], ['lacuna', 30], ['problema', 20]],
+    [['digitar', 45], ['lacuna', 30], ['problema', 25]]];
+  function escolherFormato(rng, nivel = 1) {
+    const F = FORMATOS_NIVEL[nivel] || FORMATOS_NIVEL[1];
+    let r = rng() * 100;
+    for (const [f, p] of F) { if (r < p) return f; r -= p; }
+    return 'digitar';
+  }
   function opcoesEscolha(a, b, rng) {
     const p = a * b, cands = [];
     for (const v of [a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b, p + 10, p - 10, a + b, p + 2, p - 1])
@@ -1270,11 +1495,40 @@ const Jogo = (function (R) {
   }
 
   // ======================================================================
+  // DATAS E DIÁRIO (dia = número inteiro de dias desde 1970, no fuso local)
+  // ======================================================================
+  const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const SEMANA = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+  function dataDoDia(d) { const x = new Date(d * 86400000); return { ano: x.getUTCFullYear(), mes: x.getUTCMonth(), dia: x.getUTCDate(), semana: x.getUTCDay() }; }
+  function diaDaData(ano, mes, dia) { return Math.floor(Date.UTC(ano, mes, dia) / 86400000); }
+  function textoData(d, comAno) { const x = dataDoDia(d); return `${cap(SEMANA[x.semana])}, ${x.dia} de ${MESES[x.mes]}${comAno ? ' de ' + x.ano : ''}`; }
+  function registrarVisita(e, hoje) { if (!e.visitas.includes(hoje)) { e.visitas.push(hoje); e.visitas.sort((a, b) => a - b); if (e.visitas.length > 800) e.visitas = e.visitas.slice(-800); } }
+  // semanas do mês (começando no domingo) com o que aconteceu em cada dia
+  function mesCalendario(e, ano, mes, hoje) {
+    const primeiro = diaDaData(ano, mes, 1), dias = new Date(Date.UTC(ano, mes + 1, 0)).getUTCDate();
+    const semanas = [];
+    let semana = Array(dataDoDia(primeiro).semana).fill(null);
+    for (let i = 0; i < dias; i++) {
+      const d = primeiro + i, h = e.historico.find(x => x.dia === d);
+      semana.push({ d, dia: i + 1, missoes: h ? h.missoes : 0, xp: h ? h.xp : 0, visitou: e.visitas.includes(d) || !!h, hoje: d === hoje, futuro: d > hoje });
+      if (semana.length === 7) { semanas.push(semana); semana = []; }
+    }
+    if (semana.length) { while (semana.length < 7) semana.push(null); semanas.push(semana); }
+    return semanas;
+  }
+  function resumoMes(e, ano, mes) {
+    const ini = diaDaData(ano, mes, 1), fim = diaDaData(ano, mes + 1, 1);
+    const hs = e.historico.filter(h => h.dia >= ini && h.dia < fim);
+    return { diasComMissao: hs.length, missoes: hs.reduce((s, h) => s + h.missoes, 0), xp: hs.reduce((s, h) => s + h.xp, 0),
+      perguntas: hs.reduce((s, h) => s + h.perguntas, 0), dePrimeira: hs.reduce((s, h) => s + h.dePrimeira, 0), visitas: e.visitas.filter(d => d >= ini && d < fim).length };
+  }
+
+  // ======================================================================
   // ESTADO, DIA, MISSÕES, XP E PATENTES
   // ======================================================================
   const CONFIG_PADRAO = { missoesPorDia: 3, perguntasPorMissao: 12, limiarMs: 4000, novosPorDia: 15 };
   const NOMES_MISSAO = [['🪐', 'Decolagem'], ['🌍', 'Órbita'], ['🌙', 'Pouso na Lua'], ['☄️', 'Cometa'], ['🔭', 'Observatório']];
-  const XP = { primeira: 10, depois: 4, missao: 25, diaCompleto: 50 };
+  const XP = { primeira: 10, depois: 4, missao: 25, diaCompleto: 50, bonusNivel: 2 };
   const PATENTES = [
     { nome: 'Cadete', icone: '🧑‍🚀', xp: 0 },
     { nome: 'Piloto Aprendiz', icone: '🛩️', xp: 500 },
@@ -1302,21 +1556,27 @@ const Jogo = (function (R) {
       progresso: (xp - p.xp) / (prox.xp - p.xp), falta: prox.xp - xp };
   }
 
-  function estadoInicial() {
-    return completarEstado({});
-  }
-  // preenche o que faltar (importante quando entram temas novos numa versão futura)
+  function estadoInicial() { return completarEstado({}); }
+  // preenche o que faltar (estados salvos antigos continuam valendo quando entram coisas novas)
   function completarEstado(e) {
-    e.versao = 1;
+    e.versao = 2;
     e.config = Object.assign({}, CONFIG_PADRAO, e.config || {});
     e.temas = e.temas || {};
     for (const t of TEMAS) e.temas[t.id] = Object.assign({ ligado: t.ligado, peso: t.peso }, e.temas[t.id] || {});
     e.estat = e.estat || {};
     for (const t of TEMAS) if (!Array.isArray(e.estat[t.id])) e.estat[t.id] = [];
+    if (!e.niveis) { // primeira vez com níveis: a janela começa com o histórico recente (quem já vai bem sobe logo)
+      e.niveis = {};
+      for (const t of TEMAS) if (!t.semNivel) e.niveis[t.id] = { n: 1, janela: e.estat[t.id].slice(-(JANELA - 1)) };
+    }
+    for (const t of TEMAS) if (!t.semNivel && !e.niveis[t.id]) e.niveis[t.id] = { n: 1, janela: [] };
     e.cartoes = e.cartoes && Object.keys(e.cartoes).length === 81 ? e.cartoes : cartoesIniciais();
     e.xp = e.xp || 0;
     e.dias = Array.isArray(e.dias) ? e.dias : [];
     e.historico = Array.isArray(e.historico) ? e.historico : [];
+    e.visitas = Array.isArray(e.visitas) ? e.visitas : [];
+    for (const h of e.historico) if (!e.visitas.includes(h.dia)) e.visitas.push(h.dia);
+    e.visitas.sort((a, b) => a - b);
     e.novos = e.novos || { dia: null, n: 0 };
     e.dia = e.dia || null;
     e.missaoAtiva = e.missaoAtiva || null;
@@ -1355,25 +1615,26 @@ const Jogo = (function (R) {
   function distribuicaoMissao(e, rng) {
     const ts = temasLigados(e);
     const pesos = ts.map(t => PESOS[e.temas[t.id].peso] * (1 + 1.5 * taxaErro(e, t.id)));
-    const cont = alocar(pesos, e.config.perguntasPorMissao, rng);
+    const cont = alocar(pesos, perguntasDaMissao(e), rng);
     const out = {};
     ts.forEach((t, i) => { if (cont[i]) out[t.id] = cont[i]; });
     return out;
   }
-  const GERAR = { adicao: gerarAdicao, subtracao: gerarSubtracao, multiplicacao: gerarMultiplicacao, provareal: gerarProvaReal };
+  const GERAR = { adicao: gerarAdicao, subtracao: gerarSubtracao, multiplicacao: gerarMultiplicacao, provareal: gerarProvaReal, divisao: gerarDivisao };
   function gerarDoTema(e, tema, qtd, hoje, rng) {
+    const nivel = nivelDe(e, tema);
     if (tema === 'tabuada') {
       const permitidos = Math.max(0, e.config.novosPorDia - e.novos.n);
       const fatos = escolherFatos(e.cartoes, hoje, qtd, rng, permitidos);
       e.novos.n += fatos.filter(f => f.novo).length;
-      return fatos.map(f => Object.assign(montarFato(f.chave, escolherFormato(rng), rng), { manutencao: f.manutencao }));
+      return fatos.map(f => Object.assign(montarFato(f.chave, escolherFormato(rng, nivel), rng), { manutencao: f.manutencao, nivel }));
     }
     if (GERAR[tema]) {
       const out = [], vistos = new Set();
       for (let i = 0; i < qtd; i++) {
         let q;
-        for (let t = 0; t < 20; t++) { q = GERAR[tema](rng); if (!vistos.has(q.enunciado + q.correta)) break; }
-        vistos.add(q.enunciado + q.correta); out.push(q);
+        for (let t = 0; t < 20; t++) { q = GERAR[tema](rng, nivel); if (!vistos.has(q.enunciado + q.correta)) break; }
+        vistos.add(q.enunciado + q.correta); out.push(Object.assign(q, { nivel }));
       }
       return out;
     }
@@ -1386,7 +1647,7 @@ const Jogo = (function (R) {
     const listas = {};
     for (const t in dist) listas[t] = gerarDoTema(e, t, dist[t], hoje, rng);
     const perguntas = R.intercalar(listas, rng).map((q, i) => Object.assign(q, { id: i + 1, tentativas: 0, acertou: false }));
-    return { numero, dia: hoje, perguntas, fila: perguntas.map(q => q.id), finalizada: false, xp: 0, subiram: [], regrasVistas: false };
+    return { numero, dia: hoje, perguntas, fila: perguntas.map(q => q.id), finalizada: false, xp: 0, subiram: [], niveisSubiram: [], regrasVistas: false };
   }
   function perguntaAtual(m) { return m.perguntas.find(q => q.id === m.fila[0]) || null; }
   function progresso(m) { return { feitas: m.perguntas.filter(q => q.acertou).length, total: m.perguntas.length }; }
@@ -1396,21 +1657,27 @@ const Jogo = (function (R) {
     const q = m.perguntas.find(x => x.id === id);
     const primeira = q.tentativas === 0;
     q.tentativas++;
+    if (!m.niveisSubiram) m.niveisSubiram = [];
     if (q.tema === 'tabuada' && primeira && e.cartoes[q.chave]) {
       const r = responderCartao(e.cartoes[q.chave], { correto: res.acertou, ms: res.ms || 0, limiarMs: limiarEfetivo(q.formato, e.config.limiarMs), hoje, manutencao: q.manutencao });
       e.cartoes[q.chave] = r.cartao;
       if (r.subiu && !m.subiram.includes(q.chave)) m.subiram.push(q.chave);
       if (!res.acertou) m.subiram = m.subiram.filter(k => k !== q.chave);
     }
-    if (primeira) { const h = e.estat[q.tema] || (e.estat[q.tema] = []); h.push(res.acertou ? 1 : 0); if (h.length > 40) h.shift(); }
-    if (res.acertou) { q.acertou = true; m.xp += primeira ? XP.primeira : XP.depois; }
+    let mudouNivel = 0;
+    if (primeira) {
+      const h = e.estat[q.tema] || (e.estat[q.tema] = []); h.push(res.acertou ? 1 : 0); if (h.length > 40) h.shift();
+      mudouNivel = atualizarNivel(e, q.tema, res.acertou);
+      if (mudouNivel > 0) m.niveisSubiram.push({ tema: q.tema, n: nivelDe(e, q.tema) });
+    }
+    if (res.acertou) { q.acertou = true; m.xp += primeira ? XP.primeira + XP.bonusNivel * ((q.nivel || 1) - 1) : XP.depois; }
     else m.fila.splice(Math.min(m.fila.length, inteiro(rng, 2, 4)), 0, id);
     if (!m.fila.length) m.finalizada = true;
-    return { primeira };
+    return { primeira, mudouNivel };
   }
   function registrarDia(e, hoje) { if (!e.dias.includes(hoje)) { e.dias.push(hoje); e.dias.sort((x, y) => x - y); } }
   function sequenciaDias(dias, hoje) { const s = new Set(dias); let d = s.has(hoje) ? hoje : hoje - 1, n = 0; while (s.has(d)) { n++; d--; } return n; }
-  function finalizarMissao(e, m, hoje) {
+  function finalizarMissao(e, m, hoje, hora) {
     const dia = garantirDia(e, hoje);
     const antes = patenteDe(e.xp);
     const ganhos = [{ rotulo: 'Perguntas', xp: m.xp }, { rotulo: 'Missão cumprida', xp: XP.missao }];
@@ -1419,10 +1686,16 @@ const Jogo = (function (R) {
     if (!dia.bonus && dia.missoes.every(x => x.feita)) { dia.bonus = true; ganhos.push({ rotulo: 'Todas as missões do dia', xp: XP.diaCompleto }); }
     const total = ganhos.reduce((s, g) => s + g.xp, 0);
     e.xp += total;
-    registrarDia(e, hoje);
+    registrarDia(e, hoje); registrarVisita(e, hoje);
     let h = e.historico.find(x => x.dia === hoje);
     if (!h) { h = { dia: hoje, xp: 0, missoes: 0, perguntas: 0, dePrimeira: 0 }; e.historico.push(h); }
-    h.xp += total; h.missoes++; h.perguntas += m.perguntas.length; h.dePrimeira += m.perguntas.filter(q => q.tentativas === 1).length;
+    const dePrimeira = m.perguntas.filter(q => q.tentativas === 1).length;
+    h.xp += total; h.missoes++; h.perguntas += m.perguntas.length; h.dePrimeira += dePrimeira;
+    h.figurinhas = (h.figurinhas || 0) + m.subiram.length;
+    h.lista = h.lista || [];
+    const temas = {};
+    for (const q of m.perguntas) temas[q.tema] = (temas[q.tema] || 0) + 1;
+    h.lista.push({ numero: m.numero, nome: nomeMissao(m.numero).nome, icone: nomeMissao(m.numero).icone, hora: hora || '', xp: total, perguntas: m.perguntas.length, dePrimeira, temas, niveis: (m.niveisSubiram || []).slice() });
     if (e.historico.length > 400) e.historico = e.historico.slice(-400);
     for (const q of m.perguntas.filter(x => x.tentativas > 1)) {
       dia.revisar.push({ tema: TEMA[q.tema] ? TEMA[q.tema].nome : q.tema, enunciado: textoPergunta(q), resposta: q.respostaTexto || q.correta, tentativas: q.tentativas });
@@ -1430,11 +1703,11 @@ const Jogo = (function (R) {
     if (dia.revisar.length > 60) dia.revisar = dia.revisar.slice(-60);
     e.missaoAtiva = null;
     const depois = patenteDe(e.xp);
-    return { ganhos, total, antes, depois, subiuPatente: depois.nome !== antes.nome, subiram: m.subiram.slice(), diaCompleto: dia.missoes.every(x => x.feita) };
+    return { ganhos, total, antes, depois, subiuPatente: depois.nome !== antes.nome, subiram: m.subiram.slice(), niveisSubiram: (m.niveisSubiram || []).slice(), diaCompleto: dia.missoes.every(x => x.feita) };
   }
   function textoPergunta(q) {
     let t = String(q.enunciado || '').replace(/[«»]/g, '');
-    if (q.tipo === 'conta') t = `${q.conta.a} ${q.conta.op} ${q.conta.b}` + (q.enunciado.startsWith('Arme') ? '' : ` — ${t}`);
+    if (q.tipo === 'conta') t = (q.conta.parcelas || [q.conta.a, q.conta.b]).join(` ${q.conta.op} `) + (String(q.enunciado).startsWith('Arme') ? '' : ` — ${t}`);
     else if (q.visual && q.visual.kind === 'expressao') t = q.visual.texto;
     else if (q.visual && q.visual.kind === 'romano') t += ` (${q.visual.texto})`;
     else if (q.visual && q.visual.kind === 'relogio') t += ` (relógio marcando ${R.formatarHora(q.visual.h, q.visual.m)})`;
@@ -1460,11 +1733,14 @@ const Jogo = (function (R) {
   }
 
   return {
-    TEMAS, TEMA, PESOS, NOMES_COLUNA, CONFIG_PADRAO, PATENTES, XP, INTERVALOS, FRACAO_FRACOS,
-    passosAdicao, passosSubtracao, linhasAdicao, linhasSubtracao, temReservaAd, temEmprestimo, erroAdSemReserva, erroSubInvertida, montarConta,
-    gerarAdicao, gerarSubtracao, gerarMultiplicacao, gerarProvaReal, cabecaQ,
+    TEMAS, TEMA, PESOS, NOMES_COLUNA, CONFIG_PADRAO, PATENTES, XP, INTERVALOS, FRACAO_FRACOS, NIVEL_MAX, JANELA, O_QUE_TEM, MESES, SEMANA,
+    passosAdicao, passosAdicaoN, passosSubtracao, linhasAdicao, linhasSubtracao, temReservaAd, temEmprestimo, contarReservas, contarEmprestimos,
+    erroAdSemReserva, erroSubInvertida, montarConta,
+    gerarAdicao, gerarSubtracao, gerarMultiplicacao, gerarProvaReal, gerarDivisao, cabecaQ, escondidoQ, duasEtapasQ, vezesDezQ,
+    nivelDe, atualizarNivel, nivelMedio, perguntasDaMissao,
     chave, partes, ligado, diaDe, cartoesIniciais, novo, vencido, limiarEfetivo, responderCartao, separarLigados, escolherFatos,
     escolherFormato, opcoesEscolha, montarFato, estrategia, textoComutativo,
+    dataDoDia, diaDaData, textoData, registrarVisita, mesCalendario, resumoMes,
     patenteDe, estadoInicial, completarEstado, garantirDia, nomeMissao, taxaErro, alocar, temasLigados, distribuicaoMissao, gerarDoTema,
     criarMissao, perguntaAtual, progresso, registrar, registrarDia, sequenciaDias, finalizarMissao, textoPergunta, verificar,
     maisErrados, tempoMedio, maisLentos, validarImportacao,
@@ -1489,6 +1765,7 @@ const Jogo = (function (R) {
   function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) { /* sem armazenamento: segue */ } }
   let estado = carregar() || J.estadoInicial();
   J.garantirDia(estado, hoje());
+  J.registrarVisita(estado, hoje());
   salvar();
 
   // ---------- voz e som ----------
@@ -1545,7 +1822,7 @@ const Jogo = (function (R) {
   });
 
   // ---------- navegação (hash: o botão voltar do celular funciona) ----------
-  const ROTAS = ['missoes', 'patente', 'album', 'missao', 'painel'];
+  const ROTAS = ['missoes', 'diario', 'patente', 'album', 'missao', 'painel'];
   let painelLiberado = false;
   function ir(rota) { if (location.hash !== '#/' + rota) location.hash = '#/' + rota; else render(); }
   function rotaAtual() { const r = (location.hash || '').replace(/^#\/?/, ''); return ROTAS.includes(r) ? r : 'missoes'; }
@@ -1563,6 +1840,7 @@ const Jogo = (function (R) {
     calar(); teclas = null;
     $('#camada').classList.remove('aberta'); $('#festa').classList.remove('aberta');
     J.garantirDia(estado, hoje());
+    if (!estado.visitas.includes(hoje())) { J.registrarVisita(estado, hoje()); salvar(); }
     let rota = rotaAtual();
     if ((rota === 'painel' && !painelLiberado) || (rota === 'missao' && !estado.missaoAtiva)) {
       rota = 'missoes';
@@ -1577,6 +1855,7 @@ const Jogo = (function (R) {
     document.documentElement.style.setProperty('--tema', '#1d4ed8');
     window.scrollTo(0, 0);
     if (rota === 'patente') return telaPatente();
+    if (rota === 'diario') return telaDiario();
     if (rota === 'album') return telaAlbum();
     if (rota === 'painel') return telaPainel();
     if (rota === 'missao') return proxima();
@@ -1595,7 +1874,7 @@ const Jogo = (function (R) {
         <div class="barra" aria-hidden="true"><i style="width:${Math.round(p.progresso * 100)}%"></i></div>
         <div class="sub" style="font-size:15px">⭐ ${estado.xp} XP · faltam ${p.falta} para <b>${esc(p.proxima.nome)}</b></div>
       </div></div>
-      <div class="placar">${seq >= 2 ? `<span>🔥 ${seq} dias seguidos</span>` : ''}<span>📅 ${estado.dias.length} dia${estado.dias.length === 1 ? '' : 's'} de treino</span><span>🏅 ${Object.values(estado.cartoes).filter(c => c.caixa === 5).length} de 81 na memória</span></div>`;
+      <div class="placar">${seq >= 2 ? `<span>🔥 ${seq} dias seguidos</span>` : ''}<span>📅 ${estado.dias.length} dia${estado.dias.length === 1 ? '' : 's'} de missão</span><span>🏅 ${Object.values(estado.cartoes).filter(c => c.caixa === 5).length} de 81 na memória</span></div>`;
   }
   function telaMissoes() {
     const dia = estado.dia, ativa = estado.missaoAtiva;
@@ -1609,12 +1888,15 @@ const Jogo = (function (R) {
     }).join('');
     const tudo = dia.missoes.every(m => m.feita);
     const extraAndando = ativa && ativa.numero === 'extra';
-    palco.innerHTML = `${cartaoPerfil()}
+    const feitasHoje = dia.missoes.filter(m => m.feita).length;
+    palco.innerHTML = `<div class="data-hoje">📅 ${esc(J.textoData(hoje()))}<span class="dia-n">${feitasHoje} de ${dia.missoes.length} missões hoje</span></div>
+      ${cartaoPerfil()}
       <h2 class="secao">Missões de hoje</h2>
       <div class="missoes">${cards}</div>
       ${tudo ? `<div class="cartao centro"><div class="titulo" style="font-size:24px">🎉 Missões de hoje cumpridas!</div><div class="sub">Amanhã tem missões novas. Quer treinar mais?</div>
         <div class="pilha"><button class="botao-grande claro" data-missao="extra">✨ ${extraAndando ? 'Continuar a missão extra' : 'Missão extra'}</button></div></div>` : ''}
-      <a class="cartao" href="revisao-prova.html" style="text-decoration:none;display:flex;gap:12px;align-items:center"><span style="font-size:40px">📝</span><span><b>Revisão da prova</b><br><span class="sub" style="font-size:16px">A missão especial do 2º trimestre</span></span></a>`;
+      <button class="cartao" id="b-ver-diario" style="display:flex;gap:12px;align-items:center;text-align:left;width:100%"><span style="font-size:40px">📅</span><span><b>Meu diário</b><br><span class="sub" style="font-size:16px">Veja os dias e as missões que você já fez</span></span></button>`;
+    $('#b-ver-diario').onclick = () => ir('diario');
     palco.querySelectorAll('[data-missao]').forEach(b => { b.onclick = () => {
       const num = b.dataset.missao === 'extra' ? 'extra' : Number(b.dataset.missao);
       const md = dia.missoes.find(x => x.numero === num);
@@ -1635,11 +1917,59 @@ const Jogo = (function (R) {
         <div class="placar"><span>🏆 Melhor dia: ${melhor} XP</span><span>🔥 Sequência: ${seq} dia${seq === 1 ? '' : 's'}</span><span>✅ ${totalPerg} perguntas respondidas</span></div>
         <div class="grafico" aria-label="XP dos últimos 7 dias">${dias7.map(x => `<div><b style="color:#111827">${x.xp || ''}</b><i style="height:${Math.round(x.xp / max7 * 100)}%"></i>${x.d === h ? 'hoje' : nomeDia(x.d)}</div>`).join('')}</div>
       </div>
+      <h2 class="secao">Meus níveis</h2>
+      ${htmlNiveis()}
       <h2 class="secao">Patentes</h2>
       <div class="degraus">${J.PATENTES.map((pt, i) => {
         const cls = i < p.indice ? 'ok' : i === p.indice ? 'atual' : 'trancado';
         return `<div class="degrau ${cls}"><span class="ic">${pt.icone}</span><span><b>${esc(pt.nome)}</b><small>${pt.xp} XP</small></span><span>${i < p.indice ? '✔' : i === p.indice ? '⭐ você' : '🔒'}</span></div>`;
       }).join('')}</div>`;
+  }
+  function estrelas(n) { return '★'.repeat(n) + '☆'.repeat(J.NIVEL_MAX - n); }
+  function htmlNiveis() {
+    const ts = J.temasLigados(estado).filter(t => !t.semNivel);
+    return `<div class="niveis">${ts.map(t => {
+      const n = J.nivelDe(estado, t.id), jan = (estado.niveis[t.id] || { janela: [] }).janela;
+      const certos = jan.reduce((a, b) => a + b, 0);
+      return `<div class="nivel-linha"><span class="ic">${t.icone}</span><b>${esc(t.nome)} · Nível ${n}</b><span class="est">${estrelas(n)}</span>
+        <small>${esc((J.O_QUE_TEM[t.id] || [])[n - 1] || '')} · ${n >= J.NIVEL_MAX ? 'nível máximo! 🏆' : `para subir: 7 acertos de primeira em 8 (agora ${certos} de ${jan.length})`}</small></div>`;
+    }).join('')}</div>`;
+  }
+  let diarioMes = null, diarioSel = null;
+  function telaDiario() {
+    const h = hoje(), dh = J.dataDoDia(h);
+    if (!diarioMes) diarioMes = { ano: dh.ano, mes: dh.mes };
+    if (diarioSel === null) diarioSel = h;
+    const { ano, mes } = diarioMes;
+    const semanas = J.mesCalendario(estado, ano, mes, h), res = J.resumoMes(estado, ano, mes);
+    const ehAtual = ano === dh.ano && mes === dh.mes;
+    const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
+    const celula = c => {
+      if (!c) return '<div class="vazio"></div>';
+      const cls = ['d', c.missoes ? 'm' + Math.min(3, c.missoes) : c.visitou ? 'visitou' : '', c.hoje ? 'hoje' : '', c.futuro ? 'futuro' : '', c.d === diarioSel ? 'sel' : ''].join(' ');
+      const marca = c.missoes ? '🚀'.repeat(Math.min(c.missoes, 3)) + (c.missoes > 3 ? '+' : '') : c.visitou ? '•' : '';
+      return `<button class="${cls}" data-dia="${c.d}" ${c.futuro ? 'disabled' : ''} aria-label="dia ${c.dia}">${c.dia}<span class="m">${marca}</span></button>`;
+    };
+    const hs = estado.historico.find(x => x.dia === diarioSel);
+    const visitou = estado.visitas.includes(diarioSel);
+    let detalhe;
+    if (hs) {
+      const lista = hs.lista && hs.lista.length ? hs.lista.map(x => `<div class="det-missao"><span class="ic">${x.icone || '🚀'}</span><b>${esc(x.nome)}</b><b style="color:#b45309">+${x.xp} XP</b>
+          <small>${x.hora ? '🕐 ' + esc(x.hora) + ' · ' : ''}${x.dePrimeira} de ${x.perguntas} de primeira${x.niveis && x.niveis.length ? ' · ⬆️ ' + x.niveis.map(nv => `${esc((J.TEMA[nv.tema] || {}).nome || nv.tema)} nível ${nv.n}`).join(', ') : ''}</small></div>`).join('')
+        : `<p class="sub" style="font-size:16px;margin-top:6px">${plural(hs.missoes, 'missão cumprida', 'missões cumpridas')}. (O detalhe de cada missão começou a ser guardado depois deste dia.)</p>`;
+      detalhe = `<div class="placar" style="margin:6px 0"><span>🚀 ${plural(hs.missoes, 'missão', 'missões')}</span><span>⭐ ${hs.xp} XP</span><span>✅ ${hs.perguntas ? Math.round(hs.dePrimeira / hs.perguntas * 100) : 0}% de primeira</span>${hs.figurinhas ? `<span>📒 ${plural(hs.figurinhas, 'figurinha subiu', 'figurinhas subiram')}</span>` : ''}</div>${lista}`;
+    } else detalhe = `<p class="sub" style="font-size:17px;margin-top:6px">${visitou ? 'Você entrou no jogo neste dia, mas não terminou nenhuma missão.' : diarioSel === h ? 'Ainda não tem missão hoje. Bora? 🚀' : 'Sem missões neste dia.'}</p>`;
+    palco.innerHTML = `<div class="data-hoje">📅 Hoje: ${esc(J.textoData(h))}</div>
+      <div class="cartao">
+        <div class="cal-topo"><button class="botao-mini" id="cal-ant" aria-label="Mês anterior">◀</button><b>${esc(R.cap(J.MESES[mes]))} de ${ano}</b><button class="botao-mini" id="cal-prox" aria-label="Próximo mês" ${ehAtual ? 'disabled style="opacity:.3"' : ''}>▶</button></div>
+        <div class="cal">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(x => `<div class="sem">${x}</div>`).join('')}${semanas.map(w => w.map(celula).join('')).join('')}</div>
+        <div class="legenda" style="margin-top:8px"><span><i style="background:#eef2ff;border:1px solid #c7d2fe"></i>entrou</span><span><i style="background:#fef9c3"></i>1 missão</span><span><i style="background:#d9f99d"></i>2</span><span><i style="background:#86efac"></i>3 ou mais</span></div>
+        <div class="placar" style="margin-top:10px"><span>📆 ${plural(res.diasComMissao, 'dia', 'dias')} com missão no mês</span><span>🚀 ${plural(res.missoes, 'missão', 'missões')}</span><span>⭐ ${res.xp} XP</span></div>
+      </div>
+      <div class="cartao"><b style="font-size:20px">${esc(J.textoData(diarioSel))}${diarioSel === h ? ' (hoje)' : ''}</b>${detalhe}</div>`;
+    $('#cal-ant').onclick = () => { diarioMes = mes === 0 ? { ano: ano - 1, mes: 11 } : { ano, mes: mes - 1 }; telaDiario(); };
+    $('#cal-prox').onclick = () => { if (!ehAtual) { diarioMes = mes === 11 ? { ano: ano + 1, mes: 0 } : { ano, mes: mes + 1 }; telaDiario(); } };
+    palco.querySelectorAll('[data-dia]').forEach(b => { b.onclick = () => { diarioSel = Number(b.dataset.dia); telaDiario(); }; });
   }
   function telaAlbum() {
     let linhas = '';
@@ -1710,6 +2040,7 @@ const Jogo = (function (R) {
     if (v.kind === 'linha') return `<div class="chips">` + v.pontos.map((p, i) => (i ? `<span class="seta">+${p.pulo} →</span>` : '') + `<span class="chip ${i === 0 ? 'inicio' : i === v.pontos.length - 1 ? 'destino' : 'conta'}">${esc(p.t)}</span>`).join('') + `</div>`;
     if (v.kind === 'sequencia') return `<div class="chips">` + v.itens.map((t, i) => `<span class="chip ${v.destaques[i] || ''}">${esc(t)}</span>`).join('') + `</div>`;
     if (v.kind === 'caminho') return `<div class="chips">` + v.itens.map((it, i) => (i ? '<span class="seta">→</span>' : '') + `<span class="chip ${it.marca || ''}">${esc(it.texto)}${it.num ? `<span class="num">${it.num}</span>` : ''}</span>`).join('') + `</div>`;
+    if (v.kind === 'matriz') return `<div class="matriz">${matrizSVG(v.a, v.b)}<span>${esc(v.legenda || '')}</span></div>`;
     if (v.kind === 'unidades') return `<div class="tabela-uni">` + R.UNIDADES.map(u => { const hl = v.destaque === u.nome ? ' class="hl"' : ''; return `<div${hl}>${esc(R.cap(u.nome))}</div><div${hl}>${u.valor} ${esc(u.uni)}</div>`; }).join('') + `</div>`;
     return '';
   }
@@ -1751,7 +2082,7 @@ const Jogo = (function (R) {
   function cabecalho(q) {
     const t = J.TEMA[q.tema] || { nome: q.tema, icone: '❓', cor: '#1d4ed8' };
     document.documentElement.style.setProperty('--tema', t.cor);
-    return `<div class="linha-selo"><span class="selo">${t.icone} ${esc(t.nome)}</span>
+    return `<div class="linha-selo"><span class="selo">${t.icone} ${esc(t.nome)}${q.nivel ? `<span class="nv">Nível ${q.nivel}</span>` : ''}</span>
       <span>${q.tema === 'romanos' ? '<button class="botao-mini" id="b-regras">📜 Regras</button> ' : ''}${temVoz ? '<button class="botao-mini" id="b-falar" aria-label="Ler a pergunta">🔊</button>' : ''}</span></div>`;
   }
   function ligarCabecalho(q, fala) {
@@ -1763,7 +2094,7 @@ const Jogo = (function (R) {
     calar(); teclas = null;
     window.scrollTo(0, 0);
     if (q.tipo === 'fato') return renderFato(q);
-    if (q.tipo === 'mult' || q.tipo === 'prova' || q.tipo === 'conta') return renderEtapas(q);
+    if (['mult', 'prova', 'conta', 'escondido', 'duas'].includes(q.tipo)) return renderEtapas(q);
     const temVisual = !!q.visual;
     palco.innerHTML = `<div class="cartao">${cabecalho(q)}
       <div class="corpo ${temVisual || q.tipo !== 'escolha' ? 'duas' : ''}">
@@ -1861,11 +2192,12 @@ const Jogo = (function (R) {
   }
 
   // ----- conta armada (+, −, ×) -----
-  function normConta(c) { return { op: c.op || '×', a: c.a, b: c.b !== undefined ? c.b : c.m, resultado: c.resultado, passos: c.passos, reservaFinal: c.reservaFinal || 0 }; }
+  function normConta(c) { return { op: c.op || '×', a: c.a, b: c.b !== undefined ? c.b : c.m, parcelas: c.parcelas, resultado: c.resultado, passos: c.passos, reservaFinal: c.reservaFinal || 0 }; }
+  const termosConta = c => c.parcelas || [c.a, c.b];
   function geometria(c) {
-    const la = String(c.a).length, lb = String(c.b).length;
-    const cols = c.op === '−' ? la : c.op === '+' ? Math.max(la, lb) + 1 : la + 1;
-    const maxl = c.op === '−' ? la : c.op === '+' ? Math.max(la, lb) : la;
+    const lens = termosConta(c).map(x => String(x).length), la = lens[0], mx = Math.max(...lens);
+    const cols = c.op === '−' ? la : c.op === '+' ? Math.max(mx + 1, String(c.resultado).length) : la + 1;
+    const maxl = c.op === '−' ? la : c.op === '+' ? mx : la;
     // caixinhas de rascunho (reserva / empréstimo) acima de cada coluna que pode recebê-las
     const temCaixa = r => c.op === '−' ? r < la : (r >= 1 && r < maxl);
     return { cols, temCaixa };
@@ -1873,7 +2205,7 @@ const Jogo = (function (R) {
   function htmlConta(c, modo, est) {
     const { cols, temCaixa } = geometria(c);
     const pad = (n) => String(n).padStart(cols, ' ');
-    const sa = pad(c.a), sb = pad(c.b), sres = pad(c.resultado);
+    const termos = termosConta(c), sa = pad(termos[0]), sres = pad(c.resultado);
     const rascunho = r => {
       const p = c.passos[r];
       if (!p) return '';
@@ -1893,7 +2225,7 @@ const Jogo = (function (R) {
       const riscar = modo !== 'entrada' && c.op === '−' && c.passos[r] && c.passos[r].eventos.length;
       h += `<div class="c ${riscar ? 'riscado' : ''}">${ch}</div>`;
     }
-    h += `<div class="c">${c.op}</div>` + Array.from(sb).map(ch => `<div class="c">${ch.trim()}</div>`).join('');
+    termos.slice(1).forEach((t, k) => { h += `<div class="c">${k === termos.length - 2 ? c.op : ''}</div>` + Array.from(pad(t)).map(ch => `<div class="c">${ch.trim()}</div>`).join(''); });
     h += `<div class="traco"></div><div class="c"></div>`;
     for (let i = 0; i < cols; i++) {
       if (modo === 'entrada') h += `<div class="c res ${est.ativo.lin === 'r' && est.ativo.i === i ? 'ativo' : ''}" data-r="${i}">${esc(est.res[i] || '')}</div>`;
@@ -1942,7 +2274,12 @@ const Jogo = (function (R) {
 
   // ----- perguntas em etapas (conta · S.M./Cálculo/R: · prova real) -----
   function etapasDe(q) {
-    if (q.tipo === 'conta') return [{ nome: 'Cálculo', kind: 'conta', pergunta: `Arme e faça: ${q.conta.a} ${q.conta.op} ${q.conta.b}`, conta: q.conta, linhas: q.explicacao.linhas }];
+    if (q.tipo === 'conta') return [{ nome: 'Cálculo', kind: 'conta', pergunta: `Arme e faça: ${termosConta(q.conta).join(` ${q.conta.op} `)}`, conta: q.conta, linhas: q.explicacao.linhas }];
+    if (q.tipo === 'escondido') return [
+      { nome: 'Qual conta?', kind: 'escolha', pergunta: `Qual conta descobre o ▢ em ${q.expr}?`, opcoes: q.etapa1.opcoes, correta: q.etapa1.correta, linhas: q.etapa1.linhas },
+      { nome: 'Cálculo', kind: 'conta', pergunta: `Arme e faça: ${q.contaAchar.a} ${q.contaAchar.op} ${q.contaAchar.b}`, conta: q.contaAchar, linhas: q.linhasAchar },
+    ];
+    if (q.tipo === 'duas') return q.etapas2.map((x, i) => ({ nome: `${i + 1}ª conta`, kind: 'conta', pergunta: x.pergunta, conta: x.conta, linhas: x.linhas }));
     if (q.tipo === 'mult') {
       const m = q.meta.m;
       const nomeVezes = m === 2 ? 'Dobro = 2 vezes' : m === 3 ? 'Triplo = 3 vezes' : `${m} vezes`;
@@ -1964,7 +2301,7 @@ const Jogo = (function (R) {
     const desenhar = () => {
       const e = etapas[st.k];
       const pills = etapas.length > 1 ? `<div class="etapas">${etapas.map((x, i) => `<span class="etapa ${i === st.k ? 'agora' : i < st.k ? 'ok' : ''}">${i + 1} ${esc(x.nome)}</span>`).join('')}</div>` : '';
-      const mostraEnunciado = q.tipo !== 'conta' || !q.enunciado.startsWith('Arme');
+      const mostraEnunciado = (q.tipo !== 'conta' || !q.enunciado.startsWith('Arme')) && q.tipo !== 'escondido';
       palco.innerHTML = `<div class="cartao">${cabecalho(q)}${pills}
         <div class="corpo duas"><div>${mostraEnunciado ? `<div class="enunciado" style="font-size:clamp(19px,4.6vw,23px)">${esc(q.enunciado)}</div>` : ''}<div class="pergunta-etapa">${esc(e.pergunta)}</div></div><div id="area"></div></div></div>`;
       ligarCabecalho(q, (st.k === 0 ? q.fala + '. ' : '') + R.paraFala(e.pergunta).replace(/−/g, ' menos '));
@@ -2034,7 +2371,7 @@ const Jogo = (function (R) {
   function telaFimMissao() {
     teclas = null; calar();
     const m = estado.missaoAtiva;
-    const r = J.finalizarMissao(estado, m, hoje());
+    const r = J.finalizarMissao(estado, m, hoje(), new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
     salvar();
     $('#b-sair').hidden = true; $('#trilha').hidden = true;
     const dia = estado.dia, falta = dia.missoes.find(x => !x.feita);
@@ -2046,6 +2383,7 @@ const Jogo = (function (R) {
       <div class="ganhos">${r.ganhos.map(g => `<div><span>${esc(g.rotulo)}</span><b>+${g.xp} XP</b></div>`).join('')}<div class="total"><span>Total</span><span>+${r.total} XP</span></div></div>
       <div style="width:100%;max-width:420px"><div class="barra"><i style="width:${Math.round(r.depois.progresso * 100)}%"></i></div><div class="sub" style="font-size:15px">faltam ${r.depois.falta} XP para ${esc(r.depois.proxima.nome)}</div></div>
       ${subiram.length ? `<div class="sub">Na tabuada, subiram de nível:</div>${subiram.map(c => `<div class="subiu">${c.a} × ${c.b} = ${c.a * c.b} ${c.caixa === 5 ? '⭐ de cor!' : '⬆️'}</div>`).join('')}` : ''}
+      ${r.niveisSubiram.map(nv => `<div class="subiu" style="background:#fef9c3;border-color:#facc15">${(J.TEMA[nv.tema] || {}).icone || '⬆️'} ${esc((J.TEMA[nv.tema] || {}).nome || nv.tema)} subiu para o NÍVEL ${nv.n}! ${'★'.repeat(nv.n)}</div>`).join('')}
       ${r.diaCompleto && m.numero !== 'extra' ? '<div class="sub"><b>Todas as missões de hoje cumpridas!</b> Que esforço bonito! 💪</div>' : ''}
       <div class="pilha">
         ${falta ? `<button class="botao-grande verde" id="b-prox">▶ ${esc(J.nomeMissao(falta.numero).nome)}</button>` : ''}
@@ -2094,10 +2432,11 @@ const Jogo = (function (R) {
       ${J.TEMAS.map(t => {
         const cfg = e.temas[t.id], h = e.estat[t.id] || [];
         const taxa = h.length ? Math.round(h.reduce((s, x) => s + x, 0) / h.length * 100) + '% de primeira (últimas ' + h.length + ')' : 'sem dados';
-        return `<div class="tema-linha"><div><b>${t.icone} ${esc(t.nome)}</b><small>${esc(t.desc)} · ${taxa}</small></div>
+        const nv = t.semNivel ? '' : ` · <b>Nível ${J.nivelDe(e, t.id)}</b> <button class="botao-mini" style="min-height:32px;min-width:36px;padding:0 8px;font-size:15px" data-nivel="${t.id}" data-d="-1">−</button><button class="botao-mini" style="min-height:32px;min-width:36px;padding:0 8px;font-size:15px" data-nivel="${t.id}" data-d="1">+</button>`;
+        return `<div class="tema-linha"><div><b>${t.icone} ${esc(t.nome)}</b><small>${esc(t.desc)} · ${taxa}${nv}</small></div>
           <div class="seg" data-tema="${t.id}"><button class="desl" data-p="off" aria-pressed="${!cfg.ligado}">Desl.</button>${['pouco', 'normal', 'muito'].map(p => `<button data-p="${p}" aria-pressed="${cfg.ligado && cfg.peso === p}">${p[0].toUpperCase() + p.slice(1)}</button>`).join('')}</div></div>`;
       }).join('')}
-      <p>"Muito" aparece mais vezes em cada missão. Temas com mais erros ganham um pouco mais de perguntas sozinhos.</p>
+      <p>"Muito" aparece mais vezes em cada missão. Temas com mais erros ganham um pouco mais de perguntas sozinhos. O nível (1 a 5) sobe sozinho com 7 acertos de primeira em 8 e desce com 3 ou menos; os botões − / + mudam na mão. A missão ganha 1 pergunta a cada nível médio acima do 1, e cada acerto de primeira vale +2 XP por nível.</p>
 
       <h3>Tabuada (2×2 a 10×10)</h3>
       <div class="abas-mapa">${[['caixa', 'Caixa 1–5'], ['tempo', 'Tempo médio (s)'], ['erros', 'Erros']].map(([k, n]) => `<button data-m="${k}" aria-pressed="${modoMapa === k}">${n}</button>`).join('')}</div>
@@ -2131,6 +2470,10 @@ const Jogo = (function (R) {
       if (!J.TEMAS.some(t => e.temas[t.id].ligado)) { e.temas.tabuada.ligado = true; avisar('Pelo menos um tema precisa ficar ligado.'); }
       salvar(); telaPainel();
     });
+    palco.querySelectorAll('[data-nivel]').forEach(b => { b.onclick = () => {
+      const nv = e.niveis[b.dataset.nivel] || (e.niveis[b.dataset.nivel] = { n: 1, janela: [] });
+      nv.n = Math.max(1, Math.min(J.NIVEL_MAX, nv.n + Number(b.dataset.d))); nv.janela = []; salvar(); telaPainel();
+    }; });
     palco.querySelectorAll('.abas-mapa button').forEach(b => { b.onclick = () => { modoMapa = b.dataset.m; telaPainel(); }; });
     palco.querySelectorAll('[data-cfg]').forEach(inp => { inp.oninput = () => {
       const k = inp.dataset.cfg; e.config[k] = Number(inp.value);

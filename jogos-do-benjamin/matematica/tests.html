@@ -149,8 +149,9 @@ window.testesJogo = async function (J, R, { secao, teste, igual, verdade }) {
     for (let s = 1; s <= 100; s++) {
       const e = estadoNovo(), m = J.criarMissao(e, H, rng(s), 1);
       igual(m.perguntas.length, 12);
-      igual([...new Set(m.perguntas.map(q => q.tema))].sort(), ['adicao', 'multiplicacao', 'provareal', 'subtracao', 'tabuada']);
-      verdade(m.perguntas.filter(q => q.tema === 'tabuada').length >= 4, 'tabuada pesa mais');
+      igual([...new Set(m.perguntas.map(q => q.tema))].sort(), ['adicao', 'divisao', 'multiplicacao', 'provareal', 'subtracao', 'tabuada']);
+      const cont = t => m.perguntas.filter(q => q.tema === t).length;
+      verdade(['adicao', 'subtracao', 'provareal', 'multiplicacao', 'divisao'].every(t => cont('tabuada') >= cont(t)) && cont('tabuada') >= 3, 'tabuada pesa mais');
       for (let i = 1; i < 12; i++) verdade(m.perguntas[i].tema !== m.perguntas[i - 1].tema, `seguidos s=${s}`);
       igual(JSON.parse(JSON.stringify(m)), m, 'só dados');
     }
@@ -175,6 +176,7 @@ window.testesJogo = async function (J, R, { secao, teste, igual, verdade }) {
         if (['fato', 'numero', 'romano', 'conta'].includes(q.tipo)) verdade(J.verificar(q, q.correta), q.enunciado);
         if (q.tipo === 'conta') igual(Number(q.correta), q.meta.op === '+' ? q.meta.a + q.meta.b : q.meta.op === '−' ? q.meta.a - q.meta.b : q.meta.a * q.meta.b);
         if (q.tipo === 'escolha') igual(q.opcoes.filter(o => o === q.correta).length, 1);
+        if (['escondido', 'duas'].includes(q.tipo)) verdade(Number(q.correta) > 0);
         verdade(typeof J.textoPergunta(q) === 'string' && J.textoPergunta(q).length > 3);
       }
     }
@@ -191,15 +193,21 @@ window.testesJogo = async function (J, R, { secao, teste, igual, verdade }) {
     let n = 0; while (!m.finalizada && n++ < 200) { const q = J.perguntaAtual(m); J.registrar(e, m, { acertou: q.tentativas > 0 || q.id % 3 !== 0, ms: 1500 }, H, rng(n)); }
     verdade(m.finalizada && m.perguntas.every(q => q.acertou));
   });
-  teste('XP: 10 de primeira, 4 depois, +25 por missão, +50 com todas do dia', () => {
+  teste('XP: 10 (+2 por nível) de primeira, 4 depois, +25 por missão, +50 com todas do dia', () => {
     const e = estadoNovo(); J.garantirDia(e, H);
+    let esperado = 0;
     const fazer = (num, erros) => {
       const m = J.criarMissao(e, H, rng(typeof num === 'number' ? num : 99), num); e.missaoAtiva = m;
-      let k = 0; while (!m.finalizada) { const q = J.perguntaAtual(m); J.registrar(e, m, { acertou: !(q.tentativas === 0 && k++ < erros), ms: 1000 }, H, rng(k + 1)); }
+      esperado = 0;
+      let k = 0; while (!m.finalizada) {
+        const q = J.perguntaAtual(m), ok = !(q.tentativas === 0 && k++ < erros);
+        if (ok) esperado += q.tentativas === 0 ? 10 + 2 * ((q.nivel || 1) - 1) : 4;
+        J.registrar(e, m, { acertou: ok, ms: 1000 }, H, rng(k + 1));
+      }
       return J.finalizarMissao(e, m, H);
     };
     const r1 = fazer(1, 0); igual(r1.total, 12 * 10 + 25); igual(e.xp, 145);
-    const r2 = fazer(2, 2); igual(r2.total, 10 * 10 + 2 * 4 + 25);
+    const r2 = fazer(2, 2); igual(r2.total, esperado + 25);
     verdade(!r2.ganhos.some(g => g.xp === 50));
     const r3 = fazer(3, 0); verdade(r3.ganhos.some(g => g.xp === 50), 'bônus do dia'); verdade(r3.diaCompleto);
     igual(e.dia.revisar.length, 2, 'as 2 erradas vão para o papai revisar');
@@ -235,6 +243,126 @@ window.testesJogo = async function (J, R, { secao, teste, igual, verdade }) {
     const vol = J.validarImportacao(JSON.stringify(e)); verdade(vol.temas.unidades && Array.isArray(vol.estat.unidades));
     const f = estadoNovo(); f.xp = 777; igual(J.validarImportacao(JSON.stringify(f)), JSON.parse(JSON.stringify(f)));
     let falhou = false; try { J.validarImportacao('{"a":1}'); } catch (err) { falhou = true; } verdade(falhou);
+  });
+
+  secao('Missões — níveis e tarefas novas');
+  teste('3 parcelas: resultado e reservas certos (inclusive "vai 2")', () => {
+    const p = J.passosAdicaoN([999, 999, 999]); igual(p.resultado, 2997); igual(p.passos[0].vai, 2);
+    const r = rng(21);
+    for (let i = 0; i < 20000; i++) { const a = Math.floor(r() * 10000), b = Math.floor(r() * 10000), c = Math.floor(r() * 10000); if (J.passosAdicaoN([a, b, c]).resultado !== a + b + c) throw new Error(`${a}+${b}+${c}`); }
+  });
+  teste('nível sobe com 7 de 8, desce com 3 ou menos, fica entre 1 e 5', () => {
+    const e = J.estadoInicial();
+    igual(J.nivelDe(e, 'adicao'), 1);
+    for (let i = 0; i < 7; i++) J.atualizarNivel(e, 'adicao', true);
+    igual(J.nivelDe(e, 'adicao'), 1, 'precisa de 8 respostas');
+    igual(J.atualizarNivel(e, 'adicao', false), 1); igual(J.nivelDe(e, 'adicao'), 2, '7 de 8 sobe');
+    for (let i = 0; i < 8; i++) J.atualizarNivel(e, 'adicao', i < 3);
+    igual(J.nivelDe(e, 'adicao'), 1, '3 de 8 desce');
+    for (let k = 0; k < 10; k++) for (let i = 0; i < 8; i++) J.atualizarNivel(e, 'adicao', true);
+    igual(J.nivelDe(e, 'adicao'), 5, 'máximo 5');
+    for (let i = 0; i < 8; i++) J.atualizarNivel(e, 'adicao', i < 5);
+    igual(J.nivelDe(e, 'adicao'), 5, '5 de 8 mantém');
+    igual(J.atualizarNivel(e, 'romanos', true), 0, 'temas extras não têm nível');
+  });
+  function confere(q, ctx) {
+    const m = q.meta || {};
+    if (q.tipo === 'conta') {
+      const t = q.conta.parcelas || [q.conta.a, q.conta.b];
+      const certo = q.conta.op === '+' ? t.reduce((a, b) => a + b, 0) : q.conta.op === '−' ? t[0] - t[1] : t[0] * t[1];
+      igual(q.conta.resultado, certo, ctx); igual(Number(q.correta), certo, ctx); verdade(certo >= 0, ctx);
+    } else if (q.tipo === 'numero') {
+      if (q.tema === 'divisao') { igual(m.n % m.d, 0, ctx); igual(Number(q.correta), m.n / m.d, ctx); }
+      else igual(Number(q.correta), m.op === '+' ? m.a + m.b : m.op === '−' ? m.a - m.b : m.a * m.b, ctx);
+    } else if (q.tipo === 'escondido') {
+      const x = Number(q.correta);
+      if (m.forma === 'soma') igual(m.a + x, m.c, ctx); else if (m.forma === 'tirou') igual(m.a - x, m.c, ctx); else igual(x - m.b, m.c, ctx);
+      igual(q.contaAchar.resultado, x, ctx);
+      igual(q.etapa1.opcoes.filter(o => o === q.etapa1.correta).length, 1, ctx); igual(new Set(q.etapa1.opcoes).size, q.etapa1.opcoes.length, ctx);
+      verdade(q.etapa1.opcoes.length >= 3, ctx); verdade(x > 0 && q.expr.includes('▢'), ctx);
+    } else if (q.tipo === 'duas') {
+      const [e1, e2] = q.etapas2;
+      const conf = c => igual(c.resultado, c.op === '+' ? c.a + c.b : c.op === '−' ? c.a - c.b : c.a * c.b, ctx);
+      conf(e1.conta); conf(e2.conta);
+      igual(e2.conta.a, e1.conta.resultado, '2ª conta usa o resultado da 1ª ' + ctx);
+      igual(Number(q.correta), e2.conta.resultado, ctx); verdade(e2.conta.resultado > 0, ctx);
+    } else if (q.tipo === 'mult') igual(Number(q.correta), m.a * m.m, ctx);
+    else if (q.tipo === 'prova') { igual(q.provaConta.resultado === m.a, m.c === m.certo, ctx); igual(q.correta, m.c === m.certo ? 'Certa ✔' : 'Errada ✘', ctx); }
+    else throw new Error('tipo sem conferência: ' + q.tipo);
+  }
+  teste('todos os geradores, em todos os níveis (1 a 5), dão a resposta certa', () => {
+    const vistos = {};
+    for (const [nome, g] of [['adicao', J.gerarAdicao], ['subtracao', J.gerarSubtracao], ['multiplicacao', J.gerarMultiplicacao], ['provareal', J.gerarProvaReal], ['divisao', J.gerarDivisao]])
+      for (let nv = 1; nv <= 5; nv++) {
+        const r = rng(100 * nv + nome.length);
+        for (let i = 0; i < 1500; i++) { const q = g(r, nv); confere(q, `${nome} n${nv}: ${q.enunciado}`); vistos[`${nome}/${nv}/${q.tipo}`] = 1; }
+      }
+    for (const k of ['adicao/2/escondido', 'adicao/3/conta', 'adicao/4/duas', 'subtracao/2/escondido', 'subtracao/4/duas', 'multiplicacao/4/duas', 'multiplicacao/4/numero', 'divisao/1/numero'])
+      verdade(vistos[k], 'tarefa nova não apareceu: ' + k);
+  });
+  teste('a dificuldade cresce com o nível', () => {
+    const media = (g, nv, f) => { const r = rng(7 + nv); let s = 0, n = 0; for (let i = 0; i < 2000; i++) { const q = g(r, nv); const v = f(q); if (v !== null) { s += v; n++; } } return s / n; };
+    const tamAd = q => q.tipo === 'conta' ? q.conta.resultado : null;
+    verdade(media(J.gerarAdicao, 5, tamAd) > media(J.gerarAdicao, 1, tamAd) * 1.5, 'adição maior');
+    const zeros = q => q.tipo === 'conta' ? (String(q.conta.a).slice(1, -1).includes('0') ? 1 : 0) : null;
+    verdade(media(J.gerarSubtracao, 4, zeros) > media(J.gerarSubtracao, 1, zeros), 'mais zeros no meio');
+    const qtdDig = q => q.tipo === 'conta' ? String(q.conta.a).length : null;
+    verdade(media(J.gerarMultiplicacao, 3, qtdDig) > media(J.gerarMultiplicacao, 1, qtdDig), 'multiplicação com mais algarismos');
+    const div = q => q.sub === 'conta' || q.sub === 'repartir' ? q.meta.d : null;
+    verdade(media(J.gerarDivisao, 3, div) > media(J.gerarDivisao, 1, div) - 0.5 && J.gerarDivisao(rng(1), 1).meta.d <= 10);
+    verdade([2, 5, 10].includes(J.gerarDivisao(rng(3), 1).meta.d) || J.gerarDivisao(rng(3), 1).sub === 'repartir');
+    igual(J.escolherFormato(rng(1), 5) !== 'escolha', true);
+  });
+  teste('missão cresce com o nível e o acerto de primeira vale mais', () => {
+    const e = J.estadoInicial(); igual(J.perguntasDaMissao(e), 12);
+    for (const t of ['tabuada', 'adicao', 'subtracao', 'provareal', 'multiplicacao', 'divisao']) e.niveis[t].n = 3;
+    igual(J.perguntasDaMissao(e), 14);
+    igual(J.criarMissao(e, H, rng(1), 1).perguntas.length, 14);
+    const m = J.criarMissao(e, H, rng(2), 1), q = J.perguntaAtual(m);
+    J.registrar(e, m, { acertou: true, ms: 500 }, H, rng(1)); igual(m.xp, 10 + 2 * (q.nivel - 1));
+  });
+
+  secao('Missões — datas e diário');
+  teste('data por extenso e dia da semana certos (conferidos com o Date)', () => {
+    for (let d = J.diaDaData(2026, 0, 1); d < J.diaDaData(2027, 0, 1); d++) {
+      const x = J.dataDoDia(d), dt = new Date(x.ano, x.mes, x.dia);
+      igual(x.semana, dt.getDay()); igual(J.diaDe(dt), d);
+    }
+    const d = J.diaDaData(2026, 9, 11);
+    igual(J.textoData(d), `${['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'][new Date(2026, 9, 11).getDay()]}, 11 de outubro`);
+    verdade(J.textoData(d, true).endsWith('de 2026'));
+  });
+  teste('calendário do mês marca visitas e missões; resumo do mês soma certo', () => {
+    const e = J.estadoInicial(), d5 = J.diaDaData(2026, 9, 5), d6 = J.diaDaData(2026, 9, 6), hoje = J.diaDaData(2026, 9, 11);
+    e.historico.push({ dia: d5, xp: 300, missoes: 3, perguntas: 36, dePrimeira: 30 }, { dia: J.diaDaData(2026, 8, 30), xp: 99, missoes: 1, perguntas: 12, dePrimeira: 12 });
+    J.registrarVisita(e, d6);
+    const sem = J.mesCalendario(e, 2026, 9, hoje), dias = sem.flat().filter(Boolean);
+    igual(dias.length, 31); verdade(sem.every(w => w.length === 7));
+    igual(sem[0].filter(x => x === null).length, new Date(2026, 9, 1).getDay(), 'primeira semana começa no dia certo');
+    const c5 = dias.find(c => c.dia === 5), c6 = dias.find(c => c.dia === 6), c11 = dias.find(c => c.dia === 11), c20 = dias.find(c => c.dia === 20);
+    igual([c5.missoes, c5.visitou], [3, true]); igual([c6.missoes, c6.visitou], [0, true]); verdade(c11.hoje && !c11.futuro); verdade(c20.futuro);
+    const r = J.resumoMes(e, 2026, 9); igual([r.diasComMissao, r.missoes, r.xp], [1, 3, 300], 'setembro fica fora');
+  });
+  teste('cada missão terminada entra no diário do dia (nome, hora, XP, acertos)', () => {
+    const e = J.estadoInicial(); J.garantirDia(e, H);
+    const m = J.criarMissao(e, H, rng(5), 2); e.missaoAtiva = m;
+    while (!m.finalizada) J.registrar(e, m, { acertou: true, ms: 800 }, H, rng(1));
+    const r = J.finalizarMissao(e, m, H, '18:42');
+    const h = e.historico.find(x => x.dia === H);
+    igual(h.lista.length, 1); igual(h.lista[0].hora, '18:42'); igual(h.lista[0].xp, r.total); igual(h.lista[0].nome, 'Missão 2 · Órbita');
+    igual(h.lista[0].dePrimeira, m.perguntas.length); verdade(e.visitas.includes(H));
+  });
+  teste('progresso salvo da versão anterior continua (ganha divisão, níveis e visitas sem perder nada)', () => {
+    const velho = J.estadoInicial();
+    delete velho.niveis; delete velho.visitas; delete velho.temas.divisao; delete velho.estat.divisao; velho.versao = 1;
+    velho.xp = 1234; velho.estat.adicao = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    velho.historico = [{ dia: H - 1, xp: 400, missoes: 3, perguntas: 36, dePrimeira: 33 }];
+    const novoE = J.validarImportacao(JSON.stringify(velho));
+    igual(novoE.xp, 1234); verdade(novoE.temas.divisao.ligado, 'divisão entra ligada');
+    igual(novoE.niveis.adicao.janela.length, 7, 'janela começa com o histórico recente');
+    J.atualizarNivel(novoE, 'adicao', true); igual(J.nivelDe(novoE, 'adicao'), 2, 'quem já ia bem sobe logo');
+    verdade(novoE.visitas.includes(H - 1), 'dias antigos viram visitas');
+    igual(J.mesCalendario(novoE, J.dataDoDia(H - 1).ano, J.dataDoDia(H - 1).mes, H).flat().filter(Boolean).find(c => c.d === H - 1).missoes, 3);
   });
 };
 </script>
@@ -285,7 +413,7 @@ window.testesJogo = async function (J, R, { secao, teste, igual, verdade }) {
   // JOGO 1 — revisao-prova.html
   // ======================================================================
   let R;
-  try { R = await carregarLogica('revisao-prova.html', 'Logica'); } catch (e) { secao('revisao-prova.html'); teste('carregar lógica', () => { throw e; }); }
+  try { R = await carregarLogica('index.html', 'Logica'); } catch (e) { secao('index.html (lógica da revisão)'); teste('carregar lógica', () => { throw e; }); }
   if (R) {
     secao('Revisão — numerais romanos');
     teste('a semana começa no domingo (referência dos testes)', () => igual(new Date(2026, 0, 4).getDay(), 0));
@@ -526,11 +654,7 @@ window.testesJogo = async function (J, R, { secao, teste, igual, verdade }) {
   // ======================================================================
   try {
     const html = await (await fetch('index.html', { cache: 'no-store' })).text();
-    const rev = await (await fetch('revisao-prova.html', { cache: 'no-store' })).text();
     const bA = html.match(/<script id="logica">([\s\S]*?)<\/script>/), bB = html.match(/<script id="logica-jogo">([\s\S]*?)<\/script>/);
-    const bR = rev.match(/<script id="logica">([\s\S]*?)<\/script>/);
-    secao('Missões — sincronia com a revisão');
-    teste('a lógica da revisão dentro do index.html é idêntica à do revisao-prova.html', () => verdade(bA && bR && bA[1] === bR[1], 'divergiu: copie o bloco de novo'));
     const { Logica: RL, Jogo: JG } = new Function(bA[1] + '\n' + bB[1] + '\nreturn { Logica, Jogo };')();
     await window.testesJogo(JG, RL, { secao, teste, igual, verdade });
   } catch (e) { secao('index.html'); teste('carregar lógica do jogo', () => { throw e; }); }
