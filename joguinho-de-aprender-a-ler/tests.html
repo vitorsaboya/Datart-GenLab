@@ -375,7 +375,54 @@
   });
   teste('todo item tem lugar válido e preço; ids únicos', () => {
     const slots = J.SLOTS.map(s => s.id); igual(new Set(J.ITENS.map(i => i.id)).size, J.ITENS.length);
-    for (const it of J.ITENS) { verdade(slots.includes(it.slot), it.id); verdade(it.preco >= 0, it.id); }
+    for (const it of J.ITENS) { verdade(slots.includes(it.slot), it.id); verdade(it.preco >= 0, it.id); verdade(it.nome, it.id); }
+    igual(Object.keys(J.VESTE_PADRAO).sort(), slots.slice().sort(), 'cada lugar tem padrão');
+  });
+  teste('cada lugar tem pelo menos 4 peças; os que dá para tirar têm peça barata (até 10); os fixos têm a de graça', () => {
+    for (const s of J.SLOTS) {
+      const its = J.ITENS.filter(i => i.slot === s.id);
+      verdade(its.length >= 4, s.id + ': ' + its.length);
+      if (J.FIXOS.includes(s.id)) verdade(its.some(i => i.preco === 0 && i.id === J.VESTE_PADRAO[s.id]), 'grátis em ' + s.id);
+      else verdade(its.some(i => i.preco > 0 && i.preco <= 10), 'barata em ' + s.id);
+    }
+    verdade(J.ITENS.length >= 95, 'total de peças: ' + J.ITENS.length);
+  });
+  teste('save da 1ª versão ganha os lugares novos sem perder o que tinha', () => {
+    const v1 = { letras: { A: { lib: true } }, bambus: 30, roupas: { tem: ['bambuzal', 'coroa'], veste: { cabeca: 'coroa', olhos: null, pescoco: null, corpo: null, mao: null, fundo: 'bambuzal' } } };
+    const e = J.completarEstado(JSON.parse(JSON.stringify(v1)));
+    igual(e.roupas.veste.cabeca, 'coroa'); igual(e.roupas.veste.cor, 'pelo-classico'); igual(e.roupas.veste.sapatos, null); igual(e.roupas.veste.amigo, null); igual(e.roupas.veste.enfeite, null);
+    verdade(e.roupas.tem.includes('pelo-classico') && e.roupas.tem.includes('coroa')); igual(e.roupas.fotos, []); igual(e.lanches.total, 0); igual(e.bambus, 30);
+  });
+  teste('cor do pelo e lugar nunca ficam vazios (tocar de novo não tira)', () => {
+    const e = J.estadoInicial(); e.bambus = 100; J.comprar(e, 'pelo-rosa');
+    igual(e.roupas.veste.cor, 'pelo-rosa'); J.vestir(e, 'pelo-rosa'); igual(e.roupas.veste.cor, 'pelo-rosa');
+    J.vestir(e, 'pelo-classico'); igual(e.roupas.veste.cor, 'pelo-classico');
+    J.comprar(e, 'pet-gatinho'); igual(e.roupas.veste.amigo, 'pet-gatinho'); J.vestir(e, 'pet-gatinho'); igual(e.roupas.veste.amigo, null);
+  });
+  teste('lanchinho: desconta, conta, e para em 5 por dia; no dia seguinte volta', () => {
+    const e = J.estadoInicial(); e.bambus = 3;
+    igual(J.darLanche(e, 'bolo', HOJE), { ok: false, motivo: 'sem-bambu', falta: 1 });
+    e.bambus = 100;
+    for (let i = 0; i < 5; i++) verdade(J.darLanche(e, 'bambu', HOJE).ok);
+    igual(e.bambus, 95); igual(J.lanchesHoje(e, HOJE), 5);
+    igual(J.darLanche(e, 'uva', HOJE).motivo, 'cheio'); igual(e.bambus, 95);
+    igual(J.lanchesHoje(e, HOJE + 1), 0); verdade(J.darLanche(e, 'bolo', HOJE + 1).ok); igual(e.bambus, 91);
+    igual(e.lanches.total, 6); igual(e.lanches.por.bambu, 5);
+    igual(J.darLanche(e, 'nada', HOJE + 1).ok, false);
+  });
+  teste('fotos: guardam uma cópia do visual, voltam a vestir, apagam, e guardam no máximo 24', () => {
+    const e = J.estadoInicial(); e.bambus = 200; J.comprar(e, 'coroa'); J.comprar(e, 'praia'); J.comprar(e, 'pet-gatinho');
+    J.tirarFoto(e, HOJE);
+    J.vestir(e, 'coroa'); J.vestir(e, 'bambuzal'); J.vestir(e, 'pet-gatinho');
+    igual(e.roupas.fotos[0].veste.cabeca, 'coroa', 'a foto não muda quando a roupa muda');
+    verdade(J.vestirFoto(e, 0)); igual(e.roupas.veste.cabeca, 'coroa'); igual(e.roupas.veste.fundo, 'praia'); igual(e.roupas.veste.amigo, 'pet-gatinho');
+    for (let i = 0; i < 30; i++) J.tirarFoto(e, HOJE);
+    igual(e.roupas.fotos.length, J.FOTOS_MAX);
+    verdade(J.apagarFoto(e, 0)); igual(e.roupas.fotos.length, J.FOTOS_MAX - 1); verdade(!J.apagarFoto(e, 99));
+  });
+  teste('foto antiga (sem os lugares novos) não deixa a cor nem o lugar vazios', () => {
+    const e = J.estadoInicial(); e.roupas.fotos.push({ veste: { cabeca: null, fundo: 'bambuzal' }, dia: HOJE });
+    J.vestirFoto(e, 0); igual(e.roupas.veste.cor, 'pelo-classico'); igual(e.roupas.veste.fundo, 'bambuzal');
   });
 
   // ======================================================================

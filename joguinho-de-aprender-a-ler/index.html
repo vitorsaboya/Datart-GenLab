@@ -190,9 +190,20 @@
   .destaque { font-size: clamp(20px, 3.6vw, 28px); font-weight: 900; color: var(--l700); text-align: center; }
 
   /* ---------- roupinhas ---------- */
-  .roupas-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
-  .roupas-grid .cena { width: min(100%, 36vh, 380px); }
-  @media (min-width: 760px) and (orientation: landscape) { .roupas-grid { grid-template-columns: 1fr 1.2fr; align-items: start; } .roupas-grid .cena { width: min(100%, 72vh, 440px); } }
+  .roupas-grid { display: grid; grid-template-columns: 1fr; gap: 12px; --cena-w: min(calc(100vw - 28px), 34vh, 380px); }
+  /* o panda e a barra de comprar ficam grudados no alto; as abas grudam logo embaixo */
+  .vitrine { position: sticky; top: 6px; z-index: 4; width: var(--cena-w); margin: 0 auto; }
+  .vitrine .cena { width: 100%; }
+  .compra.folha { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(12px, env(safe-area-inset-bottom)); width: min(calc(100vw - 24px), 520px); z-index: 20;
+    box-shadow: 0 10px 30px rgba(70, 39, 138, .35); border: 3px solid var(--amarelo); animation: sobeFolha .25s ease-out; }
+  @keyframes sobeFolha { from { transform: translate(-50%, 30px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+  .compra.folha .b-grande { white-space: nowrap; font-size: clamp(18px, 4.6vw, 26px); }
+  .loja.com-folha { padding-bottom: 150px; }
+  .loja .abas { position: sticky; top: calc(var(--cena-w) * 1.1 + 12px); z-index: 3; background: var(--l100); padding: 6px; border-radius: 18px; }
+  @media (min-width: 760px) and (orientation: landscape) {
+    .roupas-grid { grid-template-columns: 1fr 1.2fr; align-items: start; --cena-w: min(100%, 72vh, 440px); }
+    .loja .abas { top: 6px; }
+  }
   .loja { display: flex; flex-direction: column; gap: 10px; }
   .abas { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
   .aba { background: rgba(255, 255, 255, .7); border-radius: 16px; font-size: clamp(26px, 5vw, 34px); padding: 8px 0; }
@@ -205,9 +216,30 @@
   .item.vestindo { outline: 5px solid var(--verde); }
   .item.provando { outline: 5px solid var(--amarelo); }
   .item .selo { position: absolute; top: -8px; right: -6px; background: var(--verde); color: #fff; border-radius: 999px; padding: 2px 8px; font-weight: 900; font-size: 14px; }
-  .compra { display: flex; gap: 10px; align-items: center; background: #fff; border-radius: 22px; padding: 10px; box-shadow: var(--sombra); }
+  .compra { display: flex; flex-direction: column; gap: 8px; background: #fff; border-radius: 22px; padding: 10px; box-shadow: var(--sombra); }
+  .compra-nome { font-weight: 900; color: var(--l800); font-size: clamp(20px, 3.6vw, 26px); letter-spacing: .05em; text-align: center; }
+  .compra-linha { display: flex; gap: 10px; align-items: center; }
   .compra .b-grande { min-height: 64px; font-size: clamp(20px, 4vw, 28px); }
   .compra .b-x { width: 64px; height: 64px; }
+  .panda-svg .amigo { animation: saltita 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes saltita { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9%); } }
+  .lanche-info { background: #fff; border-radius: 16px; padding: 8px 14px; font-weight: 900; color: var(--l700); box-shadow: var(--sombra); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 18px; }
+  .prato { font-size: 24px; } .prato.sem { opacity: .22; }
+  .item.lanche { padding: 10px 6px; gap: 4px; }
+  .item.lanche .em { font-size: 50px; line-height: 1.1; }
+  .item .nome { font-weight: 900; font-size: 16px; color: var(--l700); letter-spacing: .05em; }
+  .voo { position: fixed; z-index: 60; font-size: 58px; line-height: 1; transform: translate(-50%, -50%); transition: transform .62s cubic-bezier(.4, -0.35, .6, 1); pointer-events: none; }
+  .palavra-cena { position: absolute; left: 50%; top: 5%; transform: translateX(-50%); background: #fff; color: var(--l800); font-weight: 900; font-size: clamp(26px, 6vw, 40px);
+    padding: 4px 18px; border-radius: 16px; box-shadow: var(--sombra); letter-spacing: .06em; z-index: 2; white-space: nowrap; }
+  .coracao-voa { position: absolute; font-size: 28px; animation: sobe 1.4s ease-out forwards; z-index: 2; pointer-events: none; opacity: 0; }
+  @keyframes sobe { 0% { transform: translateY(0) scale(.6); opacity: 1; } 100% { transform: translateY(-120px) scale(1.25); opacity: 0; } }
+  .fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+  .foto { position: relative; }
+  .foto .cena { width: 100%; border-radius: 16px; }
+  .foto-x { position: absolute; top: -8px; right: -8px; min-width: 34px; height: 34px; border-radius: 999px; background: #fff; box-shadow: var(--sombra); font-weight: 900; color: #b91c1c; z-index: 2; }
+  .foto-x.confirma { padding: 0 10px; background: #fee2e2; font-size: 13px; }
+  #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 70; transition: opacity .55s; }
+  #flash.on { opacity: .92; transition: none; }
 
   /* ---------- painel do papai ---------- */
   .painel { -webkit-user-select: text; user-select: text; font-family: "Segoe UI", system-ui, sans-serif; }
@@ -247,6 +279,7 @@
 <div id="palco"></div>
 <div id="aviso" role="status" aria-live="polite"></div>
 <div id="confete" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
 
 <!-- ===================== LÓGICA PURA (testada em tests.html) ===================== -->
 <script id="logica">
@@ -648,8 +681,9 @@ const Jogo = (function () {
     e.bambus = e.bambus || 0;
     e.bambusTotal = e.bambusTotal || 0;
     const r = e.roupas || {};
-    e.roupas = { tem: Array.isArray(r.tem) ? r.tem : [], veste: Object.assign({ cabeca: null, olhos: null, pescoco: null, corpo: null, mao: null, fundo: 'bambuzal' }, r.veste || {}) };
+    e.roupas = { tem: Array.isArray(r.tem) ? r.tem : [], veste: Object.assign({}, VESTE_PADRAO, r.veste || {}), fotos: Array.isArray(r.fotos) ? r.fotos : [] };
     for (const it of ITENS) if (it.preco === 0 && !e.roupas.tem.includes(it.id)) e.roupas.tem.push(it.id);
+    e.lanches = Object.assign({ dia: null, hoje: 0, total: 0, por: {} }, e.lanches || {});
     e.historico = Array.isArray(e.historico) ? e.historico : [];
     e.visitas = Array.isArray(e.visitas) ? e.visitas : [];
     e.dias = Array.isArray(e.dias) ? e.dias : [];
@@ -848,23 +882,73 @@ const Jogo = (function () {
 
   // ---------- roupinhas do amigo ----------
   const SLOTS = [
-    { id: 'cabeca', nome: 'Cabeça', icone: '🎩' }, { id: 'olhos', nome: 'Óculos', icone: '👓' }, { id: 'pescoco', nome: 'Pescoço', icone: '🧣' },
-    { id: 'corpo', nome: 'Roupa', icone: '👗' }, { id: 'mao', nome: 'Na mão', icone: '🎈' }, { id: 'fundo', nome: 'Lugar', icone: '🏞️' },
+    { id: 'cabeca', nome: 'Chapéus e tiaras', icone: '🎩' }, { id: 'olhos', nome: 'Óculos', icone: '👓' }, { id: 'pescoco', nome: 'Colares', icone: '🧣' },
+    { id: 'corpo', nome: 'Roupas', icone: '👗' }, { id: 'sapatos', nome: 'Sapatos', icone: '👟' }, { id: 'mao', nome: 'Na mão', icone: '🎈' },
+    { id: 'amigo', nome: 'Amiguinhos', icone: '🐶' }, { id: 'cor', nome: 'Cor do pelo', icone: '🎨' }, { id: 'enfeite', nome: 'Enfeites', icone: '✨' },
+    { id: 'fundo', nome: 'Lugares', icone: '🏞️' },
   ];
+  const FIXOS = ['fundo', 'cor'];  // sempre tem um: não dá para tirar, só trocar
+  const VESTE_PADRAO = { cabeca: null, olhos: null, pescoco: null, corpo: null, sapatos: null, mao: null, amigo: null, cor: 'pelo-classico', enfeite: null, fundo: 'bambuzal' };
   const ITENS = [
+    // cabeça
     { id: 'laco', slot: 'cabeca', nome: 'Laço lilás', preco: 5 }, { id: 'chapeu-festa', slot: 'cabeca', nome: 'Chapéu de festa', preco: 10 },
-    { id: 'bone', slot: 'cabeca', nome: 'Boné', preco: 12 }, { id: 'tiara', slot: 'cabeca', nome: 'Tiara de flores', preco: 15 },
-    { id: 'orelhas-coelho', slot: 'cabeca', nome: 'Orelhas de coelho', preco: 18 }, { id: 'cartola', slot: 'cabeca', nome: 'Cartola', preco: 22 },
-    { id: 'chapeu-bruxa', slot: 'cabeca', nome: 'Chapéu de bruxinha', preco: 25 }, { id: 'coroa', slot: 'cabeca', nome: 'Coroa', preco: 40 },
-    { id: 'oculos', slot: 'olhos', nome: 'Óculos redondos', preco: 10 }, { id: 'oculos-sol', slot: 'olhos', nome: 'Óculos de sol', preco: 15 }, { id: 'oculos-coracao', slot: 'olhos', nome: 'Óculos de coração', preco: 20 },
-    { id: 'gravata', slot: 'pescoco', nome: 'Gravata borboleta', preco: 6 }, { id: 'cachecol', slot: 'pescoco', nome: 'Cachecol', preco: 12 },
-    { id: 'colar', slot: 'pescoco', nome: 'Colar de pérolas', preco: 16 }, { id: 'medalha', slot: 'pescoco', nome: 'Medalha', preco: 30 },
-    { id: 'camiseta', slot: 'corpo', nome: 'Camiseta', preco: 12 }, { id: 'tutu', slot: 'corpo', nome: 'Saia de bailarina', preco: 20 },
-    { id: 'macacao', slot: 'corpo', nome: 'Macacão', preco: 22 }, { id: 'vestido', slot: 'corpo', nome: 'Vestido lilás', preco: 25 }, { id: 'capa', slot: 'corpo', nome: 'Capa de heroína', preco: 35 },
-    { id: 'flor', slot: 'mao', nome: 'Flor', preco: 4 }, { id: 'balao', slot: 'mao', nome: 'Balão', preco: 8 }, { id: 'pirulito', slot: 'mao', nome: 'Pirulito', preco: 8 },
-    { id: 'sorvete', slot: 'mao', nome: 'Sorvete', preco: 10 }, { id: 'ursinho', slot: 'mao', nome: 'Ursinho', preco: 14 }, { id: 'varinha', slot: 'mao', nome: 'Varinha mágica', preco: 18 },
-    { id: 'bambuzal', slot: 'fundo', nome: 'Bambuzal', preco: 0 }, { id: 'praia', slot: 'fundo', nome: 'Praia', preco: 20 }, { id: 'arco-iris', slot: 'fundo', nome: 'Arco-íris', preco: 25 },
-    { id: 'fundo-mar', slot: 'fundo', nome: 'Fundo do mar', preco: 30 }, { id: 'castelo', slot: 'fundo', nome: 'Castelo', preco: 35 }, { id: 'espaco', slot: 'fundo', nome: 'Espaço', preco: 45 },
+    { id: 'bone', slot: 'cabeca', nome: 'Boné', preco: 12 }, { id: 'orelhas-gato', slot: 'cabeca', nome: 'Orelhas de gatinha', preco: 12 },
+    { id: 'gorro', slot: 'cabeca', nome: 'Gorro', preco: 14 }, { id: 'tiara', slot: 'cabeca', nome: 'Tiara de flores', preco: 15 },
+    { id: 'chapeu-praia', slot: 'cabeca', nome: 'Chapéu de praia', preco: 16 }, { id: 'orelhas-coelho', slot: 'cabeca', nome: 'Orelhas de coelho', preco: 18 },
+    { id: 'fone', slot: 'cabeca', nome: 'Fone de ouvido', preco: 18 }, { id: 'pirata', slot: 'cabeca', nome: 'Chapéu de pirata', preco: 20 },
+    { id: 'cartola', slot: 'cabeca', nome: 'Cartola', preco: 22 }, { id: 'cowboy', slot: 'cabeca', nome: 'Chapéu de vaqueira', preco: 22 },
+    { id: 'chapeu-bruxa', slot: 'cabeca', nome: 'Chapéu de bruxinha', preco: 25 }, { id: 'tiara-princesa', slot: 'cabeca', nome: 'Tiara de princesa', preco: 28 },
+    { id: 'chifre-unicornio', slot: 'cabeca', nome: 'Chifre de unicórnio', preco: 30 }, { id: 'coroa', slot: 'cabeca', nome: 'Coroa', preco: 40 },
+    // olhos
+    { id: 'tapa-olho', slot: 'olhos', nome: 'Tapa-olho de pirata', preco: 8 }, { id: 'oculos', slot: 'olhos', nome: 'Óculos redondos', preco: 10 },
+    { id: 'oculos-sol', slot: 'olhos', nome: 'Óculos de sol', preco: 15 }, { id: 'mergulho', slot: 'olhos', nome: 'Máscara de mergulho', preco: 16 },
+    { id: 'oculos-estrela', slot: 'olhos', nome: 'Óculos de estrela', preco: 18 }, { id: 'oculos-coracao', slot: 'olhos', nome: 'Óculos de coração', preco: 20 },
+    { id: 'mascara', slot: 'olhos', nome: 'Máscara de heroína', preco: 20 },
+    // pescoço
+    { id: 'gravata', slot: 'pescoco', nome: 'Gravata borboleta', preco: 6 }, { id: 'laco-pescoco', slot: 'pescoco', nome: 'Lacinho de bolinha', preco: 6 },
+    { id: 'cachecol', slot: 'pescoco', nome: 'Cachecol', preco: 12 }, { id: 'colar-havaiano', slot: 'pescoco', nome: 'Colar de flores', preco: 12 },
+    { id: 'colar-coracao', slot: 'pescoco', nome: 'Colar de coração', preco: 14 }, { id: 'colar', slot: 'pescoco', nome: 'Colar de pérolas', preco: 16 },
+    { id: 'gola-palhaco', slot: 'pescoco', nome: 'Gola de palhaço', preco: 16 }, { id: 'medalha', slot: 'pescoco', nome: 'Medalha', preco: 30 },
+    // roupas
+    { id: 'camiseta', slot: 'corpo', nome: 'Camiseta', preco: 10 }, { id: 'pijama', slot: 'corpo', nome: 'Pijama de estrelinha', preco: 14 },
+    { id: 'capa-chuva', slot: 'corpo', nome: 'Capa de chuva', preco: 18 }, { id: 'tutu', slot: 'corpo', nome: 'Saia de bailarina', preco: 20 },
+    { id: 'joaninha', slot: 'corpo', nome: 'Fantasia de joaninha', preco: 20 }, { id: 'macacao', slot: 'corpo', nome: 'Macacão', preco: 22 },
+    { id: 'abelha', slot: 'corpo', nome: 'Fantasia de abelha', preco: 22 }, { id: 'vestido', slot: 'corpo', nome: 'Vestido lilás', preco: 25 },
+    { id: 'princesa', slot: 'corpo', nome: 'Vestido de princesa', preco: 30 }, { id: 'capa', slot: 'corpo', nome: 'Capa de heroína', preco: 35 },
+    { id: 'astronauta', slot: 'corpo', nome: 'Roupa de astronauta', preco: 40 },
+    // sapatos
+    { id: 'tenis', slot: 'sapatos', nome: 'Tênis', preco: 8 }, { id: 'galocha', slot: 'sapatos', nome: 'Galocha', preco: 12 },
+    { id: 'sapatilha', slot: 'sapatos', nome: 'Sapatilha de bailarina', preco: 15 }, { id: 'pantufa', slot: 'sapatos', nome: 'Pantufa de coelho', preco: 20 },
+    { id: 'tenis-luz', slot: 'sapatos', nome: 'Tênis de luzinha', preco: 25 },
+    // na mão
+    { id: 'bambu', slot: 'mao', nome: 'Bambu', preco: 3 }, { id: 'flor', slot: 'mao', nome: 'Flor', preco: 4 }, { id: 'livro', slot: 'mao', nome: 'Livro', preco: 6 },
+    { id: 'balao', slot: 'mao', nome: 'Balão', preco: 8 }, { id: 'pirulito', slot: 'mao', nome: 'Pirulito', preco: 8 }, { id: 'bola', slot: 'mao', nome: 'Bola', preco: 8 },
+    { id: 'cupcake', slot: 'mao', nome: 'Bolinho', preco: 9 }, { id: 'sorvete', slot: 'mao', nome: 'Sorvete', preco: 10 }, { id: 'pincel', slot: 'mao', nome: 'Pincel', preco: 10 },
+    { id: 'guarda-chuva', slot: 'mao', nome: 'Guarda-chuva', preco: 12 }, { id: 'ursinho', slot: 'mao', nome: 'Ursinho', preco: 14 }, { id: 'microfone', slot: 'mao', nome: 'Microfone', preco: 14 },
+    { id: 'buque', slot: 'mao', nome: 'Buquê de flores', preco: 16 }, { id: 'varinha', slot: 'mao', nome: 'Varinha mágica', preco: 18 }, { id: 'violao', slot: 'mao', nome: 'Violão', preco: 20 },
+    // amiguinhos (ficam do lado do panda)
+    { id: 'pet-joaninha', slot: 'amigo', nome: 'Joaninha', preco: 8 }, { id: 'pet-pintinho', slot: 'amigo', nome: 'Pintinho', preco: 10 },
+    { id: 'pet-borboleta', slot: 'amigo', nome: 'Borboleta', preco: 12 }, { id: 'pet-passarinho', slot: 'amigo', nome: 'Passarinho', preco: 14 },
+    { id: 'pet-tartaruga', slot: 'amigo', nome: 'Tartaruga', preco: 15 }, { id: 'pet-hamster', slot: 'amigo', nome: 'Hamster', preco: 18 },
+    { id: 'pet-gatinho', slot: 'amigo', nome: 'Gatinho', preco: 20 }, { id: 'pet-cachorrinho', slot: 'amigo', nome: 'Cachorrinho', preco: 20 },
+    { id: 'pet-coelhinho', slot: 'amigo', nome: 'Coelhinho', preco: 20 }, { id: 'pet-unicornio', slot: 'amigo', nome: 'Unicórnio', preco: 40 },
+    { id: 'pet-dragao', slot: 'amigo', nome: 'Dragãozinho', preco: 45 },
+    // cor do pelo
+    { id: 'pelo-classico', slot: 'cor', nome: 'Panda de sempre', preco: 0 }, { id: 'pelo-marrom', slot: 'cor', nome: 'Panda marrom', preco: 25 },
+    { id: 'pelo-lilas', slot: 'cor', nome: 'Panda lilás', preco: 30 }, { id: 'pelo-rosa', slot: 'cor', nome: 'Panda rosa', preco: 30 },
+    { id: 'pelo-azul', slot: 'cor', nome: 'Panda azul', preco: 30 }, { id: 'pelo-verde', slot: 'cor', nome: 'Panda verde', preco: 30 },
+    { id: 'pelo-dourado', slot: 'cor', nome: 'Panda dourado', preco: 60 },
+    // enfeites do lugar
+    { id: 'flores-chao', slot: 'enfeite', nome: 'Florzinhas', preco: 8 }, { id: 'bolhas', slot: 'enfeite', nome: 'Bolhas de sabão', preco: 8 },
+    { id: 'bandeirinhas', slot: 'enfeite', nome: 'Bandeirinhas', preco: 10 }, { id: 'estrelinhas', slot: 'enfeite', nome: 'Estrelinhas', preco: 10 },
+    { id: 'baloes', slot: 'enfeite', nome: 'Balões de festa', preco: 12 }, { id: 'coracoes', slot: 'enfeite', nome: 'Corações', preco: 12 },
+    { id: 'flocos', slot: 'enfeite', nome: 'Neve caindo', preco: 15 }, { id: 'luzinhas', slot: 'enfeite', nome: 'Luzinhas', preco: 18 },
+    // lugares
+    { id: 'bambuzal', slot: 'fundo', nome: 'Bambuzal', preco: 0 }, { id: 'praia', slot: 'fundo', nome: 'Praia', preco: 20 }, { id: 'jardim', slot: 'fundo', nome: 'Jardim', preco: 20 },
+    { id: 'quarto', slot: 'fundo', nome: 'Quarto', preco: 22 }, { id: 'arco-iris', slot: 'fundo', nome: 'Arco-íris', preco: 25 }, { id: 'neve', slot: 'fundo', nome: 'Neve', preco: 25 },
+    { id: 'fazenda', slot: 'fundo', nome: 'Fazenda', preco: 25 }, { id: 'cidade', slot: 'fundo', nome: 'Cidade', preco: 28 }, { id: 'fundo-mar', slot: 'fundo', nome: 'Fundo do mar', preco: 30 },
+    { id: 'noite', slot: 'fundo', nome: 'Noite estrelada', preco: 30 }, { id: 'castelo', slot: 'fundo', nome: 'Castelo', preco: 35 }, { id: 'circo', slot: 'fundo', nome: 'Circo', preco: 35 },
+    { id: 'espaco', slot: 'fundo', nome: 'Espaço', preco: 45 },
   ];
   const ITEM = {};
   for (const it of ITENS) ITEM[it.id] = it;
@@ -877,10 +961,47 @@ const Jogo = (function () {
   function vestir(e, id) {
     const it = ITEM[id];
     if (!it || !e.roupas.tem.includes(id)) return false;
-    if (it.slot === 'fundo') e.roupas.veste.fundo = id;
+    if (FIXOS.includes(it.slot)) e.roupas.veste[it.slot] = id;
     else e.roupas.veste[it.slot] = e.roupas.veste[it.slot] === id ? null : id;
     return true;
   }
+
+  // ---------- lanchinho (gasta bambu e o panda come; no máximo 5 por dia) ----------
+  const LANCHES = [
+    { id: 'bambu', nome: 'BAMBU', emoji: '🎋', preco: 1 }, { id: 'uva', nome: 'UVA', emoji: '🍇', preco: 2 }, { id: 'banana', nome: 'BANANA', emoji: '🍌', preco: 2 },
+    { id: 'suco', nome: 'SUCO', emoji: '🧃', preco: 2 }, { id: 'coco', nome: 'COCO', emoji: '🥥', preco: 3 }, { id: 'pipoca', nome: 'PIPOCA', emoji: '🍿', preco: 3 },
+    { id: 'bolo', nome: 'BOLO', emoji: '🎂', preco: 4 },
+  ];
+  const LANCHE_MAX = 5;
+  function lanchesHoje(e, hoje) { return e.lanches.dia === hoje ? e.lanches.hoje : 0; }
+  function darLanche(e, id, hoje) {
+    const l = LANCHES.find(x => x.id === id);
+    if (!l) return { ok: false, motivo: 'nao-existe' };
+    if (e.lanches.dia !== hoje) { e.lanches.dia = hoje; e.lanches.hoje = 0; }
+    if (e.lanches.hoje >= LANCHE_MAX) return { ok: false, motivo: 'cheio' };
+    if (e.bambus < l.preco) return { ok: false, motivo: 'sem-bambu', falta: l.preco - e.bambus };
+    e.bambus -= l.preco; e.lanches.hoje++; e.lanches.total++;
+    e.lanches.por[id] = (e.lanches.por[id] || 0) + 1;
+    return { ok: true, restam: LANCHE_MAX - e.lanches.hoje };
+  }
+
+  // ---------- álbum de fotos do amigo (de graça) ----------
+  const FOTOS_MAX = 24;
+  function tirarFoto(e, hoje) {
+    e.roupas.fotos.push({ veste: Object.assign({}, e.roupas.veste), dia: hoje });
+    if (e.roupas.fotos.length > FOTOS_MAX) e.roupas.fotos.shift();
+    return e.roupas.fotos.length;
+  }
+  function vestirFoto(e, i) {
+    const f = e.roupas.fotos[i];
+    if (!f) return false;
+    for (const s in VESTE_PADRAO) {
+      const id = s in f.veste ? f.veste[s] : (FIXOS.includes(s) ? e.roupas.veste[s] : null);
+      if (id === null ? !FIXOS.includes(s) : e.roupas.tem.includes(id)) e.roupas.veste[s] = id;
+    }
+    return true;
+  }
+  function apagarFoto(e, i) { if (!e.roupas.fotos[i]) return false; e.roupas.fotos.splice(i, 1); return true; }
 
   return {
     criarRng, inteiro, escolher, embaralhar, diaDe, VOGAIS, SEQ, LETRA, PARES, base, semAcento, ehVogal, BANCO, LUGARES, PALAVRAS, POR_PALAVRA,
@@ -890,7 +1011,8 @@ const Jogo = (function () {
     CONFIG_PADRAO, INTERVALOS, DOMINIO, BAMBU, estadoInicial, completarEstado, garantirDia, registrarVisita,
     liberarLetra, marcarConhecida, bloquearLetra, aprendendo, podeNovaLetra, escolherFoco, atualizarLetra,
     criarMissao, criarDescoberta, registrarDescoberta, MAX_ERROS_DESCOBERTA, perguntaAtual, progresso, registrar, finalizarMissao, textoPergunta, verificarMontagem,
-    letrasFracas, palavrasFracas, validarImportacao, SLOTS, ITENS, ITEM, comprar, vestir,
+    letrasFracas, palavrasFracas, validarImportacao, SLOTS, FIXOS, VESTE_PADRAO, ITENS, ITEM, comprar, vestir,
+    LANCHES, LANCHE_MAX, lanchesHoje, darLanche, FOTOS_MAX, tirarFoto, vestirFoto, apagarFoto,
   };
 })();
 </script>
@@ -1046,6 +1168,12 @@ const Jogo = (function () {
   // ===================== O PANDA E AS ROUPINHAS (desenho) =====================
   const PRETO = '#25222e';
   const PEROLAS = [70, 78, 86, 94, 102, 110, 118, 126, 130].map(x => `<circle cx="${x}" cy="${(130 + 10 * (1 - Math.pow((x - 100) / 30, 2))).toFixed(1)}" r="4.2" fill="#fff" stroke="#e9d5ff" stroke-width="1.5"/>`).join('');
+  const LEI = [66, 74.5, 83, 91.5, 100, 108.5, 117, 125.5, 134].map((x, i) => { const y = (130 + 12 * (1 - Math.pow((x - 100) / 34, 2))).toFixed(1); return `<circle cx="${x}" cy="${y}" r="6.5" fill="${['#f472b6', '#fde047', '#c084fc', '#fb923c'][i % 4]}"/><circle cx="${x}" cy="${y}" r="2" fill="#fff"/>`; }).join('');
+  const ESTRELA5 = 'M0 -15 L4.4 -4.8 L15 -4.6 L6.7 2.5 L9.3 13.2 L0 7 L-9.3 13.2 L-6.7 2.5 L-15 -4.6 L-4.4 -4.8 Z';
+  const CORACAO = 'M0 7 C-15 -3 -9 -15 0 -8 C9 -15 15 -3 0 7Z';
+  const pes = f => [75, 125].map(f).join('');  // os dois pés do panda (x = 75 e 125)
+  const tenis = (cor, extra) => pes(x => `<path d="M${x - 21} 212 Q${x - 21} 196 ${x - 6} 196 L${x + 6} 197 Q${x + 21} 200 ${x + 21} 209 L${x + 21} 214 L${x - 21} 214 Z" fill="${cor}"/><rect x="${x - 22}" y="211" width="44" height="6" rx="3" fill="#fff"/><path d="M${x - 9} 200 L${x + 1} 203 M${x - 11} 204 L${x - 1} 207" stroke="#fff" stroke-width="2" stroke-linecap="round"/>${extra ? extra(x) : ''}`);
+  const CORES_FESTA = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
   const FLORES = [[56, 51], [75, 34], [100, 28], [125, 34], [144, 51]].map(([x, y], i) => `<g transform="translate(${x} ${y})">${[0, 72, 144, 216, 288].map(a => `<circle cx="${(6 * Math.cos(a * Math.PI / 180)).toFixed(1)}" cy="${(6 * Math.sin(a * Math.PI / 180)).toFixed(1)}" r="4.6" fill="${i % 2 ? '#f9a8d4' : '#c4b5fd'}"/>`).join('')}<circle r="3.4" fill="#fde047"/></g>`).join('');
   const DESENHO = {
     laco: { frente: `<g transform="translate(132 34) rotate(18)"><path d="M0 0 L-24 -13 L-24 13 Z" fill="#a855f7"/><path d="M0 0 L24 -13 L24 13 Z" fill="#a855f7"/><circle r="6.5" fill="#7e22ce"/></g>` },
@@ -1069,30 +1197,86 @@ const Jogo = (function () {
     vestido: { frente: `<path d="M66 130 Q100 120 134 130 L158 204 Q100 217 42 204 Z" fill="#c084fc"/>${[[80, 160], [104, 150], [118, 176], [90, 186], [130, 196], [66, 196], [100, 202]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.6" fill="#fff" opacity=".85"/>`).join('')}` },
     capa: { atras: `<path d="M62 126 Q100 116 138 126 L173 210 Q100 225 27 210 Z" fill="#ef4444"/>`, frente: `<circle cx="100" cy="142" r="6" fill="#facc15" stroke="#eab308" stroke-width="2"/>` },
     flor: { mao: '🌸' }, balao: { mao: '🎈', fio: true }, pirulito: { mao: '🍭' }, sorvete: { mao: '🍦' }, ursinho: { mao: '🧸' }, varinha: { mao: '🪄' },
+    // ----- cabeça (novos) -----
+    'orelhas-gato': { frente: `<path d="M52 50 Q100 8 148 50" stroke="#f472b6" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M60 36 L66 2 L88 24 Z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2.5" stroke-linejoin="round"/><path d="M140 36 L134 2 L112 24 Z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2.5" stroke-linejoin="round"/>` },
+    gorro: { frente: `<path d="M48 52 Q50 4 100 2 Q150 4 152 52 Z" fill="#60a5fa"/><path d="M60 30 Q100 18 140 30" stroke="#93c5fd" stroke-width="5" fill="none"/><rect x="44" y="42" width="112" height="15" rx="7.5" fill="#f8fafc"/><circle cx="100" cy="0" r="11" fill="#f8fafc"/>` },
+    'chapeu-praia': { frente: `<ellipse cx="100" cy="36" rx="68" ry="12" fill="#fcd34d"/><path d="M70 37 Q71 2 100 2 Q129 2 130 37 Z" fill="#fbbf24"/><path d="M70 26 Q100 22 130 26 L130 33 Q100 29 70 33 Z" fill="#ec4899"/><circle cx="128" cy="28" r="6" fill="#f9a8d4"/>` },
+    fone: { frente: `<path d="M44 84 Q44 18 100 18 Q156 18 156 84" stroke="#7c3aed" stroke-width="8" fill="none" stroke-linecap="round"/><rect x="32" y="70" width="20" height="32" rx="9" fill="#a855f7"/><rect x="148" y="70" width="20" height="32" rx="9" fill="#a855f7"/><circle cx="42" cy="86" r="4" fill="#f9a8d4"/><circle cx="158" cy="86" r="4" fill="#f9a8d4"/>` },
+    pirata: { frente: `<path d="M40 38 Q58 -6 100 6 Q142 -6 160 38 Q100 24 40 38 Z" fill="#1f1b2e"/><path d="M48 33 Q100 20 152 33" stroke="#facc15" stroke-width="2.5" fill="none"/><circle cx="100" cy="17" r="6.5" fill="#fff"/><circle cx="97.6" cy="16.4" r="1.6" fill="#1f1b2e"/><circle cx="102.4" cy="16.4" r="1.6" fill="#1f1b2e"/><path d="M92 25 L108 30 M108 25 L92 30" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>` },
+    cowboy: { frente: `<path d="M68 38 Q64 0 84 2 Q100 12 116 2 Q136 0 132 38 Z" fill="#b45309"/><rect x="67" y="27" width="66" height="7" fill="#f472b6"/><path d="M30 30 Q46 46 100 46 Q154 46 170 30 Q160 52 100 52 Q40 52 30 30 Z" fill="#92400e"/>` },
+    'tiara-princesa': { frente: `<path d="M62 42 Q100 24 138 42 L134 36 L122 26 L112 32 L100 12 L88 32 L78 26 L66 36 Z" fill="#f1f5f9" stroke="#c084fc" stroke-width="2" stroke-linejoin="round"/><circle cx="100" cy="27" r="4.5" fill="#ec4899"/><circle cx="80" cy="34" r="2.6" fill="#a78bfa"/><circle cx="120" cy="34" r="2.6" fill="#a78bfa"/>` },
+    'chifre-unicornio': { frente: `<path d="M91 34 L100 -18 L109 34 Z" fill="#fde68a" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/><path d="M93 24 L107 19 M95 12 L105 8 M97 1 L103 -2" stroke="#f59e0b" stroke-width="2"/><circle cx="84" cy="34" r="6" fill="#f9a8d4"/><circle cx="116" cy="34" r="6" fill="#c4b5fd"/><circle cx="100" cy="38" r="4" fill="#fde047"/>` },
+    // ----- olhos (novos) -----
+    'tapa-olho': { frente: `<path d="M48 64 L152 98" stroke="#1f1b2e" stroke-width="3"/><ellipse cx="121" cy="84" rx="15" ry="13" fill="#1f1b2e"/>` },
+    mergulho: { frente: `<path d="M148 92 L158 92 L158 34" stroke="#f97316" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M58 84 L44 80 M142 84 L156 80" stroke="#0ea5e9" stroke-width="5"/><rect x="58" y="68" width="84" height="32" rx="14" fill="rgba(125,211,252,.45)" stroke="#0ea5e9" stroke-width="4"/>` },
+    'oculos-estrela': { frente: `${[79, 121].map(x => `<path transform="translate(${x} 83)" d="${ESTRELA5}" fill="#facc15" stroke="#f59e0b" stroke-width="1.5"/>`).join('')}<path d="M93 80 L107 80" stroke="#f59e0b" stroke-width="3"/>` },
+    mascara: { frente: `<path d="M54 76 Q100 62 146 76 Q150 96 128 96 Q110 96 100 88 Q90 96 72 96 Q50 96 54 76 Z" fill="#ef4444"/><path d="M146 76 L160 70 M54 76 L40 70" stroke="#ef4444" stroke-width="4"/><circle cx="80" cy="82" r="7" fill="#fff"/><circle cx="81" cy="83" r="3.8" fill="${PRETO}"/><circle cx="120" cy="82" r="7" fill="#fff"/><circle cx="121" cy="83" r="3.8" fill="${PRETO}"/>` },
+    // ----- pescoço (novos) -----
+    'laco-pescoco': { frente: `<g transform="translate(100 141)"><path d="M0 0 L-22 -13 L-22 13 Z" fill="#f472b6"/><path d="M0 0 L22 -13 L22 13 Z" fill="#f472b6"/><circle cx="-12" cy="-3" r="2" fill="#fff"/><circle cx="12" cy="3" r="2" fill="#fff"/><circle cx="-15" cy="6" r="2" fill="#fff"/><circle cx="15" cy="-6" r="2" fill="#fff"/><circle r="6" fill="#db2777"/></g>` },
+    'colar-havaiano': { frente: LEI },
+    'colar-coracao': { frente: `<path d="M72 127 Q100 152 128 127" stroke="#fbbf24" stroke-width="2" fill="none"/><path transform="translate(100 146) scale(1.1)" d="${CORACAO}" fill="#ef4444"/>` },
+    'gola-palhaco': { frente: `<path d="M54 128 L62 146 L71 132 L80 150 L90 135 L100 153 L110 135 L120 150 L129 132 L138 146 L146 128 Q100 142 54 128 Z" fill="#fde047" stroke="#f472b6" stroke-width="2.5" stroke-linejoin="round"/><circle cx="100" cy="146" r="4" fill="#ef4444"/>` },
+    // ----- roupas (novas) -----
+    pijama: { frente: `<path d="M60 132 Q100 122 140 132 L151 152 L140 158 L140 202 Q100 212 60 202 L60 158 L49 152 Z" fill="#c7d2fe"/>${[[78, 150], [118, 146], [92, 172], [126, 180], [70, 188], [104, 196]].map(([x, y]) => `<path transform="translate(${x} ${y}) scale(.36)" d="${ESTRELA5}" fill="#facc15"/>`).join('')}` },
+    'capa-chuva': { frente: `<path d="M58 130 Q100 120 142 130 L154 204 Q100 214 46 204 Z" fill="#facc15"/><path d="M100 128 L100 207" stroke="#eab308" stroke-width="3"/>${[150, 168, 186].map(y => `<circle cx="107" cy="${y}" r="3" fill="#ca8a04"/>`).join('')}` },
+    joaninha: { frente: `<path d="M58 132 Q100 120 142 132 Q156 168 140 200 Q100 214 60 200 Q44 168 58 132 Z" fill="#ef4444"/><path d="M100 124 L100 208" stroke="#1f1b2e" stroke-width="3"/>${[[80, 150], [120, 150], [75, 178], [125, 178], [90, 197], [110, 197]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6" fill="#1f1b2e"/>`).join('')}` },
+    abelha: { atras: `<ellipse cx="56" cy="124" rx="20" ry="28" fill="rgba(186,230,253,.9)" stroke="#7dd3fc" stroke-width="2" transform="rotate(-30 56 124)"/><ellipse cx="144" cy="124" rx="20" ry="28" fill="rgba(186,230,253,.9)" stroke="#7dd3fc" stroke-width="2" transform="rotate(30 144 124)"/>`,
+      frente: `<path d="M58 132 Q100 120 142 132 Q156 168 140 200 Q100 214 60 200 Q44 168 58 132 Z" fill="#facc15"/><path d="M50 156 Q100 168 150 156 L151 168 Q100 180 49 168 Z" fill="#1f1b2e"/><path d="M50 182 Q100 194 150 182 L146 194 Q100 206 54 194 Z" fill="#1f1b2e"/>` },
+    princesa: { frente: `<path d="M68 130 Q100 120 132 130 L138 160 Q172 196 160 210 Q100 222 40 210 Q28 196 62 160 Z" fill="#f9a8d4"/><path d="M62 160 Q100 168 138 160" stroke="#fff" stroke-width="5" fill="none"/><path d="M100 162 L88 154 L88 170 Z M100 162 L112 154 L112 170 Z" fill="#ec4899"/>${[[70, 190], [96, 200], [124, 194], [148, 204], [52, 204], [110, 182], [84, 180]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fff"/>`).join('')}` },
+    astronauta: { frente: `<path d="M56 130 Q100 118 144 130 L150 200 Q100 214 50 200 Z" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/><rect x="84" y="148" width="32" height="22" rx="4" fill="#60a5fa"/><circle cx="92" cy="159" r="3" fill="#ef4444"/><circle cx="100" cy="159" r="3" fill="#facc15"/><circle cx="108" cy="159" r="3" fill="#22c55e"/><rect x="62" y="142" width="14" height="9" rx="1" fill="#ef4444"/><path d="M50 186 L150 186" stroke="#cbd5e1" stroke-width="3"/>` },
+    // ----- sapatos -----
+    tenis: { frente: tenis('#f472b6') },
+    galocha: { frente: pes(x => `<rect x="${x - 20}" y="188" width="40" height="26" rx="8" fill="#facc15"/><rect x="${x - 21}" y="210" width="42" height="7" rx="3" fill="#ca8a04"/>`) },
+    sapatilha: { frente: pes(x => `<ellipse cx="${x}" cy="208" rx="21" ry="9" fill="#fbcfe8"/><path d="M${x - 12} 204 L${x + 8} 186 M${x + 12} 204 L${x - 8} 186" stroke="#f9a8d4" stroke-width="3" stroke-linecap="round"/><circle cx="${x}" cy="203" r="3" fill="#ec4899"/>`) },
+    pantufa: { frente: pes(x => `<ellipse cx="${x - 7}" cy="192" rx="4.5" ry="11" fill="#fff" stroke="#e9d5ff" stroke-width="2"/><ellipse cx="${x + 7}" cy="192" rx="4.5" ry="11" fill="#fff" stroke="#e9d5ff" stroke-width="2"/><ellipse cx="${x}" cy="206" rx="22" ry="12" fill="#fff" stroke="#e9d5ff" stroke-width="2"/><circle cx="${x - 5}" cy="204" r="1.8" fill="${PRETO}"/><circle cx="${x + 5}" cy="204" r="1.8" fill="${PRETO}"/><circle cx="${x}" cy="208" r="2" fill="#f9a8d4"/>`) },
+    'tenis-luz': { frente: tenis('#a855f7', x => `<circle cx="${x - 12}" cy="214" r="2.4" fill="#facc15"/><circle cx="${x}" cy="214" r="2.4" fill="#34d399"/><circle cx="${x + 12}" cy="214" r="2.4" fill="#f472b6"/>`) },
+    // ----- na mão (novos) -----
+    bambu: { mao: '🎋' }, livro: { mao: '📖' }, bola: { mao: '⚽' }, cupcake: { mao: '🧁' }, pincel: { mao: '🖌️' }, 'guarda-chuva': { mao: '☂️' },
+    microfone: { mao: '🎤' }, buque: { mao: '💐' }, violao: { mao: '🎸' },
+    // ----- amiguinhos (ficam do lado; os que voam ficam no alto) -----
+    'pet-joaninha': { amigo: '🐞' }, 'pet-pintinho': { amigo: '🐥' }, 'pet-borboleta': { amigo: '🦋', voa: true }, 'pet-passarinho': { amigo: '🐦', voa: true },
+    'pet-tartaruga': { amigo: '🐢' }, 'pet-hamster': { amigo: '🐹' }, 'pet-gatinho': { amigo: '🐱' }, 'pet-cachorrinho': { amigo: '🐶' },
+    'pet-coelhinho': { amigo: '🐰' }, 'pet-unicornio': { amigo: '🦄' }, 'pet-dragao': { amigo: '🐲' },
+  };
+  const CORES_PELO = { 'pelo-classico': PRETO, 'pelo-marrom': '#6b3f22', 'pelo-lilas': '#7c4ddb', 'pelo-rosa': '#db2777', 'pelo-azul': '#2563eb', 'pelo-verde': '#16a34a', 'pelo-dourado': '#d4a20b' };
+  const fioY = x => { const p = [[0, 16], [50, 26], [100, 16], [150, 26], [200, 16]]; for (let i = 0; i < 4; i++) if (x <= p[i + 1][0]) return p[i][1] + (p[i + 1][1] - p[i][1]) * (x - p[i][0]) / (p[i + 1][0] - p[i][0]); return 16; };
+  const petalas = (x, y, r, rp, cor) => [0, 72, 144, 216, 288].map(a => `<circle cx="${(x + r * Math.cos(a * Math.PI / 180)).toFixed(1)}" cy="${(y + r * Math.sin(a * Math.PI / 180)).toFixed(1)}" r="${rp}" fill="${cor}"/>`).join('');
+  const ENFEITES = {
+    bandeirinhas: `<path d="M0 16 L50 26 L100 16 L150 26 L200 16" stroke="#7c4a2d" stroke-width="1.5" fill="none"/>${Array.from({ length: 10 }, (_, i) => { const x = 10 + i * 20, y = fioY(x); return `<path d="M${x - 7} ${y.toFixed(1)} L${x + 7} ${y.toFixed(1)} L${x} ${(y + 15).toFixed(1)} Z" fill="${CORES_FESTA[i % 6]}"/>`; }).join('')}`,
+    baloes: [[16, 44, '#ef4444'], [32, 32, '#fde047'], [26, 60, '#3b82f6'], [184, 44, '#ec4899'], [168, 32, '#22c55e'], [174, 60, '#a855f7']].map(([x, y, c]) => `<path d="M${x} ${y + 12} Q${x + 4} ${y + 40} ${x < 100 ? 26 : 174} 124" stroke="#9ca3af" stroke-width="1" fill="none"/><ellipse cx="${x}" cy="${y}" rx="10" ry="12" fill="${c}"/><ellipse cx="${x - 3}" cy="${y - 4}" rx="2.5" ry="3.5" fill="#fff" opacity=".6"/>`).join(''),
+    'flores-chao': [8, 22, 36, 164, 178, 192].map((x, i) => `<path d="M${x} 220 L${x} 200" stroke="#16a34a" stroke-width="2.5"/>${petalas(x, 196, 5, 4, ['#f472b6', '#c084fc', '#fb923c'][i % 3])}<circle cx="${x}" cy="196" r="2.8" fill="#fde047"/>`).join(''),
+    estrelinhas: [[20, 30], [180, 24], [40, 84], [170, 92], [14, 150], [188, 156], [100, 10], [60, 40], [146, 50]].map(([x, y], i) => `<path transform="translate(${x} ${y}) scale(${i % 2 ? 0.8 : 1.2})" d="M0 -7 Q1 -1 7 0 Q1 1 0 7 Q-1 1 -7 0 Q-1 -1 0 -7 Z" fill="#fde047" stroke="#f59e0b" stroke-width=".6"/>`).join(''),
+    bolhas: [[20, 40, 9], [38, 80, 6], [14, 120, 7], [180, 36, 8], [166, 78, 10], [186, 130, 6], [100, 16, 5]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="rgba(255,255,255,.35)" stroke="#7dd3fc" stroke-width="1.5"/><path d="M${(x - r * 0.55).toFixed(1)} ${(y - r * 0.2).toFixed(1)} Q${(x - r * 0.45).toFixed(1)} ${(y - r * 0.6).toFixed(1)} ${(x - r * 0.1).toFixed(1)} ${(y - r * 0.65).toFixed(1)}" stroke="#fff" stroke-width="1.5" fill="none"/>`).join(''),
+    coracoes: [[18, 34, 1.1], [182, 30, 1], [36, 92, 0.8], [168, 96, 1.2], [14, 150, 0.9], [188, 160, 0.8], [100, 12, 0.7]].map(([x, y, s], i) => `<path transform="translate(${x} ${y}) scale(${s})" d="${CORACAO}" fill="${i % 2 ? '#f472b6' : '#ef4444'}"/>`).join(''),
+    flocos: [[16, 24], [44, 60], [22, 110], [180, 30], [158, 70], [186, 120], [100, 12], [60, 150], [140, 160]].map(([x, y]) => `<g transform="translate(${x} ${y})" stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round"><path d="M-6 0 L6 0 M0 -6 L0 6 M-4.2 -4.2 L4.2 4.2 M-4.2 4.2 L4.2 -4.2"/></g>`).join(''),
+    luzinhas: `<path d="M0 10 Q25 26 50 12 Q75 26 100 12 Q125 26 150 12 Q175 26 200 10" stroke="#374151" stroke-width="1.5" fill="none"/>${Array.from({ length: 12 }, (_, i) => `<ellipse cx="${(8 + i * 16.5).toFixed(1)}" cy="${i % 2 ? 21 : 18}" rx="3.5" ry="5" fill="${CORES_FESTA[i % 6]}"/>`).join('')}`,
   };
   function pandaInterno(veste, humor) {
     const d = s => (veste[s] && DESENHO[veste[s]]) || {};
+    const pelo = CORES_PELO[veste.cor] || PRETO;
+    const pet = d('amigo');
+    const amigoSVG = pet.amigo ? `<text class="amigo" x="${pet.voa ? 14 : 8}" y="${pet.voa ? 116 : 214}" font-size="${pet.voa ? 30 : 40}" text-anchor="middle">${pet.amigo}</text>` : '';
     const boca = humor === 'uau' ? `<ellipse cx="100" cy="110" rx="6" ry="7" fill="${PRETO}"/><ellipse cx="100" cy="113" rx="3.5" ry="3" fill="#f9a8d4"/>`
       : humor === 'pensa' ? `<path d="M92 110 Q100 105 108 110" stroke="${PRETO}" stroke-width="3" fill="none" stroke-linecap="round"/>`
       : `<path d="M90 106 Q100 117 110 106" stroke="${PRETO}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
     const mao = d('mao').mao ? (d('mao').fio ? `<path d="M152 170 Q160 140 166 112" stroke="#9ca3af" stroke-width="1.5" fill="none"/><text x="168" y="112" font-size="40" text-anchor="middle">${d('mao').mao}</text>` : `<text x="160" y="186" font-size="36" text-anchor="middle">${d('mao').mao}</text>`) : '';
     return `${d('corpo').atras || ''}
-      <circle cx="58" cy="38" r="18" fill="${PRETO}"/><circle cx="142" cy="38" r="18" fill="${PRETO}"/>
-      <ellipse cx="75" cy="200" rx="20" ry="14" fill="${PRETO}"/><ellipse cx="125" cy="200" rx="20" ry="14" fill="${PRETO}"/>
+      <circle cx="58" cy="38" r="18" fill="${pelo}"/><circle cx="142" cy="38" r="18" fill="${pelo}"/>
+      <ellipse cx="75" cy="200" rx="20" ry="14" fill="${pelo}"/><ellipse cx="125" cy="200" rx="20" ry="14" fill="${pelo}"/>
       <ellipse cx="100" cy="158" rx="50" ry="46" fill="#fff" stroke="#e7e1f2" stroke-width="2"/>
       <ellipse cx="100" cy="166" rx="31" ry="27" fill="#f8f6fc"/>
-      ${d('corpo').frente || ''}
-      <ellipse cx="54" cy="150" rx="14" ry="27" fill="${PRETO}" transform="rotate(20 54 150)"/>
-      <ellipse cx="146" cy="150" rx="14" ry="27" fill="${PRETO}" transform="rotate(-20 146 150)"/>
+      ${d('corpo').frente || ''}${d('sapatos').frente || ''}
+      <ellipse cx="54" cy="150" rx="14" ry="27" fill="${pelo}" transform="rotate(20 54 150)"/>
+      <ellipse cx="146" cy="150" rx="14" ry="27" fill="${pelo}" transform="rotate(-20 146 150)"/>
       <circle cx="100" cy="82" r="54" fill="#fff" stroke="#e7e1f2" stroke-width="2"/>
-      <ellipse cx="78" cy="84" rx="15" ry="20" fill="${PRETO}" transform="rotate(-25 78 84)"/>
-      <ellipse cx="122" cy="84" rx="15" ry="20" fill="${PRETO}" transform="rotate(25 122 84)"/>
+      <ellipse cx="78" cy="84" rx="15" ry="20" fill="${pelo}" transform="rotate(-25 78 84)"/>
+      <ellipse cx="122" cy="84" rx="15" ry="20" fill="${pelo}" transform="rotate(25 122 84)"/>
       <g class="olho"><circle cx="80" cy="82" r="6.5" fill="#fff"/><circle cx="81" cy="83" r="3.6" fill="${PRETO}"/><circle cx="79.4" cy="80.6" r="1.4" fill="#fff"/></g>
       <g class="olho"><circle cx="120" cy="82" r="6.5" fill="#fff"/><circle cx="121" cy="83" r="3.6" fill="${PRETO}"/><circle cx="119.4" cy="80.6" r="1.4" fill="#fff"/></g>
       <ellipse cx="100" cy="99" rx="7.5" ry="5.2" fill="${PRETO}"/>
       ${boca}
       <ellipse cx="66" cy="104" rx="8" ry="5" fill="#f9a8d4" opacity=".7"/><ellipse cx="134" cy="104" rx="8" ry="5" fill="#f9a8d4" opacity=".7"/>
-      ${d('pescoco').frente || ''}${d('olhos').frente || ''}${d('cabeca').frente || ''}${mao}`;
+      ${d('pescoco').frente || ''}${d('olhos').frente || ''}${d('cabeca').frente || ''}${mao}${amigoSVG}`;
   }
   function pandaSVG(veste, humor, vb) { return `<svg class="panda-svg" viewBox="${vb || '-12 -52 224 278'}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${pandaInterno(veste || {}, humor || 'feliz')}</svg>`; }
   const ESTRELAS = [[12, 20], [40, 60], [70, 14], [140, 70], [186, 16], [176, 96], [24, 110], [60, 150], [150, 140], [190, 160], [110, 30], [8, 180], [100, 8]];
@@ -1103,15 +1287,27 @@ const Jogo = (function () {
     'fundo-mar': `<rect width="200" height="220" fill="#22d3ee"/><rect y="110" width="200" height="110" fill="#0e7490" opacity=".55"/>${[[20, 40, 5], [34, 70, 3], [180, 60, 6], [168, 30, 3], [186, 120, 4]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="#fff" stroke-width="1.6" opacity=".8"/>`).join('')}<path d="M14 220 Q4 190 16 170 Q26 150 14 130" stroke="#22c55e" stroke-width="6" fill="none"/><path d="M188 220 Q198 190 184 168" stroke="#16a34a" stroke-width="6" fill="none"/><text x="26" y="108" font-size="22">🐠</text><text x="160" y="160" font-size="20">🐟</text>`,
     castelo: `<rect width="200" height="220" fill="#fce7f3"/><rect y="186" width="200" height="34" fill="#bbf7d0"/><rect x="0" y="96" width="36" height="96" fill="#c4b5fd"/><path d="M-4 96 L18 62 L40 96 Z" fill="#a78bfa"/><rect x="164" y="96" width="36" height="96" fill="#c4b5fd"/><path d="M160 96 L182 62 L204 96 Z" fill="#a78bfa"/><path d="M18 62 L18 46 L30 52 L18 56" fill="#ec4899"/><path d="M182 62 L182 46 L194 52 L182 56" fill="#ec4899"/><rect x="10" y="130" width="12" height="18" rx="6" fill="#7c3aed"/><rect x="176" y="130" width="12" height="18" rx="6" fill="#7c3aed"/>`,
     espaco: `<rect width="200" height="220" fill="#1e1b4b"/>${ESTRELAS.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 3 ? 1.4 : 2.2}" fill="#fff"/>`).join('')}<circle cx="166" cy="42" r="16" fill="#f472b6"/><ellipse cx="166" cy="42" rx="27" ry="6" fill="none" stroke="#fde68a" stroke-width="3"/><circle cx="30" cy="44" r="12" fill="#fef3c7"/><rect y="196" width="200" height="24" fill="#4c1d95"/>`,
+    jardim: `<rect width="200" height="220" fill="#dbeafe"/><circle cx="30" cy="30" r="15" fill="#fde047"/><ellipse cx="160" cy="34" rx="24" ry="10" fill="#fff"/><rect y="168" width="200" height="52" fill="#86efac"/>${[[12, 120, '#f472b6'], [190, 128, '#c084fc'], [30, 150, '#fb923c'], [172, 156, '#f472b6']].map(([x, y, c]) => `<path d="M${x} 220 L${x} ${y}" stroke="#16a34a" stroke-width="3"/>${petalas(x, y, 8, 6, c)}<circle cx="${x}" cy="${y}" r="5" fill="#fde047"/>`).join('')}`,
+    neve: `<rect width="200" height="220" fill="#e0f2fe"/>${ESTRELAS.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fff"/>`).join('')}<path d="M0 178 Q50 166 100 176 T200 172 L200 220 L0 220 Z" fill="#f8fafc"/><text x="24" y="198" font-size="30" text-anchor="middle">⛄</text><path d="M176 182 L188 150 L200 182 Z" fill="#15803d"/><path d="M179 166 L188 140 L197 166 Z" fill="#16a34a"/>`,
+    quarto: `<rect width="200" height="220" fill="#fae8ff"/><rect y="176" width="200" height="44" fill="#e7cfb4"/>${[30, 80, 130, 180].map(x => `<path d="M${x} 176 L${x} 220" stroke="#d6b896" stroke-width="2"/>`).join('')}<rect x="146" y="26" width="44" height="40" rx="3" fill="#bae6fd" stroke="#fff" stroke-width="4"/><path d="M168 26 L168 66 M146 46 L190 46" stroke="#fff" stroke-width="3"/><rect x="12" y="40" width="30" height="24" rx="2" fill="#fff" stroke="#c084fc" stroke-width="3"/><path transform="translate(27 53) scale(.6)" d="${CORACAO}" fill="#ec4899"/><ellipse cx="100" cy="206" rx="80" ry="10" fill="#c4b5fd"/>`,
+    fazenda: `<rect width="200" height="220" fill="#bae6fd"/><circle cx="170" cy="30" r="14" fill="#fde047"/><rect y="170" width="200" height="50" fill="#bbf7d0"/><rect x="4" y="128" width="42" height="48" fill="#dc2626"/><path d="M0 130 L25 104 L50 130 Z" fill="#991b1b"/><rect x="16" y="148" width="18" height="28" fill="#fff"/><path d="M16 148 L34 176 M34 148 L16 176" stroke="#dc2626" stroke-width="2"/>${[156, 170, 184, 198].map(x => `<rect x="${x}" y="156" width="4" height="22" fill="#a16207"/>`).join('')}<path d="M152 162 L200 162 M152 172 L200 172" stroke="#a16207" stroke-width="3"/>`,
+    cidade: `<rect width="200" height="220" fill="#bfdbfe"/><circle cx="104" cy="26" r="12" fill="#fde047"/>${[[0, 110, 30, '#a78bfa'], [26, 136, 24, '#f472b6'], [146, 124, 28, '#60a5fa'], [170, 100, 30, '#34d399']].map(([x, y, w, c]) => `<rect x="${x}" y="${y}" width="${w}" height="${200 - y}" fill="${c}"/>${Array.from({ length: Math.floor((190 - y) / 16) }, (_, k) => `<rect x="${x + 5}" y="${y + 8 + k * 16}" width="7" height="8" fill="#fef9c3"/><rect x="${x + w - 12}" y="${y + 8 + k * 16}" width="7" height="8" fill="#fef9c3"/>`).join('')}`).join('')}<rect y="196" width="200" height="24" fill="#9ca3af"/><path d="M0 208 L200 208" stroke="#fff" stroke-width="2" stroke-dasharray="10 8"/>`,
+    noite: `<rect width="200" height="220" fill="#1e3a8a"/>${ESTRELAS.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 3 ? 1.3 : 2}" fill="#fef9c3"/>`).join('')}<circle cx="162" cy="38" r="15" fill="#fef3c7"/><circle cx="170" cy="32" r="13" fill="#1e3a8a"/><path d="M0 186 Q50 160 100 182 Q150 162 200 184 L200 220 L0 220 Z" fill="#1e40af"/>`,
+    circo: `${Array.from({ length: 10 }, (_, i) => `<rect x="${i * 20}" y="0" width="20" height="220" fill="${i % 2 ? '#fff' : '#f87171'}"/>`).join('')}<path d="M0 0 ${Array.from({ length: 10 }, (_, i) => `Q${i * 20 + 10} 22 ${i * 20 + 20} 0`).join(' ')} Z" fill="#facc15"/><rect y="186" width="200" height="34" fill="#fde68a"/><circle cx="20" cy="176" r="10" fill="#3b82f6"/><path d="M20 166 L20 154" stroke="#3b82f6" stroke-width="2"/><circle cx="182" cy="178" r="8" fill="#22c55e"/>`,
   };
-  const VB_SLOT = { cabeca: '28 -56 144 102', olhos: '40 56 120 56', pescoco: '38 110 124 82', corpo: '18 108 164 120', mao: '112 80 92 130' };
+  const VB_SLOT = { cabeca: '28 -56 144 102', olhos: '40 56 120 56', pescoco: '38 110 124 82', corpo: '18 108 164 120', sapatos: '36 166 128 58', mao: '112 80 92 130', cor: '24 14 152 112' };
   function cenaHTML(veste, humor) {
-    return `<svg viewBox="0 0 200 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${FUNDOS[veste.fundo] || FUNDOS.bambuzal}</svg>${pandaSVG(veste, humor)}`;
+    return `<svg viewBox="0 0 200 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${FUNDOS[veste.fundo] || FUNDOS.bambuzal}${(veste.enfeite && ENFEITES[veste.enfeite]) || ''}</svg>${pandaSVG(veste, humor)}`;
   }
   function previaItem(it) {
     if (it.slot === 'fundo') return `<svg viewBox="0 30 200 165" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${FUNDOS[it.id]}</svg>`;
+    if (it.slot === 'enfeite') return `<svg viewBox="0 0 200 220" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"><rect x="-80" width="360" height="220" fill="#f5f3ff"/>${ENFEITES[it.id]}</svg>`;
+    if (it.slot === 'amigo' || it.slot === 'mao') return `<svg viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg"><text x="40" y="47" font-size="42" text-anchor="middle">${DESENHO[it.id].amigo || DESENHO[it.id].mao}</text></svg>`;
     return pandaSVG({ [it.slot]: it.id }, 'feliz', VB_SLOT[it.slot]);
   }
+  // toda peça da loja precisa ter desenho (aviso no console se faltar; o teste da interface confere)
+  const SEM_DESENHO = J.ITENS.filter(it => !(it.slot === 'fundo' ? FUNDOS[it.id] : it.slot === 'enfeite' ? ENFEITES[it.id] : it.slot === 'cor' ? CORES_PELO[it.id] : DESENHO[it.id])).map(it => it.id);
+  if (SEM_DESENHO.length) console.warn('peças sem desenho:', SEM_DESENHO.join(', '));
   const veste = () => estado.roupas.veste;
 
   // ===================== NAVEGAÇÃO =====================
@@ -1563,34 +1759,64 @@ const Jogo = (function () {
   }
 
   // ===================== ROUPINHAS =====================
-  let slotAtual = 'cabeca', provando = null;
-  function renderRoupas() {
-    const vs = Object.assign({}, veste());
-    if (provando) vs[J.ITEM[provando].slot] = provando;
-    const itens = J.ITENS.filter(it => it.slot === slotAtual);
+  let slotAtual = 'cabeca', provando = null, comendo = false, apagandoFoto = null;
+  const ABAS = J.SLOTS.concat([{ id: 'lanche', nome: 'Lanchinho', icone: '🍎' }, { id: 'fotos', nome: 'Fotos', icone: '📸' }]);
+  const nham = () => nota([440, 554.4, 659.3], 0.09, 0.18, 0.1);
+  const clique = () => nota([1318.5, 1760], 0.04, 0.06, 0.1);
+  function flash() { const f = $('#flash'); f.classList.add('on'); requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('on'))); }
+  function lojaItens() {
     const card = it => {
       const tem = estado.roupas.tem.includes(it.id), usando = veste()[it.slot] === it.id;
       const cls = ['item', tem ? '' : estado.bambus < it.preco ? 'caro' : '', usando ? 'vestindo' : '', provando === it.id ? 'provando' : ''].join(' ');
-      return `<button class="${cls}" data-item="${it.id}" aria-label="${esc(it.nome)}">${previaItem(it)}<span class="preco">${tem ? (usando ? '✓' : '') : `${it.preco} 🎋`}</span>${usando && it.slot !== 'fundo' ? '<span class="selo">usando</span>' : ''}</button>`;
+      return `<button class="${cls}" data-item="${it.id}" aria-label="${esc(it.nome)}">${previaItem(it)}<span class="preco">${tem ? (usando ? '✓' : '') : `${it.preco} 🎋`}</span>${usando && !J.FIXOS.includes(it.slot) ? '<span class="selo">usando</span>' : ''}</button>`;
     };
+    return `<div class="itens">${J.ITENS.filter(it => it.slot === slotAtual).map(card).join('')}</div>`;
+  }
+  function lojaLanche() {
+    const n = J.lanchesHoje(estado, hoje());
+    return `<div class="lanche-info">${esc(amigo())} comeu: ${Array.from({ length: J.LANCHE_MAX }, (_, i) => `<span class="prato ${i < n ? '' : 'sem'}">🍽️</span>`).join('')}</div>
+      <div class="itens">${J.LANCHES.map(l => `<button class="item lanche ${estado.bambus < l.preco || n >= J.LANCHE_MAX ? 'caro' : ''}" data-lanche="${l.id}" aria-label="${esc(l.nome)}"><span class="em">${l.emoji}</span><span class="nome">${l.nome}</span><span class="preco">${l.preco} 🎋</span></button>`).join('')}</div>`;
+  }
+  function lojaFotos() {
+    const fotos = estado.roupas.fotos;
+    const lista = fotos.map((f, i) => ({ f, i })).reverse();
+    return `<button class="b-grande verde" id="b-foto">📸 TIRAR FOTO</button>
+      ${fotos.length ? `<div class="fotos">${lista.map(({ f, i }) => `<div class="foto"><button class="cena" data-foto="${i}" aria-label="foto ${i + 1}">${cenaHTML(Object.assign({}, J.VESTE_PADRAO, f.veste), 'feliz')}</button><button class="foto-x ${apagandoFoto === i ? 'confirma' : ''}" data-apagar-foto="${i}" aria-label="apagar foto">${apagandoFoto === i ? 'APAGAR?' : '✕'}</button></div>`).join('')}</div>`
+      : `<div class="vazio">Vista o ${esc(amigo())} e tire uma foto!</div>`}`;
+  }
+  function renderRoupas() {
+    const vs = Object.assign({}, veste());
+    if (provando) vs[J.ITEM[provando].slot] = provando;
     const itP = provando && J.ITEM[provando], podeP = itP && estado.bambus >= itP.preco;
+    const corpo = slotAtual === 'lanche' ? lojaLanche() : slotAtual === 'fotos' ? lojaFotos() : lojaItens();
     palco.innerHTML = `
       <div class="pagina">
-        <div class="barra"><button class="b-x" data-ir="casa" aria-label="Voltar">✕</button><h2>👗 ROUPINHAS</h2><div class="contador">🎋 ${estado.bambus}</div></div>
+        <div class="barra"><button class="b-x" data-ir="casa" aria-label="Voltar">✕</button><h2>👗 ROUPINHAS</h2><div class="contador" id="contador">🎋 ${estado.bambus}</div></div>
         <div class="roupas-grid">
-          <div class="cena" id="cena">${cenaHTML(vs, 'feliz')}</div>
-          <div class="loja">
-            <div class="abas">${J.SLOTS.map(s => `<button class="aba ${s.id === slotAtual ? 'ativa' : ''}" data-slot="${s.id}" aria-label="${s.nome}">${s.icone}</button>`).join('')}</div>
-            ${itP ? `<div class="compra"><button class="b-grande ${podeP ? 'verde' : ''}" id="b-comprar" ${podeP ? '' : 'disabled'}>${podeP ? `COMPRAR · ${itP.preco} 🎋` : `FALTAM ${itP.preco - estado.bambus} 🎋`}</button><button class="b-x" id="b-desistir" aria-label="Não comprar">✕</button></div>` : ''}
-            <div class="itens">${itens.map(card).join('')}</div>
+          <div class="vitrine"><div class="cena" id="cena">${cenaHTML(vs, 'feliz')}</div></div>
+          <div class="loja ${itP ? 'com-folha' : ''}">
+            <div class="abas">${ABAS.map(s => `<button class="aba ${s.id === slotAtual ? 'ativa' : ''}" data-slot="${s.id}" aria-label="${s.nome}">${s.icone}</button>`).join('')}</div>
+            ${corpo}
           </div>
         </div>
+        ${itP ? `<div class="compra folha"><div class="compra-nome">${esc(itP.nome.toUpperCase())}</div><div class="compra-linha"><button class="b-grande ${podeP ? 'verde' : ''}" id="b-comprar" ${podeP ? '' : 'disabled'}>${podeP ? `COMPRAR · ${itP.preco} 🎋` : `FALTAM ${itP.preco - estado.bambus} 🎋`}</button><button class="b-x" id="b-desistir" aria-label="Não comprar">✕</button></div></div>` : ''}
       </div>`;
-    $$('.aba').forEach(b => { b.onclick = () => { pop(); slotAtual = b.dataset.slot; provando = null; renderRoupas(); }; });
+    $$('.aba').forEach(b => {
+      b.onclick = () => {
+        pop(); slotAtual = b.dataset.slot; provando = null; apagandoFoto = null; renderRoupas();
+        const aba = ABAS.find(a => a.id === slotAtual);
+        Voz.seq([{ t: slotAtual === 'amigo' ? `Amiguinhos do ${amigo()}!` : aba.nome + '!' }]);
+      };
+    });
     $$('[data-item]').forEach(b => {
       b.onclick = () => {
         const id = b.dataset.item, it = J.ITEM[id];
-        if (estado.roupas.tem.includes(id)) { provando = null; J.vestir(estado, id); salvar(); pop(); renderRoupas(); return; }
+        if (estado.roupas.tem.includes(id)) {
+          provando = null; const tirou = veste()[it.slot] === id && !J.FIXOS.includes(it.slot);
+          J.vestir(estado, id); salvar(); pop(); renderRoupas();
+          if (!tirou) Voz.seq([{ t: it.nome + '!' }]);
+          return;
+        }
         provando = provando === id ? null : id;
         renderRoupas();
         if (provando) Voz.seq([{ t: estado.bambus >= it.preco ? `${it.nome}! Quer comprar por ${it.preco} bambus?` : `${it.nome}. Faltam ${it.preco - estado.bambus} bambus. Vamos fazer mais missões!` }]);
@@ -1599,9 +1825,66 @@ const Jogo = (function () {
     if ($('#b-comprar')) $('#b-comprar').onclick = () => {
       if (!J.comprar(estado, provando)) return;
       provando = null; salvar(); festa(); confete(); renderRoupas();
-      Voz.seq([{ t: sorteia(['Ficou lindo!', 'Que chique!', 'Adorei!']) }]);
+      Voz.seq([{ t: sorteia(['Ficou lindo!', 'Que chique!', 'Adorei!', 'Uau, que demais!']) }]);
     };
     if ($('#b-desistir')) $('#b-desistir').onclick = () => { provando = null; renderRoupas(); };
+    $$('[data-lanche]').forEach(b => {
+      b.onclick = () => {
+        if (comendo) return;
+        const l = J.LANCHES.find(x => x.id === b.dataset.lanche);
+        const r = J.darLanche(estado, l.id, hoje());
+        if (!r.ok) {
+          Voz.seq([{ t: r.motivo === 'cheio' ? `Estou cheio! Amanhã tem mais lanchinho.` : `Faltam ${r.falta} ${r.falta === 1 ? 'bambu' : 'bambus'}.` }]);
+          return;
+        }
+        salvar(); comendo = true;
+        $('#contador').textContent = '🎋 ' + estado.bambus;
+        Voz.seq([{ t: `Hmm! Que delícia de ${fp(l.nome)}!`, pausa: 200 }, r.restam === 0 ? { t: 'Agora estou cheio!' } : null]);
+        comerAnim(l, b).then(() => { comendo = false; if (rotaAtual() === 'roupas' && slotAtual === 'lanche') renderRoupas(); });
+      };
+    });
+    if ($('#b-foto')) $('#b-foto').onclick = () => {
+      J.tirarFoto(estado, hoje()); salvar(); flash(); clique(); apagandoFoto = null; renderRoupas();
+      Voz.seq([{ t: sorteia(['Que foto linda!', 'Xiiis! Ficou ótima!', 'Foto guardada no álbum!']) }]);
+    };
+    $$('[data-foto]').forEach(b => {
+      b.onclick = () => { apagandoFoto = null; J.vestirFoto(estado, Number(b.dataset.foto)); salvar(); pop(); renderRoupas(); Voz.seq([{ t: 'Prontinho! Igual à foto.' }]); };
+    });
+    $$('[data-apagar-foto]').forEach(b => {
+      b.onclick = () => {
+        const i = Number(b.dataset.apagarFoto);
+        if (apagandoFoto === i) { J.apagarFoto(estado, i); apagandoFoto = null; salvar(); }
+        else apagandoFoto = i;
+        renderRoupas();
+      };
+    });
+  }
+  // a comida voa até a boca do panda, ele faz "uau", a palavra aparece escrita e sobem coraçõezinhos
+  function comerAnim(l, botao) {
+    return new Promise(res => {
+      const cena = $('#cena');
+      if (!cena) return res();
+      const rc = cena.getBoundingClientRect(), rb = botao.getBoundingClientRect();
+      const x0 = rb.left + rb.width / 2, y0 = rb.top + rb.height / 2;
+      const voo = document.createElement('div');
+      voo.className = 'voo'; voo.textContent = l.emoji; voo.style.left = x0 + 'px'; voo.style.top = y0 + 'px';
+      document.body.appendChild(voo);
+      const dx = rc.left + rc.width * 0.5 - x0, dy = rc.top + rc.height * 0.58 - y0;
+      requestAnimationFrame(() => requestAnimationFrame(() => { voo.style.transform = `translate(-50%, -50%) translate(${dx}px, ${dy}px) scale(.35)`; }));
+      setTimeout(() => {
+        voo.remove();
+        if (!document.body.contains(cena)) return;
+        cena.innerHTML = cenaHTML(veste(), 'uau') + `<div class="palavra-cena">${esc(l.nome)}</div>`;
+        nham();
+        for (let i = 0; i < 6; i++) {
+          const c = document.createElement('span');
+          c.className = 'coracao-voa'; c.textContent = i % 2 ? '💜' : '💗';
+          c.style.left = (28 + Math.random() * 44) + '%'; c.style.top = (46 + Math.random() * 14) + '%'; c.style.animationDelay = (i * 0.12) + 's';
+          cena.appendChild(c);
+        }
+      }, 650);
+      setTimeout(res, 2100);
+    });
   }
 
   // ===================== PAINEL DO PAPAI =====================
