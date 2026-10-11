@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#b794f6">
+<title>Joguinho de Aprender a Ler</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐼</text></svg>">
+<style>
+  :root {
+    --l50: #faf7ff; --l100: #f3ecff; --l200: #e6d9ff; --l300: #d2bcff; --l400: #b794f6; --l500: #9b6cf0; --l600: #7c4ddb; --l700: #5f35b5; --l800: #46278a;
+    --tinta: #3d2a63; --suave: #7a6a99; --verde: #22c55e; --verde-esc: #15803d; --rosa: #ec4899; --amarelo: #fcd34d;
+    --sombra: 0 6px 0 rgba(95, 53, 181, .16), 0 10px 22px rgba(95, 53, 181, .12);
+    --fonte: "Nunito", "Varela Round", "Arial Rounded MT Bold", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; }
+  body { font-family: var(--fonte); color: var(--tinta); background: linear-gradient(180deg, #fbf8ff 0%, var(--l100) 45%, var(--l200) 100%); background-attachment: fixed;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; border: 0; background: none; padding: 0; }
+  #palco { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; max-width: 1080px; margin: 0 auto;
+    padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+
+  /* ---------- peças comuns ---------- */
+  .contador { background: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 900; font-size: clamp(18px, 3vw, 24px); box-shadow: var(--sombra); white-space: nowrap; }
+  .contador.peq { font-size: 18px; padding: 4px 12px; }
+  .b-x { width: 48px; height: 48px; border-radius: 50%; background: #fff; font-size: 22px; font-weight: 900; box-shadow: var(--sombra); color: var(--l700); flex: none; }
+  .barra { display: flex; align-items: center; gap: 10px; }
+  .barra h2 { flex: 1; margin: 0; font-size: clamp(20px, 4vw, 30px); font-weight: 900; color: var(--l700); letter-spacing: .5px; }
+  .b-grande { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 84px; border-radius: 28px; padding: 10px 18px;
+    font-size: clamp(26px, 5vw, 38px); font-weight: 900; color: #fff; background: linear-gradient(180deg, var(--l500), var(--l600));
+    box-shadow: 0 8px 0 var(--l800), 0 14px 26px rgba(70, 39, 138, .3); letter-spacing: 1px; transition: transform .08s; }
+  .b-grande:active { transform: translateY(5px); box-shadow: 0 3px 0 var(--l800); }
+  .b-grande.verde { background: linear-gradient(180deg, #34d399, var(--verde)); box-shadow: 0 8px 0 var(--verde-esc), 0 14px 26px rgba(21, 128, 61, .25); }
+  .b-nav { background: #fff; border-radius: 22px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 900;
+    font-size: clamp(12px, 2.4vw, 16px); box-shadow: var(--sombra); color: var(--l700); letter-spacing: .5px; }
+  .b-nav .ic { font-size: clamp(30px, 6vw, 42px); line-height: 1; }
+  .b-nav.largo { flex-direction: row; justify-content: center; font-size: clamp(16px, 3vw, 20px); padding: 14px; gap: 10px; }
+  .acesa { outline: 6px solid var(--amarelo); outline-offset: 3px; }
+
+  /* ---------- cena do panda ---------- */
+  .cena { position: relative; display: block; width: min(100%, 400px); aspect-ratio: 200 / 220; margin: 0 auto; border-radius: 28px; overflow: hidden; box-shadow: var(--sombra); background: #fff; }
+  .cena > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .cena > .panda-svg { inset: 4% 6% 0; width: 88%; height: 96%; }
+  .panda-svg .olho { animation: pisca 4.5s infinite; transform-box: fill-box; transform-origin: center; }
+  .pula { animation: pulo .6s ease; }
+  .inclina { animation: inclina .8s ease; }
+  .dancando > .panda-svg { animation: danca 1s ease-in-out infinite; transform-origin: 50% 90%; }
+  @keyframes pisca { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  @keyframes pulo { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-14%); } 70% { transform: translateY(2%); } }
+  @keyframes inclina { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-8deg); } 70% { transform: rotate(5deg); } }
+  @keyframes danca { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg) translateY(-3%); } }
+
+  /* ---------- abertura ---------- */
+  .splash { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; }
+  .splash .cena { width: min(80vw, 46vh, 360px); }
+  .titulo-splash { margin: 0; font-size: clamp(30px, 7vw, 54px); font-weight: 900; color: var(--l700); line-height: 1.05; letter-spacing: 1px; }
+  .splash .b-grande { max-width: 420px; }
+
+  /* ---------- casa ---------- */
+  .casa { flex: 1; display: grid; grid-template-columns: 1fr; gap: 14px; align-content: start; }
+  .topo { display: flex; align-items: center; gap: 10px; }
+  .titulo { flex: 1; font-weight: 900; font-size: clamp(17px, 3.4vw, 30px); letter-spacing: .5px; color: var(--l700); line-height: 1.05; }
+  .cadeado { width: 46px; height: 46px; border-radius: 50%; background: rgba(255, 255, 255, .65); font-size: 20px; position: relative; flex: none; }
+  .cadeado.segurando::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 5px solid var(--l500); border-right-color: transparent; animation: girar 3s linear forwards; }
+  @keyframes girar { to { transform: rotate(1080deg); } }
+  .col-cena { position: relative; }
+  .col-cena .cena { width: min(100%, 50vh, 460px); }
+  .balao-casa { position: absolute; left: 50%; top: 4%; transform: translateX(-50%); background: #fff; border-radius: 20px; padding: 8px 16px; font-weight: 900;
+    font-size: clamp(16px, 3vw, 22px); color: var(--l700); box-shadow: var(--sombra); white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; }
+  .col-acoes { display: flex; flex-direction: column; gap: 14px; }
+  .missoes { display: flex; justify-content: center; gap: 14px; }
+  .bolinha { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; font-weight: 900; background: #fff; color: var(--l400); box-shadow: var(--sombra); }
+  .bolinha.feita { background: var(--amarelo); color: #fff; }
+  .navega { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (min-width: 760px) and (orientation: landscape) {
+    .casa { grid-template-columns: 1.1fr 1fr; align-items: center; column-gap: 28px; }
+    .casa .topo { grid-column: 1 / -1; }
+    .col-cena .cena { width: min(100%, 70vh, 440px); }
+  }
+
+  /* ---------- missão ---------- */
+  .missao { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .trilho { flex: 1; height: 18px; background: rgba(255, 255, 255, .75); border-radius: 999px; overflow: hidden; }
+  .trilho > i { display: block; height: 100%; background: linear-gradient(90deg, var(--l400), var(--rosa)); border-radius: 999px; transition: width .4s; }
+  .quadro { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(10px, 2.6vh, 26px); padding: 6px 0; }
+  .enunciado { display: flex; align-items: center; gap: 12px; font-size: clamp(16px, 2.8vw, 24px); font-weight: 900; color: var(--l700); text-align: left; }
+  .b-ouvir { width: 58px; height: 58px; border-radius: 50%; background: var(--l500); color: #fff; font-size: 26px; box-shadow: 0 5px 0 var(--l700); flex: none; }
+  .estimulo { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .cartao { background: #fff; border-radius: 26px; box-shadow: var(--sombra); display: grid; place-items: center; line-height: 1; }
+  .figura { width: clamp(118px, 25vmin, 190px); aspect-ratio: 1; font-size: clamp(66px, 15vmin, 118px); }
+  .figura.media { width: clamp(96px, 19vmin, 150px); font-size: clamp(54px, 12vmin, 92px); }
+  .figura.som { font-size: clamp(54px, 12vmin, 90px); background: var(--l100); }
+  .opcoes { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(10px, 2.4vw, 22px); width: 100%; }
+  .op { background: #fff; border-radius: 24px; box-shadow: var(--sombra); display: grid; place-items: center; line-height: 1; transition: transform .12s, opacity .2s; position: relative; }
+  .op:active { transform: scale(.96); }
+  .op.fig { width: clamp(92px, 26vw, 170px); aspect-ratio: 1; font-size: clamp(50px, 13vw, 98px); }
+  .op.dupla { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 2px; font-size: clamp(38px, 9vw, 70px); }
+  .op.dupla.empilha { flex-direction: column; gap: 0; }
+  .op.dupla.empilha span { font-size: .8em; margin-top: -.18em; }
+  .op.letra { width: clamp(84px, 24vw, 132px); aspect-ratio: 1; font-size: clamp(46px, 12vw, 80px); font-weight: 900; color: var(--l700); }
+  .op.letra.sil { width: auto; min-width: clamp(96px, 26vw, 150px); padding: 0 16px; }
+  .opcoes.palmas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 760px; }
+  .op.palmas { padding: 12px 6px; min-height: clamp(84px, 13vh, 120px); font-size: clamp(24px, 5.6vw, 34px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+  .op.palmas small { font-size: clamp(22px, 4vw, 34px); font-weight: 900; color: var(--l600); }
+  @media (max-width: 520px) { .opcoes.palmas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .op.certa { background: #dcfce7; box-shadow: 0 6px 0 var(--verde-esc); animation: pulo .5s; }
+  .op.errada { opacity: .4; animation: balanca .4s; }
+  .op.apagada { opacity: .35; }
+  @keyframes balanca { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  .palavra-grande { font-size: clamp(50px, 13vw, 112px); font-weight: 900; letter-spacing: .08em; color: var(--l800); background: #fff; padding: 4px 26px; border-radius: 26px; box-shadow: var(--sombra); line-height: 1.15; }
+  .palavra-grande .s { transition: color .2s; border-radius: 10px; }
+  .palavra-grande .s.acesa { color: var(--rosa); outline: none; background: #fdf2f8; }
+  .palavra-grande.sep .s + .s::before { content: '·'; color: var(--l300); margin: 0 .12em; }
+  .palavra-grande.peq { font-size: clamp(34px, 8vw, 64px); }
+  .frase { font-size: clamp(32px, 7.5vw, 66px); font-weight: 900; color: var(--l800); background: #fff; padding: 10px 22px; border-radius: 26px; box-shadow: var(--sombra); text-align: center; line-height: 1.2; letter-spacing: .04em; }
+  .frase span { border-radius: 10px; padding: 0 .08em; }
+  .frase span.acesa { color: var(--rosa); background: #fdf2f8; outline: none; }
+  .b-ajuda { background: #fff; border-radius: 999px; padding: 8px 18px; font-weight: 900; color: var(--l600); box-shadow: var(--sombra); font-size: 18px; }
+  .marca { color: var(--rosa); }
+  .slots { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .grupo { display: flex; gap: 4px; }
+  .slot { min-width: clamp(58px, 14vw, 92px); height: clamp(62px, 14vw, 92px); border-radius: 18px; border: 4px dashed var(--l300); background: rgba(255, 255, 255, .6);
+    font-size: clamp(30px, 8vw, 54px); font-weight: 900; display: grid; place-items: center; color: var(--l800); padding: 0 8px; }
+  .letras-modo .slot { min-width: clamp(46px, 11vw, 74px); padding: 0 4px; }
+  .slot.cheio { border-style: solid; background: #fff; border-color: var(--l400); }
+  .slot.ok { border-color: var(--verde); background: #dcfce7; }
+  .slot.mostra { border-color: var(--amarelo); background: #fffbeb; }
+  .pecas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .peca { min-width: clamp(62px, 15vw, 98px); height: clamp(62px, 15vw, 94px); padding: 0 12px; border-radius: 18px; background: var(--l200); color: var(--l800);
+    font-weight: 900; font-size: clamp(30px, 8vw, 52px); box-shadow: 0 6px 0 var(--l400); }
+  .peca.usada { visibility: hidden; }
+  .rodape { display: flex; align-items: center; gap: 10px; min-height: 88px; }
+  .mini-panda { width: 82px; height: 92px; flex: none; }
+  .mini-panda svg { width: 100%; height: 100%; }
+  .fala { flex: 1; background: #fff; border-radius: 22px; padding: 14px 16px; font-weight: 800; font-size: clamp(16px, 2.6vw, 22px); box-shadow: var(--sombra); min-height: 58px; line-height: 1.3; }
+  .fala:empty { visibility: hidden; }
+  .b-seguir { width: 86px; height: 86px; border-radius: 50%; background: var(--verde); color: #fff; font-size: 40px; box-shadow: 0 7px 0 var(--verde-esc); flex: none; animation: respira 1.4s infinite; }
+  .b-seguir[hidden] { display: none; }
+  @keyframes respira { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+
+  /* ---------- letra nova ---------- */
+  .intro { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .intro-corpo { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 2.6vh, 24px); }
+  .intro-topo { text-align: center; font-size: clamp(24px, 5vw, 40px); font-weight: 900; color: var(--rosa); letter-spacing: 1px; }
+  .letrao { width: clamp(150px, 30vmin, 230px); aspect-ratio: 1; border-radius: 36px; background: linear-gradient(180deg, var(--l400), var(--l600)); color: #fff;
+    font-size: clamp(110px, 24vmin, 180px); font-weight: 900; line-height: 1; box-shadow: 0 10px 0 var(--l800), 0 18px 30px rgba(70, 39, 138, .3); }
+  .familia { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .exemplos { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .exemplo { background: #fff; border-radius: 22px; box-shadow: var(--sombra); padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 110px; }
+  .exemplo .em { font-size: clamp(44px, 9vw, 64px); line-height: 1; }
+  .exemplo .pl { font-size: clamp(18px, 3.4vw, 26px); font-weight: 900; color: var(--l700); letter-spacing: .05em; }
+  .exemplo .pl b { color: var(--rosa); }
+
+  /* ---------- fim da missão ---------- */
+  .fim { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
+  .fim-titulo { margin: 0; font-size: clamp(30px, 7vw, 54px); font-weight: 900; color: var(--l700); }
+  .fim .cena { width: min(70vw, 30vh, 300px); }
+  .ganhos { display: flex; flex-direction: column; gap: 6px; width: min(100%, 440px); }
+  .ganho { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 16px; padding: 8px 16px; font-weight: 800; box-shadow: var(--sombra); font-size: 18px; }
+  .ganho b { color: var(--verde-esc); font-size: 22px; }
+  .conquistas { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .letra-conq { width: 60px; height: 60px; border-radius: 16px; background: var(--l500); color: #fff; display: grid; place-items: center; font-weight: 900; font-size: 36px; box-shadow: 0 5px 0 var(--l800); }
+  .fim .b-grande { max-width: 440px; }
+  .fim .b-nav.largo { width: min(100%, 440px); }
+
+  /* ---------- páginas ---------- */
+  .pagina { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  .trilha { display: flex; flex-direction: column; gap: 14px; position: relative; padding-left: 34px; }
+  .trilha::before { content: ''; position: absolute; left: 22px; top: 30px; bottom: 30px; border-left: 6px dotted var(--l300); }
+  .mundo { background: #fff; border-radius: 24px; box-shadow: var(--sombra); padding: 14px 16px; position: relative; }
+  .mundo .num { position: absolute; left: -32px; top: 14px; width: 44px; height: 44px; border-radius: 50%; background: var(--l500); color: #fff; display: grid; place-items: center; font-weight: 900; font-size: 22px; box-shadow: 0 4px 0 var(--l800); }
+  .mundo.fechado { background: rgba(255, 255, 255, .55); }
+  .mundo.fechado .num { background: var(--l300); box-shadow: none; }
+  .mundo h3 { margin: 0 0 4px; font-size: clamp(20px, 3.6vw, 26px); font-weight: 900; color: var(--l700); }
+  .mundo p { margin: 0; color: var(--suave); font-weight: 700; font-size: 16px; }
+  .tiles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tile { width: clamp(46px, 10vw, 60px); height: clamp(46px, 10vw, 60px); border-radius: 14px; display: grid; place-items: center; font-weight: 900; font-size: clamp(24px, 5vw, 32px);
+    background: #eee9f6; color: #b8aed0; position: relative; }
+  .tile.lib { background: var(--l200); color: var(--l700); }
+  .tile.firme { background: var(--l500); color: #fff; box-shadow: 0 4px 0 var(--l800); }
+  .tile.aprendendo { background: #fff; color: var(--l700); border: 4px solid var(--rosa); }
+  .mini-emojis { font-size: 30px; margin-top: 8px; letter-spacing: 4px; }
+  .grade-palavras { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+  .palavra-card { background: #fff; border-radius: 20px; box-shadow: var(--sombra); padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .palavra-card .em { font-size: 52px; line-height: 1; }
+  .palavra-card .pl { font-size: 22px; font-weight: 900; color: var(--l700); letter-spacing: .05em; }
+  .vazio { background: rgba(255, 255, 255, .7); border-radius: 20px; padding: 22px; text-align: center; font-weight: 800; color: var(--suave); font-size: 18px; }
+  .destaque { font-size: clamp(20px, 3.6vw, 28px); font-weight: 900; color: var(--l700); text-align: center; }
+
+  /* ---------- roupinhas ---------- */
+  .roupas-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .roupas-grid .cena { width: min(100%, 36vh, 380px); }
+  @media (min-width: 760px) and (orientation: landscape) { .roupas-grid { grid-template-columns: 1fr 1.2fr; align-items: start; } .roupas-grid .cena { width: min(100%, 72vh, 440px); } }
+  .loja { display: flex; flex-direction: column; gap: 10px; }
+  .abas { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .aba { background: rgba(255, 255, 255, .7); border-radius: 16px; font-size: clamp(26px, 5vw, 34px); padding: 8px 0; }
+  .aba.ativa { background: #fff; box-shadow: var(--sombra); outline: 4px solid var(--l400); }
+  .itens { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+  .item { background: #fff; border-radius: 20px; box-shadow: var(--sombra); padding: 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
+  .item svg { width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; background: var(--l50); }
+  .item .preco { font-weight: 900; font-size: 18px; color: var(--l700); }
+  .item.caro { opacity: .5; }
+  .item.vestindo { outline: 5px solid var(--verde); }
+  .item.provando { outline: 5px solid var(--amarelo); }
+  .item .selo { position: absolute; top: -8px; right: -6px; background: var(--verde); color: #fff; border-radius: 999px; padding: 2px 8px; font-weight: 900; font-size: 14px; }
+  .compra { display: flex; gap: 10px; align-items: center; background: #fff; border-radius: 22px; padding: 10px; box-shadow: var(--sombra); }
+  .compra .b-grande { min-height: 64px; font-size: clamp(20px, 4vw, 28px); }
+  .compra .b-x { width: 64px; height: 64px; }
+
+  /* ---------- painel do papai ---------- */
+  .painel { -webkit-user-select: text; user-select: text; font-family: "Segoe UI", system-ui, sans-serif; }
+  .painel .card { background: #fff; border-radius: 18px; box-shadow: var(--sombra); padding: 14px 16px; }
+  .painel h3 { margin: 0 0 8px; font-size: 19px; color: var(--l700); }
+  .painel p, .painel li, .painel td, .painel label { font-size: 15px; line-height: 1.45; }
+  .painel .nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+  .painel .num { background: var(--l50); border-radius: 12px; padding: 8px 10px; }
+  .painel .num b { display: block; font-size: 24px; color: var(--l700); }
+  .painel .tiles .tile { cursor: pointer; }
+  .painel .tile small { position: absolute; bottom: 1px; right: 4px; font-size: 10px; font-weight: 700; }
+  .painel .acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .painel .bt { background: var(--l100); color: var(--l800); border-radius: 10px; padding: 8px 12px; font-weight: 700; font-size: 14px; }
+  .painel .bt.perigo { background: #fee2e2; color: #991b1b; }
+  .painel .bt.forte { background: var(--l500); color: #fff; }
+  .painel table { border-collapse: collapse; width: 100%; }
+  .painel td, .painel th { border-bottom: 1px solid var(--l100); padding: 4px 6px; text-align: left; font-size: 14px; }
+  .painel .linha { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0; }
+  .painel select, .painel input[type=number], .painel input[type=text] { font-size: 15px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--l300); }
+  .painel .voz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .painel .voz-item { display: flex; align-items: center; gap: 6px; background: var(--l50); border-radius: 10px; padding: 4px 8px; }
+  .painel .voz-item b { font-size: 20px; width: 24px; color: var(--l700); }
+  .painel .voz-item .ok { color: var(--verde-esc); font-size: 12px; font-weight: 700; }
+  .painel .legenda span { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: middle; margin: 0 4px 0 10px; }
+
+  /* ---------- avisos e festa ---------- */
+  #aviso { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 24px); opacity: 0; pointer-events: none; background: var(--l800); color: #fff; padding: 12px 20px; border-radius: 16px; font-weight: 800;
+    font-size: 17px; transition: transform .25s, opacity .25s; z-index: 50; max-width: 92vw; text-align: center; }
+  #aviso.ver { transform: translate(-50%, 0); opacity: 1; }
+  #confete { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 40; }
+  #confete i { position: absolute; top: -20px; width: 12px; height: 18px; border-radius: 3px; animation: cair 2.6s ease-in forwards; }
+  @keyframes cair { to { transform: translateY(110vh) rotate(720deg); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+</style>
+</head>
+<body>
+<div id="palco"></div>
+<div id="aviso" role="status" aria-live="polite"></div>
+<div id="confete" aria-hidden="true"></div>
+
+<!-- ===================== LÓGICA PURA (testada em tests.html) ===================== -->
+<script id="logica">
+const Jogo = (function () {
+  'use strict';
+
+  // ---------- sorteio (semente fixa nos testes) ----------
+  function criarRng(seed) {
+    let a = (seed >>> 0) || 1;
+    return function () { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  const inteiro = (rng, a, b) => a + Math.floor(rng() * (b - a + 1));
+  const escolher = (rng, arr) => arr[Math.floor(rng() * arr.length)];
+  function embaralhar(rng, arr) { const c = arr.slice(); for (let i = c.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [c[i], c[j]] = [c[j], c[i]]; } return c; }
+  function sortearPorPeso(rng, itens, peso) {
+    const ps = itens.map(peso), soma = ps.reduce((a, b) => a + b, 0);
+    if (!(soma > 0)) return escolher(rng, itens);
+    let r = rng() * soma;
+    for (let i = 0; i < itens.length; i++) { r -= ps[i]; if (r < 0) return itens[i]; }
+    return itens[itens.length - 1];
+  }
+  function sortearChave(rng, pesos) { const ks = Object.keys(pesos).filter(k => pesos[k] > 0); return ks.length ? sortearPorPeso(rng, ks, k => pesos[k]) : null; }
+  function diaDe(d) { return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000); }
+
+  // ---------- letras: a ordem de ensino ----------
+  // vogais -> consoantes que dá pra "esticar" (M, L, V, S, F, N, J, R) intercaladas com as outras (D, P, B, T, C, G);
+  // pares que se confundem no ouvido (P/B, T/D, F/V) ficam longe um do outro. O D vem cedo por causa de DUDA.
+  const VOGAIS = ['A', 'E', 'I', 'O', 'U'];
+  const SEQ = ['A', 'E', 'I', 'O', 'U', 'M', 'D', 'L', 'P', 'V', 'S', 'B', 'F', 'T', 'N', 'C', 'G', 'J', 'R'];
+  const LETRA = {
+    A: { nome: 'á', chave: 'ABELHA' }, E: { nome: 'é', chave: 'ELEFANTE' }, I: { nome: 'i', chave: 'ILHA' }, O: { nome: 'ó', chave: 'OVO' }, U: { nome: 'u', chave: 'UVA' },
+    M: { nome: 'eme', chave: 'MACACO' }, D: { nome: 'dê', chave: 'DADO' }, L: { nome: 'ele', chave: 'LUA' }, P: { nome: 'pê', chave: 'PATO' }, V: { nome: 'vê', chave: 'VACA' },
+    S: { nome: 'esse', chave: 'SAPO' }, B: { nome: 'bê', chave: 'BOLA' }, F: { nome: 'efe', chave: 'FADA' }, T: { nome: 'tê', chave: 'TOMATE' }, N: { nome: 'ene', chave: 'NAVIO' },
+    C: { nome: 'cê', chave: 'CAVALO' }, G: { nome: 'gê', chave: 'GATO' }, J: { nome: 'jota', chave: 'JACARÉ' }, R: { nome: 'erre', chave: 'RATO' },
+  };
+  const PARES = { P: 'B', B: 'P', T: 'D', D: 'T', F: 'V', V: 'F', M: 'N', N: 'M', C: 'G', G: 'C', E: 'I', I: 'E', O: 'U', U: 'O' };
+  const BASE = { 'Á': 'A', 'À': 'A', 'Â': 'A', 'Ã': 'A', 'É': 'E', 'Ê': 'E', 'Í': 'I', 'Ó': 'O', 'Ô': 'O', 'Õ': 'O', 'Ú': 'U' };
+  const base = ch => BASE[ch] || ch;
+  const semAcento = s => s.split('').map(base).join('');
+  const ehVogal = ch => VOGAIS.includes(base(ch));
+
+  // ---------- banco de palavras: PALAVRA | SÍLABAS | figura | gênero | categoria ----------
+  // As decodáveis (só sílabas consoante+vogal com o som "de sempre" da letra) entram nos mundos de LER;
+  // as outras servem para OUVIR (pedacinhos, começo, rima, letra do começo).
+  const BANCO = [
+    'BOLA|BO-LA|⚽|f|coisa', 'BOLO|BO-LO|🎂|m|comida', 'BOTA|BO-TA|👢|f|coisa', 'BONÉ|BO-NÉ|🧢|m|coisa', 'BOCA|BO-CA|👄|f|corpo',
+    'BULE|BU-LE|🫖|m|coisa', 'BANANA|BA-NA-NA|🍌|f|comida', 'BATATA|BA-TA-TA|🥔|f|comida', 'BEBÊ|BE-BÊ|👶|m|gente',
+    'MALA|MA-LA|🧳|f|coisa', 'MAPA|MA-PA|🗺️|m|coisa', 'MACACO|MA-CA-CO|🐒|m|bicho', 'MOTO|MO-TO|🏍️|f|coisa', 'MOEDA|MO-E-DA|🪙|f|coisa',
+    'MENINA|ME-NI-NA|👧|f|gente', 'MENINO|ME-NI-NO|👦|m|gente',
+    'DADO|DA-DO|🎲|m|coisa', 'DEDO|DE-DO|☝️|m|corpo', 'DUDA|DU-DA|👧|f|gente',
+    'LUA|LU-A|🌙|f|coisa', 'LUPA|LU-PA|🔍|f|coisa', 'LATA|LA-TA|🥫|f|coisa', 'LOBO|LO-BO|🐺|m|bicho',
+    'PATO|PA-TO|🦆|m|bicho', 'PIPA|PI-PA|🪁|f|coisa', 'PIPOCA|PI-PO-CA|🍿|f|comida', 'PIANO|PI-A-NO|🎹|m|coisa', 'PÉ|PÉ|🦶|m|corpo',
+    'PEPINO|PE-PI-NO|🥒|m|comida', 'PATINETE|PA-TI-NE-TE|🛴|m|coisa',
+    'VACA|VA-CA|🐄|f|bicho', 'VELA|VE-LA|🕯️|f|coisa', 'VOVÓ|VO-VÓ|👵|f|gente', 'VOVÔ|VO-VÔ|👴|m|gente', 'UVA|U-VA|🍇|f|comida', 'OVO|O-VO|🥚|m|comida',
+    'SAPO|SA-PO|🐸|m|bicho', 'SUCO|SU-CO|🧃|m|comida', 'SINO|SI-NO|🔔|m|coisa', 'SOFÁ|SO-FÁ|🛋️|m|coisa', 'SAPATO|SA-PA-TO|👞|m|coisa',
+    'SALADA|SA-LA-DA|🥗|f|comida', 'SACOLA|SA-CO-LA|🛍️|f|coisa', 'SETE|SE-TE|7️⃣|m|numero',
+    'FADA|FA-DA|🧚|f|gente', 'FOCA|FO-CA|🦭|f|bicho', 'FOGO|FO-GO|🔥|m|coisa', 'FITA|FI-TA|🎀|f|coisa',
+    'TOMATE|TO-MA-TE|🍅|m|comida', 'TELEFONE|TE-LE-FO-NE|☎️|m|coisa', 'NAVIO|NA-VI-O|🚢|m|coisa', 'NOVE|NO-VE|9️⃣|m|numero',
+    'CAMA|CA-MA|🛏️|f|coisa', 'CAVALO|CA-VA-LO|🐴|m|bicho', 'CAMELO|CA-ME-LO|🐫|m|bicho', 'CANETA|CA-NE-TA|🖊️|f|coisa', 'CANOA|CA-NO-A|🛶|f|coisa',
+    'COCO|CO-CO|🥥|m|comida', 'COPO|CO-PO|🥤|m|coisa', 'CAFÉ|CA-FÉ|☕|m|comida',
+    'GATO|GA-TO|🐱|m|bicho', 'GOTA|GO-TA|💧|f|coisa', 'GALO|GA-LO|🐓|m|bicho', 'JANELA|JA-NE-LA|🪟|f|coisa', 'JOGO|JO-GO|🎮|m|coisa',
+    'RATO|RA-TO|🐭|m|bicho', 'RUA|RU-A|🛣️|f|coisa',
+    // só para ouvir
+    'ABELHA|A-BE-LHA|🐝|f|bicho', 'AVIÃO|A-VI-ÃO|✈️|m|coisa', 'ABACAXI|A-BA-CA-XI|🍍|m|comida', 'ÁRVORE|ÁR-VO-RE|🌳|f|coisa',
+    'ELEFANTE|E-LE-FAN-TE|🐘|m|bicho', 'ESTRELA|ES-TRE-LA|⭐|f|coisa', 'ESCOVA|ES-CO-VA|🪥|f|coisa',
+    'ILHA|I-LHA|🏝️|f|coisa', 'IGREJA|I-GRE-JA|⛪|f|coisa', 'ÍMÃ|Í-MÃ|🧲|m|coisa',
+    'ÓCULOS|Ó-CU-LOS|👓|m|coisa', 'ÔNIBUS|Ô-NI-BUS|🚌|m|coisa', 'OLHO|O-LHO|👁️|m|corpo', 'ORELHA|O-RE-LHA|👂|f|corpo',
+    'URSO|UR-SO|🐻|m|bicho', 'UNICÓRNIO|U-NI-CÓR-NIO|🦄|m|bicho',
+    'MAÇÃ|MA-ÇÃ|🍎|f|comida', 'MÃO|MÃO|✋|f|corpo', 'MEL|MEL|🍯|m|comida', 'MOCHILA|MO-CHI-LA|🎒|f|coisa', 'MORANGO|MO-RAN-GO|🍓|m|comida',
+    'DENTE|DEN-TE|🦷|m|corpo', 'DOCE|DO-CE|🍬|m|comida', 'DINOSSAURO|DI-NOS-SAU-RO|🦕|m|bicho',
+    'LEÃO|LE-ÃO|🦁|m|bicho', 'LIMÃO|LI-MÃO|🍋|m|comida', 'LIVRO|LI-VRO|📖|m|coisa', 'LÁPIS|LÁ-PIS|✏️|m|coisa',
+    'PANDA|PAN-DA|🐼|m|bicho', 'PEIXE|PEI-XE|🐟|m|bicho', 'PORCO|POR-CO|🐷|m|bicho', 'PÃO|PÃO|🍞|m|comida', 'PIRULITO|PI-RU-LI-TO|🍭|m|comida',
+    'PERU|PE-RU|🦃|m|bicho', 'PINTINHO|PIN-TI-NHO|🐤|m|bicho',
+    'VIOLÃO|VI-O-LÃO|🎸|m|coisa', 'VULCÃO|VUL-CÃO|🌋|m|coisa', 'SOL|SOL|☀️|m|coisa', 'SORVETE|SOR-VE-TE|🍦|m|comida',
+    'BORBOLETA|BOR-BO-LE-TA|🦋|f|bicho', 'BALEIA|BA-LEI-A|🐋|f|bicho', 'BALÃO|BA-LÃO|🎈|m|coisa', 'BICICLETA|BI-CI-CLE-TA|🚲|f|coisa',
+    'FLOR|FLOR|🌸|f|coisa', 'FOGUETE|FO-GUE-TE|🚀|m|coisa', 'FORMIGA|FOR-MI-GA|🐜|f|bicho', 'FANTASMA|FAN-TAS-MA|👻|m|gente',
+    'TARTARUGA|TAR-TA-RU-GA|🐢|f|bicho', 'TIGRE|TI-GRE|🐯|m|bicho', 'TREM|TREM|🚆|m|coisa', 'TESOURA|TE-SOU-RA|✂️|f|coisa',
+    'NARIZ|NA-RIZ|👃|m|corpo', 'NUVEM|NU-VEM|☁️|f|coisa',
+    'CASA|CA-SA|🏠|f|coisa', 'CACHORRO|CA-CHOR-RO|🐶|m|bicho', 'COELHO|CO-E-LHO|🐰|m|bicho', 'CORAÇÃO|CO-RA-ÇÃO|❤️|m|coisa',
+    'COROA|CO-RO-A|👑|f|coisa', 'CAMISA|CA-MI-SA|👕|f|coisa', 'GOLFINHO|GOL-FI-NHO|🐬|m|bicho', 'GALINHA|GA-LI-NHA|🐔|f|bicho',
+    'JACARÉ|JA-CA-RÉ|🐊|m|bicho', 'JOANINHA|JO-A-NI-NHA|🐞|f|bicho',
+    'RAPOSA|RA-PO-SA|🦊|f|bicho', 'ROSA|RO-SA|🌹|f|coisa', 'REI|REI|🤴|m|gente', 'RELÓGIO|RE-LÓ-GIO|⏰|m|coisa', 'ZEBRA|ZE-BRA|🦓|f|bicho',
+  ];
+  // lugares onde um bicho pode estar numa frase ("O GATO NA CAMA.")
+  const LUGARES = ['CAMA', 'SOFÁ', 'LUA', 'MALA', 'CANOA', 'NAVIO', 'RUA', 'MOTO', 'JANELA', 'SACOLA', 'BOTA', 'PIANO', 'SAPATO', 'BOLA'];
+
+  // ---------- análise das palavras ----------
+  const RE_SIL = /^([BCDFGJLMNPRSTV]?)([AEIOUÁÉÍÓÚÂÊÔ])$/;
+  // letras de que a palavra precisa para ser lida; null = tem sílaba que ainda não se ensina
+  function letrasDe(s) {
+    const out = [];
+    for (let i = 0; i < s.length; i++) {
+      const m = RE_SIL.exec(s[i]);
+      if (!m) return null;
+      const c = m[1], v = base(m[2]);
+      if ((c === 'C' || c === 'G') && (v === 'E' || v === 'I')) return null; // CE, CI, GE, GI: outro som
+      if ((c === 'S' || c === 'R') && i > 0) return null;                     // entre vogais: S soa Z, R fica fraco
+      if (c && !out.includes(c)) out.push(c);
+      if (!out.includes(v)) out.push(v);
+    }
+    return out;
+  }
+  function letraInicial(s) {
+    const s0 = s[0], c = base(s0[0]);
+    if (!SEQ.includes(c)) return null;
+    if (VOGAIS.includes(c)) return c;
+    if ((c === 'C' || c === 'G') && /^[CG][EIÉÍÊ]/.test(s0)) return null;
+    if (/^(CH|LH|NH)/.test(s0)) return null;
+    return c;
+  }
+  // sílaba tônica: acento manda; senão, terminação (A, E, O, EM, AM com ou sem S = paroxítona)
+  function tonica(s) {
+    const n = s.length;
+    if (n === 1) return 0;
+    for (let i = 0; i < n; i++) if (/[ÁÉÍÓÚÂÊÔ]/.test(s[i])) return i;
+    for (let i = 0; i < n; i++) if (/[ÃÕ]/.test(s[i])) return i;
+    if (/([AEO]S?|EM|ENS|AM)$/.test(s[n - 1])) return n - 2;
+    return n - 1;
+  }
+  function nucleo(sil) { if (/^[GQ]U[EIÉÍÊ]/.test(sil)) return 2; for (let i = 0; i < sil.length; i++) if (ehVogal(sil[i])) return i; return 0; }
+  // rima = da vogal tônica até o fim (GATO -> ATO, CAFÉ -> É, AVIÃO -> ÃO)
+  function rimaDe(s, t) { return s[t].slice(nucleo(s[t])) + s.slice(t + 1).join(''); }
+  // palavras boas para contar pedacinhos batendo palmas: sem hiato (LU-A) nem ditongo crescente (NIO)
+  function bomParaPalmas(s) {
+    for (let i = 0; i < s.length; i++) {
+      const sil = s[i];
+      if (i > 0 && ehVogal(sil[0])) return false;
+      const vs = sil.replace(/^[GQ]U(?=[EIÉÍÊ])/, '').split('').filter(ehVogal).map(base).join('');
+      if (vs.length >= 2 && !/^(AI|EI|OI|AU|EU|OU|AO|OE|AE|UI)$/.test(vs)) return false;
+    }
+    return true;
+  }
+  const PALAVRAS = BANCO.map(linha => {
+    const [p, sil, e, g, cat] = linha.split('|');
+    const s = sil.split('-');
+    const t = tonica(s);
+    return { p, s, e, g, cat, letras: letrasDe(s), t, rima: rimaDe(s, t), ini: letraInicial(s), palmas: bomParaPalmas(s) };
+  });
+  const POR_PALAVRA = {};
+  for (const w of PALAVRAS) POR_PALAVRA[w.p] = w;
+
+  // ---------- fala (o texto que vai para a voz) ----------
+  const VOGAL_ABERTA = { A: 'á', E: 'é', I: 'i', O: 'ó', U: 'u' };
+  function falaSilaba(sil) {
+    if (/[ÁÉÍÓÚÂÊÔÃÕ]/.test(sil)) return sil.toLowerCase();
+    const m = /^([A-Z]*)([AEIOU])$/.exec(sil);
+    return m ? m[1].toLowerCase() + VOGAL_ABERTA[m[2]] : sil.toLowerCase();
+  }
+  const falaPalavra = p => String(p).toLowerCase();
+  const falaLetra = l => LETRA[l] ? LETRA[l].nome : l.toLowerCase();
+  const NUM = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco'];
+
+  // ---------- o que já dá para ler ----------
+  function liberadas(e) { return new Set(SEQ.filter(l => e.letras[l] && e.letras[l].lib)); }
+  function decodavel(w, lib) { return !!w.letras && w.letras.every(x => lib.has(x)); }
+  function decodaveis(lib) { return PALAVRAS.filter(w => decodavel(w, lib)); }
+  function proximaLetra(e) { return SEQ.find(l => !e.letras[l].lib) || null; }
+  const silabaValida = (c, v) => !((c === 'C' || c === 'G') && (v === 'E' || v === 'I'));
+  function familia(l) { return VOGAIS.includes(l) ? [l] : VOGAIS.filter(v => silabaValida(l, v)).map(v => l + v); }
+  function silabasDe(lib) {
+    const cs = SEQ.filter(x => lib.has(x) && !VOGAIS.includes(x)), vs = VOGAIS.filter(x => lib.has(x)), out = [];
+    for (const c of cs) for (const v of vs) if (silabaValida(c, v)) out.push(c + v);
+    return out;
+  }
+  function exemplos(l, lib, n) {
+    const out = [], emojis = new Set();
+    const chave = POR_PALAVRA[LETRA[l].chave];
+    const cands = [chave].concat(PALAVRAS.filter(w => w.ini === l && decodavel(w, lib)), PALAVRAS.filter(w => w.ini === l));
+    for (const w of cands) { if (!w || out.includes(w) || emojis.has(w.e) || w.ini !== l) continue; out.push(w); emojis.add(w.e); if (out.length >= n) break; }
+    return out;
+  }
+
+  // ---------- ajudantes dos geradores ----------
+  // n distratores do pool com figura diferente das já usadas (e entre si)
+  function distratores(rng, ja, pool, n, ordenado) {
+    const usadosE = new Set(ja.map(w => w.e)), usadosP = new Set(ja.map(w => w.p)), out = [];
+    for (const w of (ordenado ? pool : embaralhar(rng, pool))) {
+      if (out.length >= n) break;
+      if (usadosP.has(w.p) || usadosE.has(w.e)) continue;
+      usadosE.add(w.e); usadosP.add(w.p); out.push(w);
+    }
+    return out.length === n ? out : null;
+  }
+  function doisDistintos(rng, lista) {
+    const a = escolher(rng, lista);
+    const b = lista.filter(w => w.p !== a.p && w.e !== a.e);
+    return b.length ? [a, escolher(rng, b)] : null;
+  }
+  function similaridade(a, b) {
+    let s = 0;
+    if (a.s[0] === b.s[0]) s += 3;
+    if (a.s[a.s.length - 1] === b.s[b.s.length - 1]) s += 2;
+    if (a.s.length === b.s.length) s += 1;
+    if (a.p[0] === b.p[0]) s += 1;
+    return s;
+  }
+  function nivelTipo(e, tipo) { const h = (e.estat[tipo] || []).slice(-10); return h.length >= 8 && h.reduce((a, b) => a + b, 0) / h.length >= 0.8 ? 2 : 1; }
+  function taxaErro(e, tipo) { const h = (e.estat[tipo] || []).slice(-20); if (h.length < 4) return 0; return 1 - h.reduce((a, b) => a + b, 0) / h.length; }
+  const pesoLidas = e => w => 1 / (1 + ((e.palavras[w.p] || {}).lidas || 0));
+
+  // ---------- os 9 tipos de pergunta (cada uma é só dado: pode ser salva e recarregada) ----------
+  function gerarSilabas(c) {
+    const n = escolher(c.rng, [1, 2, 2, 3, 3, 4]);
+    const w = escolher(c.rng, PALAVRAS.filter(x => x.palmas && x.s.length === n));
+    return { tipo: 'silabas', palavra: w.p, opcoes: [1, 2, 3, 4], correta: n - 1 };
+  }
+  function gerarComeca(c) {
+    const nivel = nivelTipo(c.e, 'comeca');
+    const grupos = {};
+    for (const w of PALAVRAS) (grupos[w.s[0]] = grupos[w.s[0]] || []).push(w);
+    const chaves = Object.keys(grupos).filter(k => new Set(grupos[k].map(w => w.e)).size >= 2);
+    for (let t = 0; t < 30; t++) {
+      const k = escolher(c.rng, chaves), par = doisDistintos(c.rng, grupos[k]);
+      if (!par) continue;
+      const [alvo, igual] = par;
+      const fora = PALAVRAS.filter(w => w.s[0] !== k);
+      let ds = distratores(c.rng, par, fora.filter(w => nivel >= 2 ? w.p[0] === alvo.p[0] : base(w.p[0]) !== base(alvo.p[0])), 2);
+      if (!ds) ds = distratores(c.rng, par, fora.filter(w => base(w.p[0]) !== base(alvo.p[0])), 2);
+      if (!ds) continue;
+      const ops = embaralhar(c.rng, [igual, ...ds]);
+      return { tipo: 'comeca', palavra: alvo.p, opcoes: ops.map(w => w.p), correta: ops.indexOf(igual) };
+    }
+    return null;
+  }
+  function gerarRima(c) {
+    const nivel = nivelTipo(c.e, 'rima');
+    const grupos = {};
+    for (const w of PALAVRAS) (grupos[w.rima] = grupos[w.rima] || []).push(w);
+    const chaves = Object.keys(grupos).filter(k => new Set(grupos[k].map(w => w.e)).size >= 2);
+    for (let t = 0; t < 30; t++) {
+      const k = escolher(c.rng, chaves), par = doisDistintos(c.rng, grupos[k]);
+      if (!par) continue;
+      const [alvo, rima] = par;
+      const ultima = w => w.s[w.s.length - 1];
+      const fora = PALAVRAS.filter(w => w.rima !== k && ultima(w) !== ultima(alvo) && base(w.rima.slice(-1)) !== base(k.slice(-1)));
+      let ds = nivel >= 2 ? distratores(c.rng, par, fora.filter(w => w.s[0] === alvo.s[0] || w.s[0] === rima.s[0]), 1) : null;
+      ds = ds ? ds.concat(distratores(c.rng, par.concat(ds), fora, 1) || []) : distratores(c.rng, par, fora, 2);
+      if (!ds || ds.length < 2) continue;
+      const ops = embaralhar(c.rng, [rima, ...ds]);
+      return { tipo: 'rima', palavra: alvo.p, opcoes: ops.map(w => w.p), correta: ops.indexOf(rima) };
+    }
+    return null;
+  }
+  function gerarLetra(c, foco, opts) {
+    opts = opts || {};
+    if (!foco) return null;
+    let w = opts.palavra ? POR_PALAVRA[opts.palavra] : null;
+    if (!w) { const cands = PALAVRAS.filter(x => x.ini === foco); if (!cands.length) return null; w = escolher(c.rng, cands); }
+    const n = opts.nOpcoes || 3, ds = [];
+    if (opts.todas) {
+      for (const l of embaralhar(c.rng, SEQ.filter(l => l !== foco))) { if (ds.length >= n - 1) break; ds.push(l); }
+    } else {
+      if (nivelTipo(c.e, 'letra') >= 2 && PARES[foco] && c.lib.has(PARES[foco])) ds.push(PARES[foco]);
+      const lib = embaralhar(c.rng, SEQ.filter(l => l !== foco && c.lib.has(l))), fut = embaralhar(c.rng, SEQ.filter(l => l !== foco && !c.lib.has(l)));
+      for (const l of lib.concat(fut)) { if (ds.length >= n - 1) break; if (!ds.includes(l)) ds.push(l); }
+    }
+    const ops = embaralhar(c.rng, [foco, ...ds]);
+    return { tipo: 'letra', foco, palavra: w.p, opcoes: ops, correta: ops.indexOf(foco) };
+  }
+  function gerarSilaba(c, foco) {
+    if (!foco) return null;
+    const vsLib = VOGAIS.filter(v => c.lib.has(v));
+    if (VOGAIS.includes(foco)) {
+      const outrasLib = embaralhar(c.rng, vsLib.filter(v => v !== foco)), outras = embaralhar(c.rng, VOGAIS.filter(v => v !== foco && !outrasLib.includes(v)));
+      const ds = outrasLib.concat(outras).slice(0, 2);
+      const ops = embaralhar(c.rng, [foco, ...ds]);
+      return { tipo: 'silaba', foco, alvo: foco, opcoes: ops, correta: ops.indexOf(foco) };
+    }
+    const vs = (vsLib.length ? vsLib : VOGAIS).filter(v => silabaValida(foco, v));
+    if (!vs.length) return null;
+    const v = escolher(c.rng, vs), alvo = foco + v;
+    const outraV = embaralhar(c.rng, VOGAIS.filter(x => x !== v && silabaValida(foco, x)));
+    const consLib = SEQ.filter(x => c.lib.has(x) && !VOGAIS.includes(x) && x !== foco && silabaValida(x, v));
+    let outraC = embaralhar(c.rng, consLib);
+    if (nivelTipo(c.e, 'silaba') >= 2 && PARES[foco] && consLib.includes(PARES[foco])) outraC = [PARES[foco]].concat(outraC.filter(x => x !== PARES[foco]));
+    const ds = [];
+    if (outraV.length) ds.push(foco + outraV[0]);
+    if (outraC.length) ds.push(outraC[0] + v);
+    for (const x of outraV.slice(1)) { if (ds.length >= 2) break; ds.push(foco + x); }
+    if (ds.length < 2) {
+      const fut = embaralhar(c.rng, SEQ.filter(x => !VOGAIS.includes(x) && x !== foco && silabaValida(x, v) && !ds.includes(x + v)));
+      ds.push(fut[0] + v);
+    }
+    const ops = embaralhar(c.rng, [alvo, ...ds.slice(0, 2)]);
+    return { tipo: 'silaba', foco, alvo, opcoes: ops, correta: ops.indexOf(alvo) };
+  }
+  function gerarLer(c, foco) {
+    let pool = c.dec.slice();
+    if (!pool.length) return null;
+    if (foco) { const comF = pool.filter(w => w.letras.includes(foco)); if (comF.length) pool = comF; }
+    const alvo = sortearPorPeso(c.rng, pool, pesoLidas(c.e));
+    // distrator parecido (mesmo começo ou mesmo fim), mas nunca só o acento diferente (VOVÓ x VOVÔ é cedo demais)
+    const ordem = PALAVRAS.filter(w => semAcento(w.p) !== semAcento(alvo.p)).map(w => [similaridade(alvo, w) + c.rng() * 1.5, w]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
+    const ds = distratores(c.rng, [alvo], ordem, 2, true);
+    if (!ds) return null;
+    const ops = embaralhar(c.rng, [alvo, ...ds]);
+    return { tipo: 'ler', palavra: alvo.p, opcoes: ops.map(w => w.p), correta: ops.indexOf(alvo) };
+  }
+  function gerarMontar(c, foco) {
+    let pool = c.dec.filter(w => w.s.length >= 2 && w.s.length <= 3);
+    if (!pool.length) return null;
+    if (foco) { const comF = pool.filter(w => w.letras.includes(foco)); if (comF.length) pool = comF; }
+    const alvo = sortearPorPeso(c.rng, pool, pesoLidas(c.e));
+    const nExtra = alvo.s.length === 2 ? 1 : 2, baseAlvo = alvo.s.map(semAcento);
+    const extras = embaralhar(c.rng, silabasDe(c.lib).filter(x => !baseAlvo.includes(x))).slice(0, nExtra);
+    return { tipo: 'montar', palavra: alvo.p, pecas: embaralhar(c.rng, alvo.s.concat(extras)), resposta: alvo.s.slice() };
+  }
+  function gerarLetras(c, foco) {
+    let pool = c.dec.filter(w => w.p.length >= 3 && w.p.length <= 5);
+    if (!pool.length) return null;
+    if (foco) { const comF = pool.filter(w => w.letras.includes(foco)); if (comF.length) pool = comF; }
+    const alvo = sortearPorPeso(c.rng, pool, pesoLidas(c.e));
+    const letras = alvo.p.split(''), bases = new Set(letras.map(base));
+    const pares = letras.map(l => PARES[base(l)]).filter(l => l && c.lib.has(l) && !bases.has(l));
+    const resto = embaralhar(c.rng, SEQ.filter(l => c.lib.has(l) && !bases.has(l) && !pares.includes(l)));
+    const extras = [...new Set(embaralhar(c.rng, pares))].concat(resto).slice(0, 2);
+    return { tipo: 'letras', palavra: alvo.p, pecas: embaralhar(c.rng, letras.concat(extras)), resposta: letras, grupos: alvo.s.map(s => s.length) };
+  }
+  function gerarFrase(c) {
+    if (!c.lib.has('O') || !c.lib.has('A')) return null;
+    const seres = c.dec.filter(w => w.cat === 'bicho' || w.cat === 'gente');
+    const lugares = c.dec.filter(w => LUGARES.includes(w.p));
+    const todosSeres = PALAVRAS.filter(w => w.cat === 'bicho' || w.cat === 'gente'), todosLugares = PALAVRAS.filter(w => LUGARES.includes(w.p));
+    const art = w => (w.g === 'f' ? 'A' : 'O');
+    const modelos = [];
+    if (c.lib.has('N') && seres.length >= 2 && lugares.length >= 2) modelos.push('lugar');
+    if (c.lib.has('E') && new Set(seres.map(w => w.e)).size >= 3) modelos.push('e');
+    if (!modelos.length) return null;
+    const modelo = escolher(c.rng, modelos);
+    let x, y, outrosY;
+    if (modelo === 'lugar') { x = escolher(c.rng, seres); y = escolher(c.rng, lugares.filter(w => w.e !== x.e)); outrosY = todosLugares; }
+    else { const par = doisDistintos(c.rng, seres); if (!par) return null; [x, y] = par; outrosY = todosSeres; }
+    if (!y) return null;
+    const texto = modelo === 'lugar' ? `${art(x)} ${x.p} ${y.g === 'f' ? 'NA' : 'NO'} ${y.p}.` : `${art(x)} ${x.p} E ${art(y)} ${y.p}.`;
+    const x2 = distratores(c.rng, [x, y], todosSeres, 1);
+    const y2 = x2 && distratores(c.rng, [x, y, x2[0]], outrosY, 1);
+    if (!x2 || !y2) return null;
+    const ops = embaralhar(c.rng, [[x.p, y.p], [x2[0].p, y.p], [x.p, y2[0].p]]);
+    return { tipo: 'frase', modelo, texto, palavras: [x.p, y.p], opcoes: ops, correta: ops.findIndex(o => o[0] === x.p && o[1] === y.p) };
+  }
+
+  const TIPOS = {
+    silabas: { mundo: 1, foco: false, nome: 'Contar pedacinhos', gerar: c => gerarSilabas(c) },
+    comeca: { mundo: 1, foco: false, nome: 'Começa igual', gerar: c => gerarComeca(c) },
+    rima: { mundo: 1, foco: false, nome: 'Rima', gerar: c => gerarRima(c) },
+    letra: { mundo: 2, foco: true, nome: 'Letra do começo', gerar: (c, f) => gerarLetra(c, f) },
+    silaba: { mundo: 2, foco: true, nome: 'Achar a sílaba', gerar: (c, f) => gerarSilaba(c, f) },
+    ler: { mundo: 3, foco: false, nome: 'Ler a palavra', gerar: (c, f) => gerarLer(c, f) },
+    montar: { mundo: 3, foco: false, nome: 'Montar com sílabas', gerar: (c, f) => gerarMontar(c, f) },
+    letras: { mundo: 4, foco: false, nome: 'Escrever com letras', gerar: (c, f) => gerarLetras(c, f) },
+    frase: { mundo: 5, foco: false, nome: 'Ler a frase', gerar: c => gerarFrase(c) },
+  };
+  const MUNDOS = [
+    { n: 1, nome: 'Ouvido de detetive', icone: '👂', descr: 'brincar com os sons: pedacinhos, começo e rima', requisito: '' },
+    { n: 2, nome: 'Letras e sons', icone: '🔤', descr: 'cada letra e o som que ela faz', requisito: '' },
+    { n: 3, nome: 'Juntar sons', icone: '🧩', descr: 'juntar sílabas e ler palavras', requisito: 'abre quando já der para ler 3 palavras' },
+    { n: 4, nome: 'Escrever', icone: '✏️', descr: 'montar palavras letra por letra', requisito: 'abre com 10 letras e 12 palavras para ler' },
+    { n: 5, nome: 'Ler frases', icone: '📚', descr: 'ler frases inteiras', requisito: 'abre com 12 letras (precisa do N ou do E)' },
+  ];
+  function ctxDe(e, rng) { const lib = liberadas(e); return { e, rng, lib, dec: decodaveis(lib) }; }
+  function gerarTipo(tipo, e, rng, foco) { const T = TIPOS[tipo]; return T ? T.gerar(ctxDe(e, rng), foco) : null; }
+  function podeFrase(e) { const r = criarRng(7); for (let i = 0; i < 6; i++) if (gerarFrase(ctxDe(e, r))) return true; return false; }
+  function mundosAbertos(e) {
+    const lib = liberadas(e), nDec = decodaveis(lib).length;
+    const r = { 1: true, 2: true, 3: nDec >= 3, 4: lib.size >= 10 && nDec >= 12, 5: lib.size >= 12 && podeFrase(e) };
+    for (const k in (e.forcados || {})) if (e.forcados[k]) r[k] = true;
+    return r;
+  }
+  function pesosTipos(e) {
+    const n = liberadas(e).size, ab = mundosAbertos(e);
+    const f1 = n < 6 ? 1.2 : n < 12 ? 0.6 : 0.3;  // brincar só com o som perde força quando a letra já está em jogo
+    const p = { silabas: f1, comeca: f1, rima: f1 };
+    if (n >= 1) { p.letra = 2; p.silaba = 2; }
+    if (ab[3]) { p.ler = 3; p.montar = 2; }
+    if (ab[4]) p.letras = 2;
+    if (ab[5]) p.frase = 2;
+    for (const t in p) p[t] *= 1 + 1.5 * taxaErro(e, t);
+    return p;
+  }
+
+  // ---------- estado salvo ----------
+  const CONFIG_PADRAO = { missoesPorDia: 3, perguntasPorMissao: 8, novasPorDia: 2 };
+  const INTERVALOS = [0, 1, 2, 4, 7, 14];  // dias até rever a letra, por caixa
+  const DOMINIO = 4;                        // acertos de primeira seguidos para a letra ficar "firme"
+  const BAMBU = { primeira: 1, missao: 3, dia: 5, letra: 2 };
+  function letraVazia() { return { lib: false, caixa: 0, vence: null, acertos: 0, erros: 0, seguidos: 0, errSeguidos: 0, dominada: false, conhecida: false, reforco: false, introDia: null }; }
+  function estadoInicial() { return completarEstado({}); }
+  // preenche o que faltar: save antigo continua valendo quando entram coisas novas (NUNCA trocar a chave do save)
+  function completarEstado(e) {
+    e.versao = 1;
+    e.config = Object.assign({}, CONFIG_PADRAO, e.config || {});
+    e.letras = e.letras && typeof e.letras === 'object' ? e.letras : {};
+    for (const l of SEQ) e.letras[l] = Object.assign(letraVazia(), e.letras[l] || {});
+    e.descoberta = Object.assign({ feita: false, dia: null, conhecidas: [] }, e.descoberta || {});
+    e.palavras = e.palavras && typeof e.palavras === 'object' ? e.palavras : {};
+    e.estat = e.estat || {};
+    for (const t in TIPOS) if (!Array.isArray(e.estat[t])) e.estat[t] = [];
+    e.forcados = e.forcados || {};
+    e.bambus = e.bambus || 0;
+    e.bambusTotal = e.bambusTotal || 0;
+    const r = e.roupas || {};
+    e.roupas = { tem: Array.isArray(r.tem) ? r.tem : [], veste: Object.assign({ cabeca: null, olhos: null, pescoco: null, corpo: null, mao: null, fundo: 'bambuzal' }, r.veste || {}) };
+    for (const it of ITENS) if (it.preco === 0 && !e.roupas.tem.includes(it.id)) e.roupas.tem.push(it.id);
+    e.historico = Array.isArray(e.historico) ? e.historico : [];
+    e.visitas = Array.isArray(e.visitas) ? e.visitas : [];
+    e.dias = Array.isArray(e.dias) ? e.dias : [];
+    e.dia = e.dia || null;
+    e.missaoAtiva = e.missaoAtiva || null;
+    e.prefs = Object.assign({ voz: true, som: true, nome: 'Duda', amigo: 'Panda', vozNome: '', velocidade: 0.9 }, e.prefs || {});
+    return e;
+  }
+  function garantirDia(e, hoje) {
+    if (!e.dia || e.dia.n !== hoje) {
+      e.dia = { n: hoje, missoes: Array.from({ length: e.config.missoesPorDia }, (_, i) => ({ numero: i + 1, feita: false })), novas: 0, bonus: false, extras: 0, revisar: [] };
+      if (e.missaoAtiva && e.missaoAtiva.dia !== hoje && e.missaoAtiva.tipo !== 'descoberta') e.missaoAtiva = null;
+    }
+    while (e.dia.missoes.length < e.config.missoesPorDia) e.dia.missoes.push({ numero: e.dia.missoes.length + 1, feita: false });
+    return e.dia;
+  }
+  function registrarVisita(e, hoje) { if (!e.visitas.includes(hoje)) { e.visitas.push(hoje); e.visitas.sort((a, b) => a - b); } }
+
+  // ---------- letras: liberar, acompanhar, reforçar ----------
+  function liberarLetra(e, l, hoje) { const s = e.letras[l]; s.lib = true; s.introDia = hoje; s.caixa = Math.max(1, s.caixa); s.vence = hoje; }
+  function marcarConhecida(e, l, hoje) { liberarLetra(e, l, hoje); const s = e.letras[l]; s.conhecida = true; s.dominada = true; s.seguidos = Math.max(s.seguidos, DOMINIO); s.caixa = Math.max(2, s.caixa); s.vence = hoje + INTERVALOS[s.caixa]; s.reforco = false; }
+  function bloquearLetra(e, l) { e.letras[l] = letraVazia(); }
+  function aprendendo(e) { return SEQ.filter(l => e.letras[l].lib && !e.letras[l].dominada); }
+  function podeNovaLetra(e) { return aprendendo(e).length === 0 && e.dia.novas < e.config.novasPorDia && !!proximaLetra(e); }
+  function escolherFoco(e, rng, hoje) {
+    const lib = SEQ.filter(l => e.letras[l].lib);
+    if (!lib.length) return null;
+    return sortearPorPeso(rng, lib, l => { const s = e.letras[l]; return (6 - s.caixa) + (s.vence !== null && s.vence <= hoje ? 3 : 0) + (s.dominada ? 0 : 6) + (s.reforco ? 4 : 0); });
+  }
+  // devolve a letra se ela acabou de ficar firme
+  function atualizarLetra(e, l, certo, limpo, hoje) {
+    const s = e.letras[l];
+    if (!s || !s.lib) return null;
+    if (certo && limpo) {
+      s.acertos++; s.seguidos++; s.errSeguidos = 0;
+      if (s.vence === null || s.vence <= hoje) { s.caixa = Math.min(5, s.caixa + 1); s.vence = hoje + INTERVALOS[s.caixa]; }
+      if (!s.dominada && s.seguidos >= DOMINIO) {
+        s.dominada = true;
+        if (s.introDia === hoje && s.erros === 0 && !s.conhecida) { s.conhecida = true; if (e.dia && e.dia.novas > 0) e.dia.novas--; } // já sabia: não gasta a cota do dia
+        return l;
+      }
+    } else if (!certo) {
+      s.erros++; s.seguidos = 0; s.errSeguidos++;
+      s.caixa = Math.max(1, s.caixa - 1); s.vence = hoje;
+      if (s.errSeguidos >= 2) { s.reforco = true; s.errSeguidos = 0; }
+    }
+    return null;
+  }
+
+  // ---------- missões ----------
+  function ordenarSemRepetir(qs) {
+    const out = qs.slice();
+    for (let i = 1; i < out.length; i++) {
+      if (out[i].tipo !== out[i - 1].tipo) continue;
+      const j = out.findIndex((q, k) => k > i && q.tipo !== out[i - 1].tipo);
+      if (j > 0) [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+  function criarMissao(e, hoje, rng, numero) {
+    garantirDia(e, hoje);
+    if (!e.descoberta.feita) return criarDescoberta(e, hoje, rng);
+    let intro = null;
+    const ref = SEQ.find(l => e.letras[l].lib && e.letras[l].reforco);
+    if (ref) intro = { letra: ref, tipo: 'reforco' };
+    else if (podeNovaLetra(e)) { const l = proximaLetra(e); liberarLetra(e, l, hoje); e.dia.novas++; intro = { letra: l, tipo: 'nova' }; }
+    if (intro) e.letras[intro.letra].reforco = false;
+    const total = e.config.perguntasPorMissao, ab = mundosAbertos(e);
+    const vistos = new Set(), primeiras = [], resto = [];
+    const chave = q => q.tipo + ':' + (q.palavra || q.alvo || q.texto || '') + ':' + (q.foco || '');
+    const add = (lista, q) => { if (!q || vistos.has(chave(q))) return false; vistos.add(chave(q)); lista.push(q); return true; };
+    if (intro) {
+      const L = intro.letra;
+      add(primeiras, gerarTipo('letra', e, rng, L));
+      add(primeiras, gerarTipo('silaba', e, rng, L));
+      add(primeiras, gerarTipo('silaba', e, rng, L)) || add(primeiras, gerarTipo('letra', e, rng, L)) || add(primeiras, gerarTipo('letra', e, rng, L));
+      if (ab[3]) add(primeiras, gerarTipo('ler', e, rng, L));
+    }
+    const pesos = pesosTipos(e);
+    let guarda = 0;
+    while (primeiras.length + resto.length < total && guarda++ < 300) {
+      const t = sortearChave(rng, pesos);
+      if (!t) break;
+      const foco = TIPOS[t].foco ? escolherFoco(e, rng, hoje) : (t === 'ler' || t === 'montar' || t === 'letras') && rng() < 0.5 ? escolherFoco(e, rng, hoje) : null;
+      const q = gerarTipo(t, e, rng, foco);
+      if (!q) { pesos[t] = 0; continue; }
+      add(resto, q);
+    }
+    const ordem = [];
+    const r = ordenarSemRepetir(embaralhar(rng, resto));
+    // a 1ª pergunta depois da apresentação é da letra nova; as outras dela vão espalhadas
+    primeiras.forEach((q, i) => { ordem.push(q); ordem.push(...r.splice(0, i === 0 ? 1 : 2)); });
+    ordem.push(...r);
+    const perguntas = ordem.slice(0, Math.max(total, primeiras.length)).map((q, i) => Object.assign(q, { id: i + 1, tentativas: 0, acertou: false, ajuda: false }));
+    return { numero, tipo: 'normal', dia: hoje, intro, introVista: !intro, perguntas, fila: perguntas.map(q => q.id), finalizada: false, bambus: 0, conquistas: [] };
+  }
+  // a primeira vez: descobrir que letras ela já conhece (para depois de 3 erros)
+  function criarDescoberta(e, hoje, rng) {
+    const c = ctxDe(e, rng);
+    const perguntas = SEQ.map((l, i) => Object.assign(gerarLetra(c, l, { palavra: LETRA[l].chave, nOpcoes: 4, todas: true }), { id: i + 1, tentativas: 0, acertou: false, ajuda: false }));
+    return { numero: 'descoberta', tipo: 'descoberta', dia: hoje, intro: null, introVista: true, perguntas, fila: perguntas.map(q => q.id), finalizada: false, bambus: 0, conquistas: [], erros: 0 };
+  }
+  const MAX_ERROS_DESCOBERTA = 3;
+  function registrarDescoberta(e, m, res, hoje) {
+    const id = m.fila.shift(), q = m.perguntas.find(x => x.id === id);
+    q.tentativas++; q.acertou = !!res.acertou;
+    if (res.acertou) { marcarConhecida(e, q.foco, hoje); m.conquistas.push(q.foco); m.bambus += BAMBU.primeira; }
+    else m.erros++;
+    if (m.erros >= MAX_ERROS_DESCOBERTA || !m.fila.length) { m.finalizada = true; m.fila = []; }
+    return { primeira: true, conquistou: res.acertou ? q.foco : null };
+  }
+  function perguntaAtual(m) { return m.perguntas.find(q => q.id === m.fila[0]) || null; }
+  function progresso(m) {
+    if (m.tipo === 'descoberta') { const feitas = m.perguntas.filter(q => q.tentativas > 0).length; return { feitas, total: m.finalizada ? feitas : Math.max(feitas + 1, Math.min(m.perguntas.length, feitas + MAX_ERROS_DESCOBERTA - m.erros)) }; }
+    return { feitas: m.perguntas.filter(q => q.acertou).length, total: m.perguntas.length };
+  }
+  const LEITURA = ['ler', 'montar', 'letras'];
+  // registra a resposta da pergunta atual. Erro: a pergunta volta 2 a 4 perguntas depois.
+  function registrar(e, m, res, hoje, rng) {
+    if (m.tipo === 'descoberta') return registrarDescoberta(e, m, res, hoje);
+    const id = m.fila.shift(), q = m.perguntas.find(x => x.id === id);
+    const primeira = q.tentativas === 0, limpo = !res.ajuda && !q.ajuda;
+    q.tentativas++;
+    let conquistou = null;
+    if (primeira) {
+      const h = e.estat[q.tipo] || (e.estat[q.tipo] = []);
+      h.push(res.acertou ? 1 : 0); if (h.length > 30) h.shift();
+      if (q.foco) conquistou = atualizarLetra(e, q.foco, !!res.acertou, limpo, hoje);
+      const marcar = p => { const r = e.palavras[p] || (e.palavras[p] = { lidas: 0, erros: 0, primeira: null }); if (res.acertou && limpo) { r.lidas++; if (r.primeira === null) r.primeira = hoje; } else if (!res.acertou) r.erros++; };
+      if (LEITURA.includes(q.tipo)) marcar(q.palavra);
+      if (q.tipo === 'frase') q.palavras.forEach(marcar);
+    }
+    if (conquistou && !m.conquistas.includes(conquistou)) m.conquistas.push(conquistou);
+    if (res.acertou) { q.acertou = true; if (primeira && limpo) m.bambus += BAMBU.primeira; }
+    else m.fila.splice(Math.min(m.fila.length, inteiro(rng, 2, 4)), 0, id);
+    if (!m.fila.length) m.finalizada = true;
+    return { primeira, conquistou };
+  }
+  function registrarDia(e, hoje) { if (!e.dias.includes(hoje)) { e.dias.push(hoje); e.dias.sort((a, b) => a - b); } }
+  function finalizarMissao(e, m, hoje, hora) {
+    const dia = garantirDia(e, hoje);
+    const ganhos = [{ rotulo: 'Respostas de primeira', n: m.bambus }];
+    if (m.tipo === 'descoberta') {
+      e.descoberta = { feita: true, dia: hoje, conhecidas: m.conquistas.slice() };
+      ganhos.push({ rotulo: 'Descoberta feita', n: BAMBU.missao });
+    } else {
+      ganhos.push({ rotulo: 'Missão cumprida', n: BAMBU.missao });
+      if (m.conquistas.length) ganhos.push({ rotulo: m.conquistas.length > 1 ? 'Letras firmes' : 'Letra firme', n: BAMBU.letra * m.conquistas.length });
+      if (m.numero === 'extra') dia.extras++;
+      else { const md = dia.missoes.find(x => x.numero === m.numero); if (md) md.feita = true; }
+      if (!dia.bonus && dia.missoes.every(x => x.feita)) { dia.bonus = true; ganhos.push({ rotulo: 'Todas as missões do dia', n: BAMBU.dia }); }
+    }
+    const total = ganhos.reduce((s, g) => s + g.n, 0);
+    e.bambus += total; e.bambusTotal += total;
+    registrarDia(e, hoje); registrarVisita(e, hoje);
+    let h = e.historico.find(x => x.dia === hoje);
+    if (!h) { h = { dia: hoje, missoes: 0, perguntas: 0, dePrimeira: 0, bambus: 0, letras: [], lista: [] }; e.historico.push(h); }
+    const dePrimeira = m.perguntas.filter(q => q.tentativas === 1 && q.acertou && !q.ajuda).length, feitas = m.perguntas.filter(q => q.tentativas > 0).length;
+    h.missoes++; h.perguntas += feitas; h.dePrimeira += dePrimeira; h.bambus += total;
+    for (const l of m.conquistas) if (!h.letras.includes(l)) h.letras.push(l);
+    h.lista.push({ numero: m.numero, hora: hora || '', perguntas: feitas, dePrimeira, bambus: total, intro: m.intro ? m.intro.letra : null });
+    if (e.historico.length > 400) e.historico = e.historico.slice(-400);
+    if (m.tipo === 'descoberta') { for (const q of m.perguntas.filter(x => x.tentativas && !x.acertou)) dia.revisar.push({ texto: `Ainda não conhecia a letra ${q.foco} (de ${q.palavra})`, tentativas: 1 }); }
+    else for (const q of m.perguntas.filter(x => x.tentativas > 1)) dia.revisar.push({ texto: textoPergunta(q), tentativas: q.tentativas });
+    if (dia.revisar.length > 60) dia.revisar = dia.revisar.slice(-60);
+    e.missaoAtiva = null;
+    return { ganhos, total, conquistas: m.conquistas.slice(), dePrimeira, perguntas: feitas, diaCompleto: dia.missoes.every(x => x.feita) };
+  }
+  function textoPergunta(q) {
+    switch (q.tipo) {
+      case 'silabas': return `Contar os pedacinhos de ${q.palavra}`;
+      case 'comeca': return `O que começa igual a ${q.palavra} (${q.opcoes[q.correta]})`;
+      case 'rima': return `O que rima com ${q.palavra} (${q.opcoes[q.correta]})`;
+      case 'letra': return `Letra do começo de ${q.palavra} (${q.foco})`;
+      case 'silaba': return `Achar a sílaba ${q.alvo}`;
+      case 'ler': return `Ler ${q.palavra}`;
+      case 'montar': return `Montar ${q.resposta.join('-')}`;
+      case 'letras': return `Escrever ${q.palavra}`;
+      case 'frase': return `Ler a frase "${q.texto}"`;
+      default: return q.tipo;
+    }
+  }
+  function verificarMontagem(q, sequencia) { return sequencia.length === q.resposta.length && sequencia.every((x, i) => x === q.resposta[i]); }
+
+  // ---------- painel ----------
+  function letrasFracas(e, n) {
+    return SEQ.filter(l => e.letras[l].lib && e.letras[l].erros > 0)
+      .sort((a, b) => { const A = e.letras[a], B = e.letras[b]; return B.erros / (B.acertos + B.erros) - A.erros / (A.acertos + A.erros) || B.erros - A.erros; }).slice(0, n);
+  }
+  function palavrasFracas(e, n) { return Object.keys(e.palavras).filter(p => e.palavras[p].erros > 0).sort((a, b) => e.palavras[b].erros - e.palavras[a].erros).slice(0, n); }
+  function validarImportacao(texto) {
+    const d = JSON.parse(texto);
+    if (!d || typeof d !== 'object' || !d.letras || typeof d.letras !== 'object' || !d.letras.A) throw new Error('Arquivo não parece um progresso deste jogo.');
+    return completarEstado(d);
+  }
+
+  // ---------- roupinhas do amigo ----------
+  const SLOTS = [
+    { id: 'cabeca', nome: 'Cabeça', icone: '🎩' }, { id: 'olhos', nome: 'Óculos', icone: '👓' }, { id: 'pescoco', nome: 'Pescoço', icone: '🧣' },
+    { id: 'corpo', nome: 'Roupa', icone: '👗' }, { id: 'mao', nome: 'Na mão', icone: '🎈' }, { id: 'fundo', nome: 'Lugar', icone: '🏞️' },
+  ];
+  const ITENS = [
+    { id: 'laco', slot: 'cabeca', nome: 'Laço lilás', preco: 5 }, { id: 'chapeu-festa', slot: 'cabeca', nome: 'Chapéu de festa', preco: 10 },
+    { id: 'bone', slot: 'cabeca', nome: 'Boné', preco: 12 }, { id: 'tiara', slot: 'cabeca', nome: 'Tiara de flores', preco: 15 },
+    { id: 'orelhas-coelho', slot: 'cabeca', nome: 'Orelhas de coelho', preco: 18 }, { id: 'cartola', slot: 'cabeca', nome: 'Cartola', preco: 22 },
+    { id: 'chapeu-bruxa', slot: 'cabeca', nome: 'Chapéu de bruxinha', preco: 25 }, { id: 'coroa', slot: 'cabeca', nome: 'Coroa', preco: 40 },
+    { id: 'oculos', slot: 'olhos', nome: 'Óculos redondos', preco: 10 }, { id: 'oculos-sol', slot: 'olhos', nome: 'Óculos de sol', preco: 15 }, { id: 'oculos-coracao', slot: 'olhos', nome: 'Óculos de coração', preco: 20 },
+    { id: 'gravata', slot: 'pescoco', nome: 'Gravata borboleta', preco: 6 }, { id: 'cachecol', slot: 'pescoco', nome: 'Cachecol', preco: 12 },
+    { id: 'colar', slot: 'pescoco', nome: 'Colar de pérolas', preco: 16 }, { id: 'medalha', slot: 'pescoco', nome: 'Medalha', preco: 30 },
+    { id: 'camiseta', slot: 'corpo', nome: 'Camiseta', preco: 12 }, { id: 'tutu', slot: 'corpo', nome: 'Saia de bailarina', preco: 20 },
+    { id: 'macacao', slot: 'corpo', nome: 'Macacão', preco: 22 }, { id: 'vestido', slot: 'corpo', nome: 'Vestido lilás', preco: 25 }, { id: 'capa', slot: 'corpo', nome: 'Capa de heroína', preco: 35 },
+    { id: 'flor', slot: 'mao', nome: 'Flor', preco: 4 }, { id: 'balao', slot: 'mao', nome: 'Balão', preco: 8 }, { id: 'pirulito', slot: 'mao', nome: 'Pirulito', preco: 8 },
+    { id: 'sorvete', slot: 'mao', nome: 'Sorvete', preco: 10 }, { id: 'ursinho', slot: 'mao', nome: 'Ursinho', preco: 14 }, { id: 'varinha', slot: 'mao', nome: 'Varinha mágica', preco: 18 },
+    { id: 'bambuzal', slot: 'fundo', nome: 'Bambuzal', preco: 0 }, { id: 'praia', slot: 'fundo', nome: 'Praia', preco: 20 }, { id: 'arco-iris', slot: 'fundo', nome: 'Arco-íris', preco: 25 },
+    { id: 'fundo-mar', slot: 'fundo', nome: 'Fundo do mar', preco: 30 }, { id: 'castelo', slot: 'fundo', nome: 'Castelo', preco: 35 }, { id: 'espaco', slot: 'fundo', nome: 'Espaço', preco: 45 },
+  ];
+  const ITEM = {};
+  for (const it of ITENS) ITEM[it.id] = it;
+  function comprar(e, id) {
+    const it = ITEM[id];
+    if (!it || e.roupas.tem.includes(id) || e.bambus < it.preco) return false;
+    e.bambus -= it.preco; e.roupas.tem.push(id); e.roupas.veste[it.slot] = id;
+    return true;
+  }
+  function vestir(e, id) {
+    const it = ITEM[id];
+    if (!it || !e.roupas.tem.includes(id)) return false;
+    if (it.slot === 'fundo') e.roupas.veste.fundo = id;
+    else e.roupas.veste[it.slot] = e.roupas.veste[it.slot] === id ? null : id;
+    return true;
+  }
+
+  return {
+    criarRng, inteiro, escolher, embaralhar, diaDe, VOGAIS, SEQ, LETRA, PARES, base, semAcento, ehVogal, BANCO, LUGARES, PALAVRAS, POR_PALAVRA,
+    letrasDe, letraInicial, tonica, nucleo, rimaDe, bomParaPalmas, falaSilaba, falaPalavra, falaLetra, NUM,
+    liberadas, decodavel, decodaveis, proximaLetra, silabaValida, familia, silabasDe, exemplos, nivelTipo, taxaErro,
+    gerarSilabas, gerarComeca, gerarRima, gerarLetra, gerarSilaba, gerarLer, gerarMontar, gerarLetras, gerarFrase, TIPOS, MUNDOS, ctxDe, gerarTipo, mundosAbertos, pesosTipos,
+    CONFIG_PADRAO, INTERVALOS, DOMINIO, BAMBU, estadoInicial, completarEstado, garantirDia, registrarVisita,
+    liberarLetra, marcarConhecida, bloquearLetra, aprendendo, podeNovaLetra, escolherFoco, atualizarLetra,
+    criarMissao, criarDescoberta, registrarDescoberta, MAX_ERROS_DESCOBERTA, perguntaAtual, progresso, registrar, finalizarMissao, textoPergunta, verificarMontagem,
+    letrasFracas, palavrasFracas, validarImportacao, SLOTS, ITENS, ITEM, comprar, vestir,
+  };
+})();
+</script>
+
+<!-- ===================== INTERFACE ===================== -->
+<script>
+(function () {
+  'use strict';
+  const J = Jogo;
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const palco = $('#palco');
+  const CHAVE = 'joguinho-aprender-ler-v1';  // NUNCA trocar: é onde mora o progresso da criança
+  const hoje = () => J.diaDe(new Date());
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const esperar = ms => new Promise(r => setTimeout(r, ms));
+  const P = p => J.POR_PALAVRA[p];
+  const fp = w => J.falaPalavra(typeof w === 'string' ? w : w.p);
+  const rng = J.criarRng((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
+  const sorteia = arr => arr[Math.floor(Math.random() * arr.length)];
+  const horaAgora = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + 'h' + String(d.getMinutes()).padStart(2, '0'); };
+
+  // ---------- estado salvo ----------
+  function carregar() { try { const t = localStorage.getItem(CHAVE); return t ? J.validarImportacao(t) : null; } catch (e) { return null; } }
+  function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) { /* sem armazenamento: segue */ } }
+  let estado = carregar() || J.estadoInicial();
+  J.garantirDia(estado, hoje()); J.registrarVisita(estado, hoje()); salvar();
+  const nome = () => estado.prefs.nome || 'Duda';
+  const amigo = () => estado.prefs.amigo || 'Panda';
+
+  // ---------- voz gravada pelo papai (fica só neste aparelho) ----------
+  const Gravacoes = (function () {
+    const urls = {};
+    let db = null;
+    function abrir() {
+      return new Promise((res, rej) => {
+        if (db) return res(db);
+        if (!('indexedDB' in window)) return rej(new Error('sem IndexedDB'));
+        const r = indexedDB.open('joguinho-ler-voz', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('sons');
+        r.onsuccess = () => { db = r.result; res(db); };
+        r.onerror = () => rej(r.error);
+      });
+    }
+    function tx(modo, fn) { return abrir().then(d => new Promise((res, rej) => { const t = d.transaction('sons', modo), st = t.objectStore('sons'); const r = fn(st); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error); })); }
+    async function carregarTudo() {
+      try {
+        const d = await abrir();
+        await new Promise(res => {
+          const st = d.transaction('sons').objectStore('sons'), r = st.openCursor();
+          r.onsuccess = () => { const c = r.result; if (!c) return res(); urls[c.key] = URL.createObjectURL(c.value); c.continue(); };
+          r.onerror = () => res();
+        });
+      } catch (e) { /* sem gravações */ }
+    }
+    async function salvarSom(chave, blob) { await tx('readwrite', st => st.put(blob, chave)); if (urls[chave]) URL.revokeObjectURL(urls[chave]); urls[chave] = URL.createObjectURL(blob); }
+    async function apagar(chave) { await tx('readwrite', st => st.delete(chave)); if (urls[chave]) URL.revokeObjectURL(urls[chave]); delete urls[chave]; }
+    return { carregarTudo, salvarSom, apagar, url: k => urls[k] || null };
+  })();
+  Gravacoes.carregarTudo();
+
+  // ---------- voz do navegador ----------
+  const Voz = (function () {
+    const tem = 'speechSynthesis' in window;
+    let voz = null, token = 0, audioAtual = null;
+    function listar() { return tem ? speechSynthesis.getVoices().filter(v => /^pt/i.test(v.lang)) : []; }
+    function pontos(v) {
+      const n = v.name || '', l = (v.lang || '').replace('_', '-');
+      return (l === 'pt-BR' ? 20 : 0) + (/google/i.test(n) ? 6 : 0) + (/natural|online/i.test(n) ? 5 : 0) + (/francisca|thalita|luciana|maria|vit[oó]ria/i.test(n) ? 2 : 0);
+    }
+    function escolher() { const vs = listar(); voz = vs.find(v => v.name === estado.prefs.vozNome) || vs.sort((a, b) => pontos(b) - pontos(a))[0] || null; }
+    if (tem) { escolher(); speechSynthesis.onvoiceschanged = escolher; }
+    function destravar() { if (!tem) return; try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} }
+    function pararAudio() { if (audioAtual) { try { audioAtual.pause(); } catch (e) {} audioAtual = null; } }
+    function calar() { token++; pararAudio(); if (tem) try { speechSynthesis.cancel(); } catch (e) {} }
+    function falarUm(texto, opts, meu) {
+      return new Promise(resolve => {
+        if (!estado.prefs.voz || !tem || !texto || meu !== token) return resolve();
+        let feito = false, t = null;
+        const fim = () => { if (!feito) { feito = true; clearTimeout(t); resolve(); } };
+        try {
+          const u = new SpeechSynthesisUtterance(texto);
+          u.lang = 'pt-BR'; if (voz) u.voice = voz;
+          u.rate = Math.max(0.5, Math.min(1.4, (opts.rate || 1) * (estado.prefs.velocidade || 0.9)));
+          u.pitch = 1.08;
+          u.onend = fim; u.onerror = fim;
+          t = setTimeout(fim, 1800 + texto.length * 120 / u.rate);
+          speechSynthesis.speak(u);
+        } catch (e) { fim(); }
+      });
+    }
+    function tocar(url, meu) {
+      return new Promise(resolve => {
+        if (!estado.prefs.voz || meu !== token) return resolve();
+        pararAudio();
+        const a = new Audio(url); audioAtual = a;
+        let feito = false; const fim = () => { if (!feito) { feito = true; resolve(); } };
+        a.onended = fim; a.onerror = fim; setTimeout(fim, 4000);
+        a.play().catch(fim);
+      });
+    }
+    // fala uma sequência; outra fala (ou calar) interrompe a anterior
+    async function seq(itens) {
+      calar();
+      const meu = token;
+      await esperar(70);
+      for (const it of itens) {
+        if (!it || meu !== token) continue;
+        if (it.antes) it.antes();
+        if (it.audio) await tocar(it.audio, meu);
+        else if (it.t) await falarUm(it.t, it, meu);
+        if (meu !== token) return false;
+        await esperar(it.pausa === undefined ? 120 : it.pausa);
+      }
+      return meu === token;
+    }
+    return { tem, listar, escolher, destravar, calar, seq, nomeAtual: () => (voz ? voz.name : '') };
+  })();
+  document.addEventListener('visibilitychange', () => { if (document.hidden) Voz.calar(); });
+
+  // ---------- sons curtinhos (sem som de erro) ----------
+  let ctxAudio = null;
+  function nota(freqs, passo, dur, vol) {
+    if (!estado.prefs.som) return;
+    try {
+      ctxAudio = ctxAudio || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      freqs.forEach((f, i) => {
+        const o = ctxAudio.createOscillator(), g = ctxAudio.createGain(), t = ctxAudio.currentTime + i * passo;
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g).connect(ctxAudio.destination); o.start(t); o.stop(t + dur + 0.02);
+      });
+    } catch (e) {}
+  }
+  const plim = () => nota([523.25, 659.25, 783.99], 0.08, 0.32, 0.15);
+  const pop = () => nota([880], 0, 0.09, 0.08);
+  const festa = () => nota([523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5], 0.11, 0.4, 0.14);
+
+  let tAviso = null;
+  function avisar(txt) { const a = $('#aviso'); a.textContent = txt; a.classList.add('ver'); clearTimeout(tAviso); tAviso = setTimeout(() => a.classList.remove('ver'), 2400); }
+  function confete() {
+    const c = $('#confete'), cores = ['#b794f6', '#ec4899', '#fcd34d', '#34d399', '#93c5fd', '#7c4ddb'];
+    for (let i = 0; i < 46; i++) {
+      const p = document.createElement('i');
+      p.style.left = Math.random() * 100 + 'vw'; p.style.background = cores[i % cores.length];
+      p.style.animationDelay = Math.random() * 0.7 + 's'; p.style.animationDuration = 2 + Math.random() * 1.4 + 's';
+      c.appendChild(p);
+    }
+    setTimeout(() => { c.innerHTML = ''; }, 4200);
+  }
+
+  // ===================== O PANDA E AS ROUPINHAS (desenho) =====================
+  const PRETO = '#25222e';
+  const PEROLAS = [70, 78, 86, 94, 102, 110, 118, 126, 130].map(x => `<circle cx="${x}" cy="${(130 + 10 * (1 - Math.pow((x - 100) / 30, 2))).toFixed(1)}" r="4.2" fill="#fff" stroke="#e9d5ff" stroke-width="1.5"/>`).join('');
+  const FLORES = [[56, 51], [75, 34], [100, 28], [125, 34], [144, 51]].map(([x, y], i) => `<g transform="translate(${x} ${y})">${[0, 72, 144, 216, 288].map(a => `<circle cx="${(6 * Math.cos(a * Math.PI / 180)).toFixed(1)}" cy="${(6 * Math.sin(a * Math.PI / 180)).toFixed(1)}" r="4.6" fill="${i % 2 ? '#f9a8d4' : '#c4b5fd'}"/>`).join('')}<circle r="3.4" fill="#fde047"/></g>`).join('');
+  const DESENHO = {
+    laco: { frente: `<g transform="translate(132 34) rotate(18)"><path d="M0 0 L-24 -13 L-24 13 Z" fill="#a855f7"/><path d="M0 0 L24 -13 L24 13 Z" fill="#a855f7"/><circle r="6.5" fill="#7e22ce"/></g>` },
+    'chapeu-festa': { frente: `<g transform="rotate(-10 100 30)"><path d="M78 34 L100 -16 L122 34 Z" fill="#f472b6"/><path d="M84 22 L116 22" stroke="#fde047" stroke-width="4"/><path d="M91 6 L109 6" stroke="#93c5fd" stroke-width="4"/><circle cx="100" cy="-18" r="7" fill="#fde047"/></g>` },
+    bone: { frente: `<path d="M48 52 Q100 -4 152 52 Z" fill="#3b82f6"/><path d="M118 47 Q152 38 178 53 Q150 60 118 56 Z" fill="#1d4ed8"/><circle cx="100" cy="23" r="4" fill="#1d4ed8"/>` },
+    tiara: { frente: FLORES },
+    'orelhas-coelho': { frente: `<g transform="rotate(-14 80 30)"><ellipse cx="80" cy="0" rx="11" ry="32" fill="#fff" stroke="#e9d5ff" stroke-width="3"/><ellipse cx="80" cy="3" rx="5.5" ry="23" fill="#fbcfe8"/></g><g transform="rotate(14 120 30)"><ellipse cx="120" cy="0" rx="11" ry="32" fill="#fff" stroke="#e9d5ff" stroke-width="3"/><ellipse cx="120" cy="3" rx="5.5" ry="23" fill="#fbcfe8"/></g><path d="M52 50 Q100 8 148 50" stroke="#c084fc" stroke-width="7" fill="none" stroke-linecap="round"/>` },
+    cartola: { frente: `<rect x="72" y="-8" width="56" height="42" rx="4" fill="#1f1b2e"/><rect x="72" y="20" width="56" height="8" fill="#a855f7"/><ellipse cx="100" cy="34" rx="46" ry="8" fill="#1f1b2e"/>` },
+    'chapeu-bruxa': { frente: `<path d="M68 32 Q96 -8 120 -36 Q118 4 132 32 Z" fill="#6d28d9"/><path d="M71 26 Q100 20 129 26 L130 32 Q100 27 70 32 Z" fill="#fde047"/><ellipse cx="100" cy="33" rx="58" ry="9" fill="#5b21b6"/><path d="M108 0 l3 7 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1z" fill="#fde047"/>` },
+    coroa: { frente: `<path d="M68 36 L68 6 L84 20 L100 0 L116 20 L132 6 L132 36 Z" fill="#facc15" stroke="#eab308" stroke-width="2" stroke-linejoin="round"/><circle cx="100" cy="24" r="4.5" fill="#ef4444"/><circle cx="82" cy="28" r="3.2" fill="#3b82f6"/><circle cx="118" cy="28" r="3.2" fill="#22c55e"/>` },
+    oculos: { frente: `<g fill="rgba(255,255,255,.18)" stroke="#7c3aed" stroke-width="3.5"><circle cx="79" cy="83" r="14"/><circle cx="121" cy="83" r="14"/><path d="M93 82 Q100 77 107 82" fill="none"/><path d="M65 80 L50 74" fill="none"/><path d="M135 80 L150 74" fill="none"/></g>` },
+    'oculos-sol': { frente: `<rect x="61" y="72" width="34" height="23" rx="9" fill="#1f2937"/><rect x="105" y="72" width="34" height="23" rx="9" fill="#1f2937"/><path d="M95 80 L105 80" stroke="#1f2937" stroke-width="4"/><path d="M66 77 L76 77" stroke="#fff" stroke-width="2.5" opacity=".6"/><path d="M110 77 L120 77" stroke="#fff" stroke-width="2.5" opacity=".6"/>` },
+    'oculos-coracao': { frente: `<g transform="translate(79 85) scale(1.55)"><path d="M0 7 C-15 -3 -9 -15 0 -8 C9 -15 15 -3 0 7Z" fill="#ec4899" opacity=".92"/></g><g transform="translate(121 85) scale(1.55)"><path d="M0 7 C-15 -3 -9 -15 0 -8 C9 -15 15 -3 0 7Z" fill="#ec4899" opacity=".92"/></g><path d="M94 81 L106 81" stroke="#be185d" stroke-width="3"/>` },
+    gravata: { frente: `<g transform="translate(100 141)"><path d="M0 0 L-19 -11 L-19 11 Z" fill="#ef4444"/><path d="M0 0 L19 -11 L19 11 Z" fill="#ef4444"/><circle r="5.5" fill="#b91c1c"/></g>` },
+    cachecol: { frente: `<path d="M54 124 Q100 152 146 124 L148 138 Q100 168 52 138 Z" fill="#f472b6"/><path d="M70 133 L74 146 M90 140 L92 153 M110 140 L108 153 M130 133 L126 146" stroke="#fbcfe8" stroke-width="5"/><path d="M118 142 L126 182 L110 184 L106 146 Z" fill="#ec4899"/>` },
+    colar: { frente: PEROLAS },
+    medalha: { frente: `<path d="M86 128 L100 154 L114 128" stroke="#3b82f6" stroke-width="7" fill="none" stroke-linejoin="round"/><circle cx="100" cy="161" r="11" fill="#facc15" stroke="#eab308" stroke-width="2.5"/><path d="M100 154 l2.4 5 5.4.6 -4 3.7 1.1 5.3 -4.9 -2.7 -4.9 2.7 1.1 -5.3 -4 -3.7 5.4 -.6z" fill="#fff7cc"/>` },
+    camiseta: { frente: `<path d="M60 132 Q100 122 140 132 L151 152 L140 158 L140 192 Q100 202 60 192 L60 158 L49 152 Z" fill="#2dd4bf"/><path d="M100 152 l4 9 10 1 -7 7 2 10 -9 -5 -9 5 2 -10 -7 -7 10 -1z" fill="#fff" opacity=".9"/>` },
+    tutu: { frente: `<path d="M44 186 Q100 160 156 186 L163 199 Q100 216 37 199 Z" fill="#f9a8d4"/><path d="M50 191 Q100 168 150 191" stroke="#fbcfe8" stroke-width="5" fill="none"/><rect x="60" y="166" width="80" height="9" rx="4.5" fill="#ec4899"/>` },
+    macacao: { frente: `<path d="M72 150 L128 150 L128 170 L151 172 Q152 200 134 206 L66 206 Q48 200 49 172 L72 170 Z" fill="#3b82f6"/><path d="M77 150 L68 127 M123 150 L132 127" stroke="#2563eb" stroke-width="7" stroke-linecap="round"/><circle cx="82" cy="156" r="3.5" fill="#facc15"/><circle cx="118" cy="156" r="3.5" fill="#facc15"/><rect x="88" y="160" width="24" height="14" rx="3" fill="#2563eb"/>` },
+    vestido: { frente: `<path d="M66 130 Q100 120 134 130 L158 204 Q100 217 42 204 Z" fill="#c084fc"/>${[[80, 160], [104, 150], [118, 176], [90, 186], [130, 196], [66, 196], [100, 202]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.6" fill="#fff" opacity=".85"/>`).join('')}` },
+    capa: { atras: `<path d="M62 126 Q100 116 138 126 L173 210 Q100 225 27 210 Z" fill="#ef4444"/>`, frente: `<circle cx="100" cy="142" r="6" fill="#facc15" stroke="#eab308" stroke-width="2"/>` },
+    flor: { mao: '🌸' }, balao: { mao: '🎈', fio: true }, pirulito: { mao: '🍭' }, sorvete: { mao: '🍦' }, ursinho: { mao: '🧸' }, varinha: { mao: '🪄' },
+  };
+  function pandaInterno(veste, humor) {
+    const d = s => (veste[s] && DESENHO[veste[s]]) || {};
+    const boca = humor === 'uau' ? `<ellipse cx="100" cy="110" rx="6" ry="7" fill="${PRETO}"/><ellipse cx="100" cy="113" rx="3.5" ry="3" fill="#f9a8d4"/>`
+      : humor === 'pensa' ? `<path d="M92 110 Q100 105 108 110" stroke="${PRETO}" stroke-width="3" fill="none" stroke-linecap="round"/>`
+      : `<path d="M90 106 Q100 117 110 106" stroke="${PRETO}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    const mao = d('mao').mao ? (d('mao').fio ? `<path d="M152 170 Q160 140 166 112" stroke="#9ca3af" stroke-width="1.5" fill="none"/><text x="168" y="112" font-size="40" text-anchor="middle">${d('mao').mao}</text>` : `<text x="160" y="186" font-size="36" text-anchor="middle">${d('mao').mao}</text>`) : '';
+    return `${d('corpo').atras || ''}
+      <circle cx="58" cy="38" r="18" fill="${PRETO}"/><circle cx="142" cy="38" r="18" fill="${PRETO}"/>
+      <ellipse cx="75" cy="200" rx="20" ry="14" fill="${PRETO}"/><ellipse cx="125" cy="200" rx="20" ry="14" fill="${PRETO}"/>
+      <ellipse cx="100" cy="158" rx="50" ry="46" fill="#fff" stroke="#e7e1f2" stroke-width="2"/>
+      <ellipse cx="100" cy="166" rx="31" ry="27" fill="#f8f6fc"/>
+      ${d('corpo').frente || ''}
+      <ellipse cx="54" cy="150" rx="14" ry="27" fill="${PRETO}" transform="rotate(20 54 150)"/>
+      <ellipse cx="146" cy="150" rx="14" ry="27" fill="${PRETO}" transform="rotate(-20 146 150)"/>
+      <circle cx="100" cy="82" r="54" fill="#fff" stroke="#e7e1f2" stroke-width="2"/>
+      <ellipse cx="78" cy="84" rx="15" ry="20" fill="${PRETO}" transform="rotate(-25 78 84)"/>
+      <ellipse cx="122" cy="84" rx="15" ry="20" fill="${PRETO}" transform="rotate(25 122 84)"/>
+      <g class="olho"><circle cx="80" cy="82" r="6.5" fill="#fff"/><circle cx="81" cy="83" r="3.6" fill="${PRETO}"/><circle cx="79.4" cy="80.6" r="1.4" fill="#fff"/></g>
+      <g class="olho"><circle cx="120" cy="82" r="6.5" fill="#fff"/><circle cx="121" cy="83" r="3.6" fill="${PRETO}"/><circle cx="119.4" cy="80.6" r="1.4" fill="#fff"/></g>
+      <ellipse cx="100" cy="99" rx="7.5" ry="5.2" fill="${PRETO}"/>
+      ${boca}
+      <ellipse cx="66" cy="104" rx="8" ry="5" fill="#f9a8d4" opacity=".7"/><ellipse cx="134" cy="104" rx="8" ry="5" fill="#f9a8d4" opacity=".7"/>
+      ${d('pescoco').frente || ''}${d('olhos').frente || ''}${d('cabeca').frente || ''}${mao}`;
+  }
+  function pandaSVG(veste, humor, vb) { return `<svg class="panda-svg" viewBox="${vb || '-12 -52 224 278'}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${pandaInterno(veste || {}, humor || 'feliz')}</svg>`; }
+  const ESTRELAS = [[12, 20], [40, 60], [70, 14], [140, 70], [186, 16], [176, 96], [24, 110], [60, 150], [150, 140], [190, 160], [110, 30], [8, 180], [100, 8]];
+  const FUNDOS = {
+    bambuzal: `<rect width="200" height="220" fill="#ecfccb"/><rect y="182" width="200" height="38" fill="#bef264"/>${[8, 30, 164, 186].map(x => `<rect x="${x}" y="-4" width="10" height="196" rx="3" fill="#65a30d"/>${[30, 80, 130].map(y => `<rect x="${x - 1}" y="${y}" width="12" height="4" rx="2" fill="#4d7c0f"/>`).join('')}`).join('')}<ellipse cx="44" cy="58" rx="16" ry="5" fill="#84cc16" transform="rotate(-25 44 58)"/><ellipse cx="156" cy="100" rx="16" ry="5" fill="#84cc16" transform="rotate(25 156 100)"/><ellipse cx="22" cy="140" rx="14" ry="5" fill="#84cc16" transform="rotate(30 22 140)"/>`,
+    praia: `<rect width="200" height="220" fill="#bae6fd"/><circle cx="166" cy="34" r="18" fill="#fde047"/><rect y="120" width="200" height="60" fill="#38bdf8"/><path d="M0 132 Q25 126 50 132 T100 132 T150 132 T200 132" stroke="#fff" stroke-width="3" fill="none" opacity=".7"/><rect y="170" width="200" height="50" fill="#fde68a"/><circle cx="30" cy="200" r="4" fill="#fb923c"/><circle cx="176" cy="196" r="3" fill="#f472b6"/>`,
+    'arco-iris': `<rect width="200" height="220" fill="#e0f2fe"/>${['#f87171', '#fb923c', '#fde047', '#4ade80', '#60a5fa', '#a78bfa'].map((c, i) => `<circle cx="100" cy="230" r="${178 - i * 14}" fill="none" stroke="${c}" stroke-width="14"/>`).join('')}<circle cx="100" cy="230" r="96" fill="#e0f2fe"/><ellipse cx="22" cy="190" rx="26" ry="14" fill="#fff"/><ellipse cx="180" cy="186" rx="26" ry="14" fill="#fff"/><rect y="196" width="200" height="24" fill="#bbf7d0"/>`,
+    'fundo-mar': `<rect width="200" height="220" fill="#22d3ee"/><rect y="110" width="200" height="110" fill="#0e7490" opacity=".55"/>${[[20, 40, 5], [34, 70, 3], [180, 60, 6], [168, 30, 3], [186, 120, 4]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="#fff" stroke-width="1.6" opacity=".8"/>`).join('')}<path d="M14 220 Q4 190 16 170 Q26 150 14 130" stroke="#22c55e" stroke-width="6" fill="none"/><path d="M188 220 Q198 190 184 168" stroke="#16a34a" stroke-width="6" fill="none"/><text x="26" y="108" font-size="22">🐠</text><text x="160" y="160" font-size="20">🐟</text>`,
+    castelo: `<rect width="200" height="220" fill="#fce7f3"/><rect y="186" width="200" height="34" fill="#bbf7d0"/><rect x="0" y="96" width="36" height="96" fill="#c4b5fd"/><path d="M-4 96 L18 62 L40 96 Z" fill="#a78bfa"/><rect x="164" y="96" width="36" height="96" fill="#c4b5fd"/><path d="M160 96 L182 62 L204 96 Z" fill="#a78bfa"/><path d="M18 62 L18 46 L30 52 L18 56" fill="#ec4899"/><path d="M182 62 L182 46 L194 52 L182 56" fill="#ec4899"/><rect x="10" y="130" width="12" height="18" rx="6" fill="#7c3aed"/><rect x="176" y="130" width="12" height="18" rx="6" fill="#7c3aed"/>`,
+    espaco: `<rect width="200" height="220" fill="#1e1b4b"/>${ESTRELAS.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 3 ? 1.4 : 2.2}" fill="#fff"/>`).join('')}<circle cx="166" cy="42" r="16" fill="#f472b6"/><ellipse cx="166" cy="42" rx="27" ry="6" fill="none" stroke="#fde68a" stroke-width="3"/><circle cx="30" cy="44" r="12" fill="#fef3c7"/><rect y="196" width="200" height="24" fill="#4c1d95"/>`,
+  };
+  const VB_SLOT = { cabeca: '28 -56 144 102', olhos: '40 56 120 56', pescoco: '38 110 124 82', corpo: '18 108 164 120', mao: '112 80 92 130' };
+  function cenaHTML(veste, humor) {
+    return `<svg viewBox="0 0 200 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${FUNDOS[veste.fundo] || FUNDOS.bambuzal}</svg>${pandaSVG(veste, humor)}`;
+  }
+  function previaItem(it) {
+    if (it.slot === 'fundo') return `<svg viewBox="0 30 200 165" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${FUNDOS[it.id]}</svg>`;
+    return pandaSVG({ [it.slot]: it.id }, 'feliz', VB_SLOT[it.slot]);
+  }
+  const veste = () => estado.roupas.veste;
+
+  // ===================== NAVEGAÇÃO =====================
+  const ROTAS = ['casa', 'missao', 'roupas', 'trilha', 'palavras', 'papai'];
+  let iniciado = false, painelLiberado = false, teclas = null;
+  function rotaAtual() { const r = (location.hash || '').replace(/^#\/?/, ''); return ROTAS.includes(r) ? r : 'casa'; }
+  function ir(r) { const h = r === 'casa' ? '#/' : '#/' + r; if (location.hash !== h && !(r === 'casa' && location.hash === '')) location.hash = h; else render(); }
+  window.addEventListener('hashchange', render);
+  palco.addEventListener('click', ev => { const b = ev.target.closest('[data-ir]'); if (b) { pop(); ir(b.dataset.ir); } });
+  document.addEventListener('keydown', ev => {
+    if (!teclas) return;
+    if (/^[1-4]$/.test(ev.key) && teclas.opcao) { teclas.opcao(Number(ev.key) - 1); ev.preventDefault(); }
+    else if ((ev.key === 'Enter' || ev.key === ' ') && teclas.ok) { teclas.ok(); ev.preventDefault(); }
+    else if (/^[a-zçáéíóúâêôã]$/i.test(ev.key) && teclas.letra) { teclas.letra(ev.key.toUpperCase()); ev.preventDefault(); }
+    else if (ev.key === 'Backspace' && teclas.apagar) { teclas.apagar(); ev.preventDefault(); }
+  });
+
+  function render() {
+    Voz.calar(); teclas = null;
+    J.garantirDia(estado, hoje());
+    if (!estado.visitas.includes(hoje())) { J.registrarVisita(estado, hoje()); salvar(); }
+    window.scrollTo(0, 0);
+    if (!iniciado) return renderAbertura();
+    const r = rotaAtual();
+    if (r === 'papai' && !painelLiberado) return ir('casa');
+    ({ casa: renderCasa, missao: renderMissao, roupas: renderRoupas, trilha: renderTrilha, palavras: renderPalavras, papai: renderPainel })[r]();
+  }
+
+  // ===================== ABERTURA =====================
+  function renderAbertura() {
+    palco.innerHTML = `
+      <div class="splash">
+        <div class="cena">${cenaHTML(veste(), 'feliz')}</div>
+        <h1 class="titulo-splash">JOGUINHO DE<br>APRENDER A LER</h1>
+        <button class="b-grande verde" id="b-comecar">▶ COMEÇAR</button>
+      </div>`;
+    teclas = { ok: () => $('#b-comecar').click() };
+    $('#b-comecar').onclick = () => {
+      iniciado = true; Voz.destravar(); nota([660], 0, 0.05, 0.001);
+      if (!estado.descoberta.feita) return renderBoasVindas();
+      render();
+      if (rotaAtual() === 'casa') Voz.seq([{ t: `Oi, ${nome()}! Vamos brincar de ler?` }]);
+    };
+  }
+  function renderBoasVindas() {
+    palco.innerHTML = `
+      <div class="intro">
+        <div class="intro-corpo">
+          <div class="cena" style="width:min(80vw,44vh,360px)">${cenaHTML(veste(), 'feliz')}</div>
+          <div class="destaque">Oi, ${esc(nome().toUpperCase())}! Eu sou o ${esc(amigo().toUpperCase())}.</div>
+        </div>
+        <div class="rodape"><div class="fala" id="fala">Vamos ver que letras você já conhece?</div><button class="b-seguir" id="b-seguir" aria-label="Começar">▶</button></div>
+      </div>`;
+    const comecar = () => { Voz.calar(); estado.missaoAtiva = J.criarMissao(estado, hoje(), rng, 'descoberta'); salvar(); ir('missao'); };
+    $('#b-seguir').onclick = comecar;
+    teclas = { ok: comecar };
+    Voz.seq([{ t: `Oi, ${nome()}! Eu sou o ${amigo()}. Vamos aprender a ler juntos?` }, { t: 'Primeiro, quero ver que letras você já conhece. Toque no botão verde!' }]);
+  }
+
+  // ===================== CASA =====================
+  function proximoNumero() { const m = estado.dia.missoes.find(x => !x.feita); return m ? m.numero : 'extra'; }
+  function renderCasa() {
+    const dia = estado.dia, tudo = dia.missoes.every(m => m.feita);
+    const ativa = estado.missaoAtiva && (estado.missaoAtiva.dia === hoje() || estado.missaoAtiva.tipo === 'descoberta') ? estado.missaoAtiva : null;
+    const frase = ativa ? 'Vamos continuar?' : tudo ? 'Você fez tudo hoje!' : `Oi, ${nome()}!`;
+    palco.innerHTML = `
+      <div class="casa">
+        <header class="topo">
+          <div class="titulo">JOGUINHO DE<br>APRENDER A LER</div>
+          <div class="contador" aria-label="bambus">🎋 ${estado.bambus}</div>
+          <button class="cadeado" id="cadeado" aria-label="Painel do papai: segure 3 segundos">🔒</button>
+        </header>
+        <div class="col-cena">
+          <button class="cena" id="cena" aria-label="${esc(amigo())}">${cenaHTML(veste(), 'feliz')}</button>
+          <div class="balao-casa">${esc(frase)}</div>
+        </div>
+        <div class="col-acoes">
+          <div class="missoes" aria-label="missões de hoje">${dia.missoes.map(m => `<div class="bolinha ${m.feita ? 'feita' : ''}">${m.feita ? '⭐' : m.numero}</div>`).join('')}</div>
+          <button class="b-grande ${tudo && !ativa ? '' : 'verde'}" id="b-brincar">${ativa ? '▶ CONTINUAR' : tudo ? '✨ MISSÃO EXTRA' : '▶ BRINCAR'}</button>
+          <nav class="navega">
+            <button class="b-nav" data-ir="roupas"><span class="ic">👗</span>ROUPINHAS</button>
+            <button class="b-nav" data-ir="trilha"><span class="ic">🗺️</span>TRILHA</button>
+            <button class="b-nav" data-ir="palavras"><span class="ic">📖</span>PALAVRAS</button>
+          </nav>
+        </div>
+      </div>`;
+    const brincar = () => {
+      if (!ativa) { estado.missaoAtiva = J.criarMissao(estado, hoje(), rng, proximoNumero()); salvar(); }
+      ir('missao');
+    };
+    $('#b-brincar').onclick = brincar;
+    teclas = { ok: brincar };
+    const FALAS_PANDA = ['Eu adoro bambu!', 'Vamos ler?', 'Gostou da minha roupa?', `Você é demais, ${nome()}!`, 'Cada letra tem um som escondido!'];
+    $('#cena').onclick = () => { const c = $('#cena'); c.classList.remove('pula'); void c.offsetWidth; c.classList.add('pula'); Voz.seq([{ t: sorteia(FALAS_PANDA) }]); };
+    ligarCadeado($('#cadeado'));
+  }
+  function ligarCadeado(el) {
+    let t = null;
+    const soltar = () => { clearTimeout(t); t = null; el.classList.remove('segurando'); };
+    el.addEventListener('pointerdown', ev => { ev.preventDefault(); el.classList.add('segurando'); t = setTimeout(() => { soltar(); painelLiberado = true; ir('papai'); }, 3000); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(k => el.addEventListener(k, soltar));
+    el.addEventListener('contextmenu', ev => ev.preventDefault());
+    el.addEventListener('click', () => { if (!painelLiberado) avisar('Painel do papai: segure o cadeado por 3 segundos'); });
+  }
+
+  // ===================== MISSÃO =====================
+  let respondido = false;
+  function renderMissao() {
+    const m = estado.missaoAtiva;
+    if (!m) return ir('casa');
+    if (m.dia !== hoje() && m.tipo !== 'descoberta') { estado.missaoAtiva = null; salvar(); return ir('casa'); }
+    if (m.intro && !m.introVista) return renderIntro(m.intro.letra, m.intro.tipo, () => { m.introVista = true; salvar(); render(); });
+    if (m.finalizada) return concluirMissao(m);
+    const q = J.perguntaAtual(m);
+    if (!q) { m.finalizada = true; salvar(); return concluirMissao(m); }
+    respondido = false;
+    const prog = J.progresso(m);
+    palco.innerHTML = `
+      <div class="missao">
+        <div class="barra">
+          <button class="b-x" id="b-sair" aria-label="Sair">✕</button>
+          <div class="trilho"><i style="width:${Math.round(100 * prog.feitas / Math.max(1, prog.total))}%"></i></div>
+          <div class="contador peq">🎋 ${estado.bambus + m.bambus}</div>
+        </div>
+        <div class="quadro">
+          <div class="enunciado"><button class="b-ouvir" id="b-ouvir" aria-label="Ouvir de novo">🔊</button><span id="enunciado"></span></div>
+          <div class="estimulo" id="estimulo"></div>
+          <div class="opcoes" id="opcoes"></div>
+        </div>
+        <div class="rodape"><div class="mini-panda" id="mini-panda">${pandaSVG(veste(), 'feliz')}</div><div class="fala" id="fala"></div><button class="b-seguir" id="b-seguir" hidden aria-label="Continuar">▶</button></div>
+      </div>`;
+    $('#b-sair').onclick = () => { ir('casa'); avisar('Sua missão ficou guardada. Continue quando quiser!'); };
+    RENDER[q.tipo](m, q);
+  }
+  const enunciado = t => { $('#enunciado').textContent = t; };
+  const estimulo = h => { $('#estimulo').innerHTML = h; };
+  function opcoes(h, classe) { const o = $('#opcoes'); o.innerHTML = h; if (classe) o.classList.add(classe); }
+  function acender(sel) { $$('.acesa').forEach(x => x.classList.remove('acesa')); if (sel) { const el = $(sel); if (el) el.classList.add('acesa'); } }
+  function ouvir(fn) { $('#b-ouvir').onclick = () => { pop(); fn(); }; setTimeout(() => { if (!respondido) fn(); }, 250); }
+  function ligarOpcoes(m, q) {
+    const escolher = i => {
+      if (respondido) return;
+      const certo = i === q.correta;
+      $$('#opcoes .op').forEach((b, k) => { if (k === q.correta) b.classList.add('certa'); else if (k === i) b.classList.add('errada'); else b.classList.add('apagada'); });
+      responder(m, q, certo);
+    };
+    $$('#opcoes .op').forEach(b => { b.onclick = () => escolher(Number(b.dataset.i)); });
+    teclas = { opcao: i => { if (i < q.opcoes.length) escolher(i); } };
+  }
+  const silSpans = (w, sep) => w.s.map((s, i) => `<span class="s" data-s="${i}">${s}</span>`).join('');
+  const acenderSil = i => { $$('.palavra-grande .s').forEach((x, k) => x.classList.toggle('acesa', k === i)); };
+  const falaOpcoes = ops => ops.map((o, i) => ({ t: fp(o), antes: () => acender(`.op[data-i="${i}"]`), pausa: 260 }));
+  const cartaoFig = (w, extra) => `<button class="cartao figura ${extra || ''}" id="fig" aria-label="${esc(w.p)}">${w.e}</button>`;
+
+  const RENDER = {
+    silabas(m, q) {
+      const w = P(q.palavra);
+      enunciado('Quantos pedacinhos?');
+      estimulo(cartaoFig(w));
+      opcoes(q.opcoes.map((n, i) => `<button class="op palmas" data-i="${i}" aria-label="${n}"><span>${'👏'.repeat(n)}</span><small>${n}</small></button>`).join(''), 'palmas');
+      $('#fig').onclick = () => Voz.seq([{ t: fp(w) }]);
+      ligarOpcoes(m, q);
+      ouvir(() => Voz.seq([{ t: `Quantos pedacinhos tem ${fp(w)}?` }, { t: 'Bata palmas e conte!' }]));
+    },
+    comeca(m, q) { RENDER._figuras(m, q, 'Qual começa igual?', w => `Qual começa igual a ${fp(w)}?`); },
+    rima(m, q) { RENDER._figuras(m, q, 'Qual rima?', w => `Qual rima com ${fp(w)}?`); },
+    _figuras(m, q, titulo, pergunta) {
+      const w = P(q.palavra), ops = q.opcoes.map(P);
+      enunciado(titulo);
+      estimulo(cartaoFig(w));
+      opcoes(ops.map((o, i) => `<button class="op fig" data-i="${i}" aria-label="${esc(o.p)}">${o.e}</button>`).join(''));
+      $('#fig').onclick = () => Voz.seq([{ t: fp(w) }]);
+      ligarOpcoes(m, q);
+      ouvir(() => Voz.seq([{ t: pergunta(w), antes: () => acender('#fig') }, ...falaOpcoes(ops), { antes: () => acender(null), pausa: 0 }]));
+    },
+    letra(m, q) {
+      const w = P(q.palavra);
+      enunciado('Com que letra começa?');
+      estimulo(cartaoFig(w));
+      opcoes(q.opcoes.map((l, i) => `<button class="op letra" data-i="${i}">${l}</button>`).join(''));
+      $('#fig').onclick = () => Voz.seq([{ t: fp(w) }]);
+      ligarOpcoes(m, q);
+      ouvir(() => Voz.seq([{ t: `Com que letra começa ${fp(w)}?` }]));
+    },
+    silaba(m, q) {
+      const vogal = J.VOGAIS.includes(q.alvo);
+      enunciado(vogal ? 'Ache a letra que você ouvir' : 'Ache a sílaba que você ouvir');
+      estimulo(`<button class="cartao figura som" id="fig" aria-label="ouvir">🔊</button>`);
+      opcoes(q.opcoes.map((s, i) => `<button class="op letra sil" data-i="${i}">${s}</button>`).join(''));
+      $('#fig').onclick = () => Voz.seq([{ t: J.falaSilaba(q.alvo), rate: 0.85 }]);
+      ligarOpcoes(m, q);
+      ouvir(() => Voz.seq([{ t: 'Cadê o' }, { t: J.falaSilaba(q.alvo), rate: 0.85, pausa: 200 }]));
+    },
+    ler(m, q) {
+      const w = P(q.palavra), ops = q.opcoes.map(P);
+      enunciado('Leia e toque na figura');
+      estimulo(`<div class="palavra-grande" id="pal">${silSpans(w)}</div><button class="b-ajuda" id="b-ajuda">🔊 ajuda</button>`);
+      opcoes(ops.map((o, i) => `<button class="op fig" data-i="${i}" aria-label="${esc(o.p)}">${o.e}</button>`).join(''));
+      $('#b-ajuda').onclick = () => { if (respondido) return; q.ajuda = true; salvar(); Voz.seq([...w.s.map((s, i) => ({ t: J.falaSilaba(s), antes: () => acenderSil(i), pausa: 380, rate: 0.8 })), { antes: () => acenderSil(-1), pausa: 0 }]); };
+      ligarOpcoes(m, q);
+      ouvir(() => Voz.seq([{ t: 'Leia a palavra e toque na figura certa.' }, { t: 'É', pausa: 60 }, ...falaOpcoes(ops), { antes: () => acender(null), pausa: 0 }]));
+    },
+    montar(m, q) { RENDER._montagem(m, q, false); },
+    letras(m, q) { RENDER._montagem(m, q, true); },
+    _montagem(m, q, porLetra) {
+      const w = P(q.palavra), n = q.resposta.length;
+      enunciado(porLetra ? 'Escreva com as letrinhas' : 'Monte a palavra');
+      let slots = '';
+      if (porLetra) { let k = 0; slots = q.grupos.map(g => `<div class="grupo">${Array.from({ length: g }, () => `<div class="slot" data-s="${k++}"></div>`).join('')}</div>`).join(''); }
+      else slots = q.resposta.map((_, i) => `<div class="slot" data-s="${i}"></div>`).join('');
+      estimulo(`${cartaoFig(w, 'media')}<div class="slots ${porLetra ? 'letras-modo' : ''}" id="slots">${slots}</div>`);
+      opcoes(q.pecas.map((p, i) => `<button class="peca" data-p="${i}">${p}</button>`).join(''), 'pecas');
+      const cheio = Array(n).fill(null);
+      const pintar = () => {
+        $$('#slots .slot').forEach((s, i) => { s.textContent = cheio[i] === null ? '' : q.pecas[cheio[i]]; s.classList.toggle('cheio', cheio[i] !== null); });
+        $$('#opcoes .peca').forEach((b, i) => b.classList.toggle('usada', cheio.includes(i)));
+      };
+      const conferir = () => {
+        if (respondido || cheio.includes(null)) return;
+        const seqv = cheio.map(i => q.pecas[i]), certo = J.verificarMontagem(q, seqv);
+        $$('#slots .slot').forEach((s, i) => { if (certo) s.classList.add('ok'); else { s.textContent = q.resposta[i]; s.classList.add('mostra'); } });
+        responder(m, q, certo);
+      };
+      const colocar = i => { if (respondido || cheio.includes(i)) return; const vaga = cheio.indexOf(null); if (vaga < 0) return; cheio[vaga] = i; pop(); pintar(); Voz.seq([{ t: porLetra ? letraFala(q.pecas[i]) : J.falaSilaba(q.pecas[i]), pausa: 0 }]); setTimeout(conferir, 350); };
+      const tirar = k => { if (respondido || cheio[k] === null) return; cheio[k] = null; pintar(); };
+      $$('#opcoes .peca').forEach(b => { b.onclick = () => colocar(Number(b.dataset.p)); });
+      $$('#slots .slot').forEach(s => { s.onclick = () => tirar(Number(s.dataset.s)); });
+      $('#fig').onclick = () => Voz.seq([{ t: fp(w) }]);
+      teclas = {
+        letra: L => { const i = q.pecas.findIndex((p, k) => !cheio.includes(k) && (p === L || J.semAcento(p) === L || p[0] === L)); if (i >= 0) colocar(i); },
+        apagar: () => { for (let k = n - 1; k >= 0; k--) if (cheio[k] !== null) { tirar(k); break; } },
+      };
+      pintar();
+      ouvir(() => Voz.seq([{ t: porLetra ? `Escreva ${fp(w)} com as letrinhas.` : `Monte a palavra ${fp(w)}.` }]));
+    },
+    frase(m, q) {
+      enunciado('Leia a frase');
+      estimulo(`<div class="frase" id="frase">${q.texto.split(' ').map((p, i) => `<span data-w="${i}">${p}</span>`).join(' ')}</div><button class="b-ajuda" id="b-ajuda">🔊 ajuda</button>`);
+      opcoes(q.opcoes.map((par, i) => `<button class="op fig dupla ${q.modelo === 'lugar' ? 'empilha' : ''}" data-i="${i}" aria-label="${esc(par.join(' e '))}">${P(par[0]).e}<span>${P(par[1]).e}</span></button>`).join(''));
+      const palavras = q.texto.replace('.', '').split(' ');
+      $('#b-ajuda').onclick = () => { if (respondido) return; q.ajuda = true; salvar(); Voz.seq([...palavras.map((p, i) => ({ t: fp(p), antes: () => acender(`#frase [data-w="${i}"]`), pausa: 300, rate: 0.85 })), { antes: () => acender(null), pausa: 0 }]); };
+      ligarOpcoes(m, q);
+      ouvir(() => Voz.seq([{ t: 'Leia a frase e toque na figura certa.' }]));
+    },
+  };
+  const letraFala = l => J.ehVogal(l) ? J.falaSilaba(l) : J.falaLetra(J.base(l));
+
+  function responder(m, q, certo) {
+    if (respondido) return;
+    respondido = true; teclas = null;
+    Voz.calar();
+    const desc = m.tipo === 'descoberta';
+    J.registrar(estado, m, { acertou: certo, ajuda: q.ajuda }, hoje(), rng);
+    salvar();
+    const mp = $('#mini-panda');
+    mp.innerHTML = pandaSVG(veste(), certo ? 'uau' : 'pensa');
+    mp.classList.remove('pula', 'inclina'); void mp.offsetWidth; mp.classList.add(certo ? 'pula' : 'inclina');
+    if (certo) plim();
+    const ex = desc ? explicaDescoberta(q, certo) : explicacao(q, certo);
+    $('#fala').innerHTML = ex.html;
+    if (ex.revelar) ex.revelar();
+    const b = $('#b-seguir');
+    b.hidden = false;
+    const seguir = () => { Voz.calar(); render(); };
+    b.onclick = seguir;
+    teclas = { ok: seguir };
+    $('#b-ouvir').onclick = () => Voz.seq(ex.fala);
+    Voz.seq(ex.fala);
+  }
+  const ELOGIOS = ['Isso!', 'Muito bem!', 'Acertou!', 'Boa, {n}!', 'Que demais!', 'Arrasou!'];
+  const QUASE = ['Quase! Olha só:', 'Hmm, olha de novo:', 'Vamos ver juntos:'];
+  const marcaInicio = (w, n) => `<b class="marca">${w.p.slice(0, n)}</b>${w.p.slice(n)}`;
+  // na correção a figura fica e a palavra escrita aparece embaixo
+  function revelarComFigura(w, palavraHTML, classe) {
+    estimulo(`${cartaoFig(w, 'media')}<div class="palavra-grande peq ${classe || ''}">${palavraHTML}</div>`);
+    $('#fig').onclick = () => Voz.seq([{ t: fp(w) }]);
+  }
+  function explicacao(q, certo) {
+    const ab = certo ? sorteia(ELOGIOS).replace('{n}', nome()) : sorteia(QUASE);
+    const fala = [{ t: ab }];
+    switch (q.tipo) {
+      case 'silabas': {
+        const w = P(q.palavra), n = w.s.length;
+        return {
+          html: `${esc(ab)} <b>${w.s.join(' · ')}</b> = ${n} ${n === 1 ? 'pedacinho' : 'pedacinhos'}`,
+          revelar: () => revelarComFigura(w, silSpans(w), 'sep'),
+          fala: fala.concat(w.s.map((s, i) => ({ t: J.falaSilaba(s), antes: () => acenderSil(i), pausa: 260 })), [{ antes: () => acenderSil(-1), t: `${fp(w)} tem ${J.NUM[n]} ${n === 1 ? 'pedacinho' : 'pedacinhos'}!` }]),
+        };
+      }
+      case 'comeca': {
+        const w = P(q.palavra), o = P(q.opcoes[q.correta]), n = w.s[0].length;
+        return { html: `${esc(ab)} ${marcaInicio(w, n)} e ${marcaInicio(o, n)} começam com <b>${w.s[0]}</b>`, fala: fala.concat([{ t: `${fp(w)} e ${fp(o)} começam com ${J.falaSilaba(w.s[0])}.` }]) };
+      }
+      case 'rima': {
+        const w = P(q.palavra), o = P(q.opcoes[q.correta]);
+        const fim = x => `${x.p.slice(0, x.p.length - w.rima.length)}<b class="marca">${x.p.slice(x.p.length - w.rima.length)}</b>`;
+        return { html: `${esc(ab)} ${fim(w)} e ${fim(o)} rimam!`, fala: fala.concat([{ t: `${fp(w)}, ${fp(o)}: rimam!` }]) };
+      }
+      case 'letra': {
+        const w = P(q.palavra);
+        const som = Gravacoes.url('som:' + q.foco);
+        return {
+          html: `${esc(ab)} ${marcaInicio(w, 1)} começa com <b>${q.foco}</b>`,
+          revelar: () => revelarComFigura(w, marcaInicio(w, 1)),
+          fala: fala.concat([{ t: `${fp(w)} começa com ${J.falaLetra(q.foco)}.` }], som ? [{ audio: som }] : []),
+        };
+      }
+      case 'silaba': {
+        const vogal = J.VOGAIS.includes(q.alvo);
+        return {
+          html: vogal ? `${esc(ab)} Esta é a letra <b>${q.alvo}</b>` : `${esc(ab)} <b>${q.alvo[0]}</b> + <b>${q.alvo.slice(1)}</b> = <b class="marca">${q.alvo}</b>`,
+          fala: fala.concat(vogal ? [{ t: J.falaSilaba(q.alvo) }] : [{ t: `${J.falaLetra(q.alvo[0])} com ${J.falaSilaba(q.alvo.slice(1))}:` }, { t: J.falaSilaba(q.alvo), rate: 0.85 }]),
+        };
+      }
+      case 'ler': case 'montar': case 'letras': {
+        const w = P(q.palavra);
+        return {
+          html: `${esc(ab)} <b>${w.p}</b> ${w.e}`,
+          revelar: () => { const pal = $('#pal'); if (pal) pal.classList.add('sep'); },
+          fala: fala.concat(q.tipo === 'ler' ? w.s.map((s, i) => ({ t: J.falaSilaba(s), antes: () => acenderSil(i), pausa: 200, rate: 0.85 })) : [], [{ antes: () => acenderSil(-1), t: `${fp(w)}!` }]),
+        };
+      }
+      case 'frase': {
+        const palavras = q.texto.replace('.', '').split(' ');
+        return {
+          html: `${esc(ab)} <b>${esc(q.texto)}</b>`,
+          fala: fala.concat(palavras.map((p, i) => ({ t: fp(p), antes: () => acender(`#frase [data-w="${i}"]`), pausa: 140 })), [{ antes: () => acender(null), pausa: 0 }]),
+        };
+      }
+    }
+    return { html: esc(ab), fala };
+  }
+  function explicaDescoberta(q, certo) {
+    const w = P(q.palavra);
+    return certo
+      ? { html: `Você já conhece o <b>${q.foco}</b>! ${marcaInicio(w, 1)}`, revelar: () => revelarComFigura(w, marcaInicio(w, 1)), fala: [{ t: `Isso! Você já conhece o ${J.falaLetra(q.foco)}!` }] }
+      : { html: `Tudo bem! ${marcaInicio(w, 1)} começa com <b>${q.foco}</b>. Essa a gente aprende juntos.`, revelar: () => revelarComFigura(w, marcaInicio(w, 1)), fala: [{ t: `Tudo bem! ${fp(w)} começa com ${J.falaLetra(q.foco)}. Essa a gente aprende juntos.` }] };
+  }
+
+  // ---------- apresentação da letra (nova, relembrar ou rever pela trilha) ----------
+  function renderIntro(L, tipo, aoFim) {
+    const vogal = J.VOGAIS.includes(L), nomeL = J.falaLetra(L);
+    const fam = J.familia(L), exs = J.exemplos(L, J.liberadas(estado), 3);
+    const titulo = tipo === 'nova' ? 'LETRA NOVA!' : tipo === 'reforco' ? 'VAMOS RELEMBRAR?' : `A LETRA ${L}`;
+    palco.innerHTML = `
+      <div class="intro">
+        ${tipo === 'revisao' ? `<div class="barra"><button class="b-x" id="b-voltar" aria-label="Voltar">✕</button></div>` : ''}
+        <div class="intro-topo">${titulo}</div>
+        <div class="intro-corpo">
+          <button class="letrao" id="letrao" aria-label="letra ${L}">${L}</button>
+          ${vogal ? '' : `<div class="familia">${fam.map((s, i) => `<button class="peca" data-f="${i}">${s}</button>`).join('')}</div>`}
+          <div class="exemplos">${exs.map((w, i) => `<button class="exemplo" data-x="${i}"><span class="em">${w.e}</span><span class="pl">${marcaInicio(w, 1)}</span></button>`).join('')}</div>
+        </div>
+        <div class="rodape"><div class="mini-panda">${pandaSVG(veste(), 'feliz')}</div><div class="fala" id="fala">${vogal ? `Esta é a vogal <b>${L}</b>.` : `Esta é a letra <b>${L}</b>.`}</div><button class="b-seguir" id="b-seguir" aria-label="Vamos brincar">▶</button></div>
+      </div>`;
+    const som = Gravacoes.url('som:' + L);
+    const falaLetra = () => [
+      { t: vogal ? `Esta é a vogal ${nomeL}.` : `Esta é a letra ${nomeL}.`, antes: () => acender('#letrao') },
+      som ? { t: 'Ela faz assim:', pausa: 80 } : null, som ? { audio: som } : null,
+    ];
+    const tudo = () => Voz.seq([
+      { t: tipo === 'nova' ? 'Letra nova!' : tipo === 'reforco' ? 'Vamos relembrar!' : '', pausa: 150 },
+      ...falaLetra(),
+      ...(vogal ? [] : [{ t: 'Com as vogais, ela faz:', antes: () => acender(null) }, ...fam.map((s, i) => ({ t: J.falaSilaba(s), antes: () => acender(`[data-f="${i}"]`), pausa: 220, rate: 0.85 }))]),
+      exs[0] ? { t: `${nomeL} de ${fp(exs[0])}.`, antes: () => acender('[data-x="0"]') } : null,
+      ...exs.slice(1).map((w, i) => ({ t: fp(w), antes: () => acender(`[data-x="${i + 1}"]`) })),
+      { antes: () => acender(null), pausa: 0 },
+    ]);
+    $('#letrao').onclick = () => Voz.seq(falaLetra());
+    $$('[data-f]').forEach(b => { b.onclick = () => { pop(); Voz.seq([{ t: J.falaSilaba(fam[Number(b.dataset.f)]), rate: 0.85 }]); }; });
+    $$('[data-x]').forEach(b => { b.onclick = () => Voz.seq([{ t: fp(exs[Number(b.dataset.x)]) }]); });
+    const fim = () => { Voz.calar(); aoFim(); };
+    $('#b-seguir').onclick = fim;
+    if ($('#b-voltar')) $('#b-voltar').onclick = fim;
+    teclas = { ok: fim };
+    setTimeout(tudo, 200);
+  }
+
+  function concluirMissao(m) {
+    const desc = m.tipo === 'descoberta';
+    const res = J.finalizarMissao(estado, m, hoje(), horaAgora());
+    salvar();
+    const podeComprar = J.ITENS.some(it => it.preco > 0 && !estado.roupas.tem.includes(it.id) && it.preco <= estado.bambus);
+    const titulo = desc ? 'DESCOBERTA FEITA!' : 'MISSÃO CUMPRIDA!';
+    palco.innerHTML = `
+      <div class="fim">
+        <h1 class="fim-titulo">${titulo}</h1>
+        <div class="cena dancando">${cenaHTML(veste(), 'uau')}</div>
+        ${res.conquistas.length ? `<div class="destaque">${desc ? 'Letras que você já conhece:' : res.conquistas.length > 1 ? 'Letras firmes:' : 'Letra firme:'}</div><div class="conquistas">${res.conquistas.map(l => `<span class="letra-conq">${l}</span>`).join('')}</div>` : ''}
+        <div class="ganhos">${res.ganhos.filter(g => g.n > 0).map(g => `<div class="ganho"><span>${esc(g.rotulo)}</span><b>+${g.n} 🎋</b></div>`).join('')}</div>
+        <button class="b-grande verde" id="b-casa">🏠 VOLTAR</button>
+        ${podeComprar ? `<button class="b-nav largo" data-ir="roupas">👗 Já dá para comprar uma roupinha!</button>` : ''}
+      </div>`;
+    confete(); festa();
+    const voltar = () => ir('casa');
+    $('#b-casa').onclick = voltar;
+    teclas = { ok: voltar };
+    const n = res.conquistas.length;
+    const falas = desc
+      ? [{ t: n ? `Uau! Você já conhece ${n === 1 ? 'uma letra' : J.NUM[n] && n <= 5 ? J.NUM[n] + ' letras' : n + ' letras'}!` : 'Agora vamos aprender as letras juntos!' }, { t: `Você ganhou ${res.total} bambus!` }]
+      : [{ t: `Missão cumprida! Você ganhou ${res.total} bambus!` }, n ? { t: n > 1 ? 'E ficou craque em letras novas!' : `E ficou craque na letra ${J.falaLetra(res.conquistas[0])}!` } : null, podeComprar ? { t: `Já dá para comprar uma roupinha para o ${amigo()}!` } : null];
+    setTimeout(() => Voz.seq(falas), 300);
+  }
+
+  // ===================== TRILHA =====================
+  function renderTrilha() {
+    const ab = J.mundosAbertos(estado), lib = J.liberadas(estado), dec = J.decodaveis(lib);
+    const lidas = Object.keys(estado.palavras).filter(p => estado.palavras[p].lidas > 0).length;
+    const estadoLetra = l => { const s = estado.letras[l]; return !s.lib ? '' : s.dominada ? 'lib firme' : 'lib aprendendo'; };
+    const corpo = mu => {
+      if (mu.n === 2) return `<div class="tiles">${J.SEQ.map(l => `<button class="tile ${estadoLetra(l)}" data-l="${l}" aria-label="letra ${l}">${l}</button>`).join('')}</div>`;
+      if (mu.n === 3 && ab[3]) return `<p>${dec.length} palavras para ler · já leu ${lidas}</p><div class="mini-emojis">${dec.slice(0, 12).map(w => w.e).join('')}</div>`;
+      return '';
+    };
+    palco.innerHTML = `
+      <div class="pagina">
+        <div class="barra"><button class="b-x" data-ir="casa" aria-label="Voltar">✕</button><h2>🗺️ TRILHA</h2></div>
+        <div class="trilha">${J.MUNDOS.map(mu => `
+          <div class="mundo ${ab[mu.n] ? '' : 'fechado'}">
+            <div class="num">${ab[mu.n] ? mu.n : '🔒'}</div>
+            <h3>${mu.icone} ${mu.nome.toUpperCase()}</h3>
+            <p>${ab[mu.n] ? esc(mu.descr) : esc(mu.requisito)}</p>
+            ${corpo(mu)}
+          </div>`).join('')}
+        </div>
+      </div>`;
+    $$('.tile[data-l]').forEach(b => {
+      b.onclick = () => {
+        const l = b.dataset.l;
+        if (!estado.letras[l].lib) { Voz.seq([{ t: 'Essa letra ainda vai chegar!' }]); return; }
+        renderIntro(l, 'revisao', () => render());
+      };
+    });
+    Voz.seq([{ t: `Você já conhece ${lib.size} letras!` }]);
+  }
+
+  // ===================== PALAVRAS =====================
+  function renderPalavras() {
+    const lidas = Object.keys(estado.palavras).filter(p => estado.palavras[p].lidas > 0 && P(p)).sort();
+    palco.innerHTML = `
+      <div class="pagina">
+        <div class="barra"><button class="b-x" data-ir="casa" aria-label="Voltar">✕</button><h2>📖 MINHAS PALAVRAS</h2></div>
+        <div class="destaque">${lidas.length ? `${esc(nome().toUpperCase())} JÁ LEU ${lidas.length} ${lidas.length === 1 ? 'PALAVRA' : 'PALAVRAS'}!` : ''}</div>
+        ${lidas.length ? `<div class="grade-palavras">${lidas.map(p => `<button class="palavra-card" data-p="${esc(p)}"><span class="em">${P(p).e}</span><span class="pl">${p}</span></button>`).join('')}</div>`
+        : `<div class="vazio">As palavras que você ler sozinha aparecem aqui!</div>`}
+      </div>`;
+    $$('.palavra-card').forEach(b => { b.onclick = () => Voz.seq([{ t: fp(b.dataset.p) }]); });
+    Voz.seq([{ t: lidas.length ? `Você já leu ${lidas.length} ${lidas.length === 1 ? 'palavra' : 'palavras'}!` : 'As palavras que você ler aparecem aqui!' }]);
+  }
+
+  // ===================== ROUPINHAS =====================
+  let slotAtual = 'cabeca', provando = null;
+  function renderRoupas() {
+    const vs = Object.assign({}, veste());
+    if (provando) vs[J.ITEM[provando].slot] = provando;
+    const itens = J.ITENS.filter(it => it.slot === slotAtual);
+    const card = it => {
+      const tem = estado.roupas.tem.includes(it.id), usando = veste()[it.slot] === it.id;
+      const cls = ['item', tem ? '' : estado.bambus < it.preco ? 'caro' : '', usando ? 'vestindo' : '', provando === it.id ? 'provando' : ''].join(' ');
+      return `<button class="${cls}" data-item="${it.id}" aria-label="${esc(it.nome)}">${previaItem(it)}<span class="preco">${tem ? (usando ? '✓' : '') : `${it.preco} 🎋`}</span>${usando && it.slot !== 'fundo' ? '<span class="selo">usando</span>' : ''}</button>`;
+    };
+    const itP = provando && J.ITEM[provando], podeP = itP && estado.bambus >= itP.preco;
+    palco.innerHTML = `
+      <div class="pagina">
+        <div class="barra"><button class="b-x" data-ir="casa" aria-label="Voltar">✕</button><h2>👗 ROUPINHAS</h2><div class="contador">🎋 ${estado.bambus}</div></div>
+        <div class="roupas-grid">
+          <div class="cena" id="cena">${cenaHTML(vs, 'feliz')}</div>
+          <div class="loja">
+            <div class="abas">${J.SLOTS.map(s => `<button class="aba ${s.id === slotAtual ? 'ativa' : ''}" data-slot="${s.id}" aria-label="${s.nome}">${s.icone}</button>`).join('')}</div>
+            ${itP ? `<div class="compra"><button class="b-grande ${podeP ? 'verde' : ''}" id="b-comprar" ${podeP ? '' : 'disabled'}>${podeP ? `COMPRAR · ${itP.preco} 🎋` : `FALTAM ${itP.preco - estado.bambus} 🎋`}</button><button class="b-x" id="b-desistir" aria-label="Não comprar">✕</button></div>` : ''}
+            <div class="itens">${itens.map(card).join('')}</div>
+          </div>
+        </div>
+      </div>`;
+    $$('.aba').forEach(b => { b.onclick = () => { pop(); slotAtual = b.dataset.slot; provando = null; renderRoupas(); }; });
+    $$('[data-item]').forEach(b => {
+      b.onclick = () => {
+        const id = b.dataset.item, it = J.ITEM[id];
+        if (estado.roupas.tem.includes(id)) { provando = null; J.vestir(estado, id); salvar(); pop(); renderRoupas(); return; }
+        provando = provando === id ? null : id;
+        renderRoupas();
+        if (provando) Voz.seq([{ t: estado.bambus >= it.preco ? `${it.nome}! Quer comprar por ${it.preco} bambus?` : `${it.nome}. Faltam ${it.preco - estado.bambus} bambus. Vamos fazer mais missões!` }]);
+      };
+    });
+    if ($('#b-comprar')) $('#b-comprar').onclick = () => {
+      if (!J.comprar(estado, provando)) return;
+      provando = null; salvar(); festa(); confete(); renderRoupas();
+      Voz.seq([{ t: sorteia(['Ficou lindo!', 'Que chique!', 'Adorei!']) }]);
+    };
+    if ($('#b-desistir')) $('#b-desistir').onclick = () => { provando = null; renderRoupas(); };
+  }
+
+  // ===================== PAINEL DO PAPAI =====================
+  let letraSel = null;
+  const dataTxt = n => { const d = new Date(n * 86400000); return String(d.getUTCDate()).padStart(2, '0') + '/' + String(d.getUTCMonth() + 1).padStart(2, '0'); };
+  function renderPainel() {
+    const lib = J.liberadas(estado), dec = J.decodaveis(lib), ab = J.mundosAbertos(estado), dia = estado.dia;
+    const prox = J.proximaLetra(estado), aprend = J.aprendendo(estado);
+    const lidas = Object.keys(estado.palavras).filter(p => estado.palavras[p].lidas > 0);
+    const hist = estado.historico.slice(-14).reverse();
+    const fracas = J.letrasFracas(estado, 6), pfracas = J.palavrasFracas(estado, 8);
+    const hj = estado.historico.find(h => h.dia === hoje());
+    const naoLidas = dec.filter(w => !(estado.palavras[w.p] && estado.palavras[w.p].lidas > 0));
+    const st = l => { const s = estado.letras[l]; return !s.lib ? '' : s.dominada ? 'lib firme' : 'lib aprendendo'; };
+    const vozes = Voz.listar();
+    const sel = letraSel && estado.letras[letraSel];
+    palco.innerHTML = `
+      <div class="pagina painel">
+        <div class="barra"><button class="b-x" id="b-fechar" aria-label="Fechar">✕</button><h2>Painel do papai</h2></div>
+        <section class="card">
+          <h3>Hoje (${dataTxt(hoje())})</h3>
+          <div class="nums">
+            <div class="num"><b>${dia.missoes.filter(m => m.feita).length}/${dia.missoes.length}</b>missões${dia.extras ? ` + ${dia.extras} extra` : ''}</div>
+            <div class="num"><b>${hj ? Math.round(100 * hj.dePrimeira / Math.max(1, hj.perguntas)) + '%' : '—'}</b>de primeira (${hj ? hj.perguntas : 0} perguntas)</div>
+            <div class="num"><b>${lib.size}/${J.SEQ.length}</b>letras liberadas</div>
+            <div class="num"><b>${lidas.length}</b>palavras já lidas sozinha</div>
+            <div class="num"><b>${dec.length}</b>palavras possíveis com essas letras</div>
+            <div class="num"><b>${estado.dias.length}</b>dias jogados</div>
+          </div>
+          ${dia.revisar.length ? `<p><b>Para rever hoje no papel</b> (o que ela errou antes de acertar):</p><ul>${dia.revisar.slice(-12).map(r => `<li>${esc(r.texto)}${r.tentativas > 2 ? ` — ${r.tentativas} tentativas` : ''}</li>`).join('')}</ul>` : '<p>Nada para rever hoje.</p>'}
+        </section>
+        <section class="card">
+          <h3>Letras</h3>
+          <div class="legenda"><span style="background:var(--l500)"></span>firme <span style="background:#fff;border:3px solid var(--rosa)"></span>aprendendo <span style="background:#eee9f6"></span>ainda não chegou</div>
+          <div class="tiles">${J.SEQ.map(l => { const s = estado.letras[l]; return `<button class="tile ${st(l)}" data-l="${l}">${l}${s.lib ? `<small>${s.acertos}✓${s.erros ? ' ' + s.erros + '✗' : ''}</small>` : ''}</button>`; }).join('')}</div>
+          <p>${aprend.length ? `Aprendendo agora: <b>${aprend.join(', ')}</b> — fica firme com ${J.DOMINIO} acertos de primeira seguidos.` : prox ? `Próxima letra: <b>${prox}</b> (entra na próxima missão, até ${estado.config.novasPorDia} por dia).` : 'Todas as letras desta etapa já chegaram.'}
+          ${estado.descoberta.feita ? ` Na descoberta ela já conhecia: <b>${(estado.descoberta.conhecidas || []).join(', ') || 'nenhuma'}</b>.` : ''}</p>
+          ${sel ? `<div class="acoes"><b style="align-self:center">Letra ${letraSel}:</b>
+            ${sel.lib ? `<button class="bt" data-acao="rever">Rever a apresentação</button>` : ''}
+            ${!sel.dominada ? `<button class="bt forte" data-acao="conhecida">Marcar como firme</button>` : ''}
+            ${sel.lib ? `<button class="bt perigo" data-acao="bloquear">Tirar (volta a ser nova)</button>` : ''}
+            <button class="bt" data-acao="fechar-letra">Fechar</button></div>` : '<p style="color:var(--suave)">Toque numa letra para marcar como firme, rever a apresentação ou tirar.</p>'}
+        </section>
+        <section class="card">
+          <h3>Para treinar no papel</h3>
+          ${fracas.length || pfracas.length ? `${fracas.length ? `<p>Letras com mais erro: <b>${fracas.map(l => `${l} (${estado.letras[l].erros}✗/${estado.letras[l].acertos}✓)`).join(' · ')}</b></p>` : ''}${pfracas.length ? `<p>Palavras com mais erro: <b>${pfracas.join(', ')}</b></p>` : ''}
+          <p style="color:var(--suave)">Sugestão: escrever a letra grande, falar o som dela e achar coisas da casa que começam com ela.</p>` : '<p>Ainda sem erros que se repetem.</p>'}
+        </section>
+        <section class="card">
+          <h3>Mundos</h3>
+          ${J.MUNDOS.map(mu => `<div class="linha"><b>${mu.icone} ${mu.n}. ${esc(mu.nome)}</b> — ${ab[mu.n] ? 'aberto' : 'fechado (' + esc(mu.requisito) + ')'}
+            ${mu.n >= 3 ? `<label><input type="checkbox" data-forcar="${mu.n}" ${estado.forcados[mu.n] ? 'checked' : ''}> abrir agora</label>` : ''}</div>`).join('')}
+        </section>
+        <section class="card">
+          <h3>Palavras</h3>
+          <p><b>Já leu sozinha (${lidas.length}):</b> ${lidas.sort().join(', ') || '—'}</p>
+          <p><b>Já dá para ler e ainda não leu (${naoLidas.length}):</b> ${naoLidas.map(w => w.p).join(', ') || '—'}</p>
+        </section>
+        <section class="card">
+          <h3>Ajustes</h3>
+          <div class="linha"><label>Missões por dia <select data-cfg="missoesPorDia">${[1, 2, 3, 4, 5].map(n => `<option ${estado.config.missoesPorDia === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+            <label>Perguntas por missão <select data-cfg="perguntasPorMissao">${[5, 6, 7, 8, 10, 12].map(n => `<option ${estado.config.perguntasPorMissao === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+            <label>Letras novas por dia (no máximo) <select data-cfg="novasPorDia">${[1, 2, 3, 4].map(n => `<option ${estado.config.novasPorDia === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label></div>
+          <div class="linha"><label>Nome da criança <input type="text" id="cfg-nome" value="${esc(nome())}" maxlength="20"></label>
+            <label>Nome do amigo <input type="text" id="cfg-amigo" value="${esc(amigo())}" maxlength="20"></label>
+            <label><input type="checkbox" id="cfg-som" ${estado.prefs.som ? 'checked' : ''}> sons de festa</label>
+            <label><input type="checkbox" id="cfg-voz" ${estado.prefs.voz ? 'checked' : ''}> voz ligada</label></div>
+          <div class="acoes"><button class="bt" id="b-dar">Dar 10 bambus de presente</button></div>
+        </section>
+        <section class="card">
+          <h3>Voz</h3>
+          ${Voz.tem ? `<div class="linha"><label>Voz <select id="cfg-vozes"><option value="">automática (${esc(Voz.nomeAtual() || 'nenhuma em português')})</option>${vozes.map(v => `<option value="${esc(v.name)}" ${estado.prefs.vozNome === v.name ? 'selected' : ''}>${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select></label>
+            <label>Velocidade <input type="range" id="cfg-vel" min="0.6" max="1.2" step="0.05" value="${estado.prefs.velocidade}"></label>
+            <button class="bt forte" id="b-testar">Testar</button></div>
+            ${vozes.length ? '' : '<p style="color:#991b1b">Este aparelho não tem voz em português instalada. No Android: Configurações → Idioma → Saída de texto para fala → Google, português (Brasil).</p>'}`
+          : '<p style="color:#991b1b">Este navegador não tem leitura em voz alta. Use o Chrome.</p>'}
+          <p><b>Voz do papai (opcional):</b> a voz do navegador lê bem sílabas e palavras, mas não sabe fazer o som sozinho da letra (o "mmmm"). Grave aqui o SOM curtinho de cada letra (M = "mmmm", P = "p" sem o "ê", vogal = o som dela). Ele toca na apresentação da letra e na correção. Fica salvo só neste aparelho.</p>
+          <div class="voz-grid">${J.SEQ.map(l => { const tem = !!Gravacoes.url('som:' + l); return `<div class="voz-item"><b>${l}</b><button class="bt" data-gravar="${l}">● gravar</button>${tem ? `<button class="bt" data-tocar="${l}">▶</button><button class="bt perigo" data-apagar="${l}">✕</button><span class="ok">ok</span>` : ''}</div>`; }).join('')}</div>
+        </section>
+        <section class="card">
+          <h3>Histórico (14 dias)</h3>
+          ${hist.length ? `<table><tr><th>dia</th><th>missões</th><th>perguntas</th><th>de primeira</th><th>bambus</th><th>letras firmes</th></tr>${hist.map(h => `<tr><td>${dataTxt(h.dia)}</td><td>${h.missoes}</td><td>${h.perguntas}</td><td>${Math.round(100 * h.dePrimeira / Math.max(1, h.perguntas))}%</td><td>${h.bambus}</td><td>${(h.letras || []).join(' ')}</td></tr>`).join('')}</table>` : '<p>Ainda sem histórico.</p>'}
+        </section>
+        <section class="card">
+          <h3>Dados</h3>
+          <p>O progresso fica salvo neste aparelho. Para trocar de aparelho: exporte aqui e importe no outro.</p>
+          <div class="acoes"><button class="bt" id="b-exportar">Exportar progresso</button><label class="bt" style="cursor:pointer">Importar<input type="file" id="b-importar" accept=".json,application/json" hidden></label>
+            <button class="bt" id="b-redescobrir">Refazer a descoberta de letras</button><button class="bt perigo" id="b-zerar">Zerar tudo</button></div>
+        </section>
+        <section class="card">
+          <h3>Como o jogo ensina</h3>
+          <p>Ensino explícito e em ordem da letra e do som (método fônico), com a sílaba simples do português (consoante + vogal) como porta de entrada, sempre terminando em palavra ou frase de verdade, com figura. A escrita (montar com sílabas e letras) ajuda a fixar a leitura. Ordem das letras: ${J.SEQ.join(' ')}. Cada letra nova só entra quando a anterior está firme. Errou: a pergunta volta 2 a 4 perguntas depois, até acertar. Não tem relógio, vidas nem som de erro.</p>
+        </section>
+      </div>`;
+    $('#b-fechar').onclick = () => { painelLiberado = false; letraSel = null; ir('casa'); };
+    $$('.painel .tile[data-l]').forEach(b => { b.onclick = () => { letraSel = letraSel === b.dataset.l ? null : b.dataset.l; renderPainel(); }; });
+    $$('[data-acao]').forEach(b => {
+      b.onclick = () => {
+        const a = b.dataset.acao, l = letraSel;
+        if (a === 'rever') return renderIntro(l, 'revisao', () => renderPainel());
+        if (a === 'conhecida') J.marcarConhecida(estado, l, hoje());
+        if (a === 'bloquear' && confirm(`Tirar a letra ${l}? Ela volta a ser apresentada como nova.`)) J.bloquearLetra(estado, l);
+        if (a === 'fechar-letra') letraSel = null;
+        salvar(); renderPainel();
+      };
+    });
+    $$('[data-forcar]').forEach(c => { c.onchange = () => { estado.forcados[c.dataset.forcar] = c.checked; salvar(); renderPainel(); }; });
+    $$('[data-cfg]').forEach(s => { s.onchange = () => { estado.config[s.dataset.cfg] = Number(s.value); J.garantirDia(estado, hoje()); salvar(); }; });
+    $('#cfg-nome').onchange = ev => { estado.prefs.nome = ev.target.value.trim() || 'Duda'; salvar(); };
+    $('#cfg-amigo').onchange = ev => { estado.prefs.amigo = ev.target.value.trim() || 'Panda'; salvar(); };
+    $('#cfg-som').onchange = ev => { estado.prefs.som = ev.target.checked; salvar(); };
+    $('#cfg-voz').onchange = ev => { estado.prefs.voz = ev.target.checked; salvar(); };
+    $('#b-dar').onclick = () => { estado.bambus += 10; estado.bambusTotal += 10; salvar(); avisar('+10 bambus 🎋'); };
+    if ($('#cfg-vozes')) {
+      $('#cfg-vozes').onchange = ev => { estado.prefs.vozNome = ev.target.value; salvar(); Voz.escolher(); };
+      $('#cfg-vel').onchange = ev => { estado.prefs.velocidade = Number(ev.target.value); salvar(); };
+      $('#b-testar').onclick = () => Voz.seq([{ t: `Oi, ${nome()}! Bola, pato, macaco.` }, { t: J.falaSilaba('MA') }, { t: J.falaSilaba('PE') }]);
+    }
+    $$('[data-gravar]').forEach(b => { b.onclick = () => gravarSom(b.dataset.gravar, b); });
+    $$('[data-tocar]').forEach(b => { b.onclick = () => Voz.seq([{ audio: Gravacoes.url('som:' + b.dataset.tocar) }]); });
+    $$('[data-apagar]').forEach(b => { b.onclick = async () => { await Gravacoes.apagar('som:' + b.dataset.apagar); renderPainel(); }; });
+    $('#b-exportar').onclick = () => {
+      const blob = new Blob([JSON.stringify(estado, null, 1)], { type: 'application/json' });
+      const a = document.createElement('a'), d = new Date();
+      a.href = URL.createObjectURL(blob); a.download = `joguinho-ler-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}.json`;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    };
+    $('#b-importar').onchange = ev => {
+      const f = ev.target.files[0]; if (!f) return;
+      f.text().then(t => { try { estado = J.validarImportacao(t); J.garantirDia(estado, hoje()); salvar(); avisar('Progresso importado'); renderPainel(); } catch (e) { alert(e.message); } });
+    };
+    $('#b-redescobrir').onclick = () => { if (!confirm('Refazer a descoberta de letras na próxima vez que ela tocar em BRINCAR? (as letras que já tem continuam)')) return; estado.descoberta.feita = false; estado.missaoAtiva = null; salvar(); avisar('A descoberta vai rodar de novo'); };
+    $('#b-zerar').onclick = () => {
+      if (!confirm('Zerar TODO o progresso (letras, palavras, bambus e roupinhas)?') || !confirm('Tem certeza? Não dá para desfazer.')) return;
+      estado = J.estadoInicial(); J.garantirDia(estado, hoje()); salvar(); letraSel = null; avisar('Tudo zerado'); renderPainel();
+    };
+  }
+  async function gravarSom(l, botao) {
+    if (!navigator.mediaDevices || !window.MediaRecorder) { alert('Este navegador não grava áudio.'); return; }
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) { alert('Sem permissão para usar o microfone.'); return; }
+    const rec = new MediaRecorder(stream), partes = [];
+    rec.ondataavailable = ev => { if (ev.data && ev.data.size) partes.push(ev.data); };
+    const fim = new Promise(r => { rec.onstop = r; });
+    botao.textContent = '● gravando…'; botao.disabled = true;
+    rec.start();
+    setTimeout(() => { if (rec.state !== 'inactive') rec.stop(); }, 2200);
+    await fim;
+    stream.getTracks().forEach(t => t.stop());
+    const blob = new Blob(partes, { type: rec.mimeType || 'audio/webm' });
+    try { await Gravacoes.salvarSom('som:' + l, blob); } catch (e) { alert('Não consegui salvar a gravação neste aparelho.'); }
+    renderPainel();
+    Voz.seq([{ audio: Gravacoes.url('som:' + l) }]);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

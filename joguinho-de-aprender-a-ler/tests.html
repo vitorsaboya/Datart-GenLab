@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Testes — Joguinho de Aprender a Ler</title>
+<style>
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: #faf7ff; color: #1f1633; margin: 0; padding: 16px; font-size: 16px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  #resumo { font-size: 20px; font-weight: 800; padding: 10px 14px; border-radius: 12px; margin: 10px 0 16px; }
+  #resumo.ok { background: #dcfce7; color: #14532d; } #resumo.falha { background: #fee2e2; color: #7f1d1d; }
+  h2 { font-size: 18px; margin: 18px 0 6px; }
+  .t { padding: 3px 0; font-family: Consolas, monospace; font-size: 14px; }
+  .t.ok::before { content: "✔ "; color: #15803d; } .t.falha { color: #b91c1c; } .t.falha::before { content: "✘ "; }
+</style>
+</head>
+<body>
+<h1>Testes da lógica pura</h1>
+<div>Carrega o bloco <code>&lt;script id="logica"&gt;</code> do <code>index.html</code> e testa. Precisa ser aberto por http.</div>
+<div id="resumo">rodando…</div>
+<div id="saida"></div>
+<script>
+(async function () {
+  'use strict';
+  const saida = document.getElementById('saida');
+  let total = 0, falhas = 0;
+  const resultados = [];
+  function secao(nome) { const h = document.createElement('h2'); h.textContent = nome; saida.appendChild(h); }
+  function teste(nome, fn) {
+    total++;
+    let ok = false, msg = '';
+    try { const r = fn(); ok = r === undefined || r === true; if (!ok) msg = String(r); } catch (e) { msg = e && e.message ? e.message : String(e); }
+    if (!ok) falhas++;
+    resultados.push({ nome, ok, msg });
+    const d = document.createElement('div');
+    d.className = 't ' + (ok ? 'ok' : 'falha');
+    d.textContent = nome + (msg ? ' — ' + msg : '');
+    saida.appendChild(d);
+  }
+  function igual(a, b, ctx) { if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${ctx || ''} esperado ${JSON.stringify(b)}, veio ${JSON.stringify(a)}`); }
+  function verdade(c, ctx) { if (!c) throw new Error(ctx || 'condição falsa'); }
+
+  let J;
+  try {
+    const html = await (await fetch('index.html', { cache: 'no-store' })).text();
+    const m = html.match(/<script id="logica">([\s\S]*?)<\/script>/);
+    J = new Function(m[1] + '\nreturn Jogo;')();
+  } catch (e) { secao('carregar'); teste('carregar a lógica do index.html', () => { throw e; }); fim(); return; }
+
+  const HOJE = 20500;
+  const comLetras = (letras, extra) => { const e = J.estadoInicial(); for (const l of letras) J.marcarConhecida(e, l, HOJE); e.descoberta.feita = true; J.garantirDia(e, HOJE); return Object.assign(e, extra || {}); };
+  const W = p => J.POR_PALAVRA[p];
+
+  // ======================================================================
+  secao('Banco de palavras');
+  teste('sílabas juntas formam a palavra, sem palavra repetida, toda palavra tem figura e categoria', () => {
+    const vistas = new Set();
+    for (const w of J.PALAVRAS) {
+      igual(w.s.join(''), w.p, w.p);
+      verdade(!vistas.has(w.p), 'repetida: ' + w.p); vistas.add(w.p);
+      verdade(w.e && w.e.length >= 1, 'sem figura: ' + w.p);
+      verdade(['m', 'f'].includes(w.g), 'gênero: ' + w.p);
+      verdade(['coisa', 'comida', 'bicho', 'gente', 'corpo', 'numero'].includes(w.cat), 'categoria: ' + w.p);
+    }
+  });
+  teste('separação de sílabas confere com a tabela de referência (feita à mão)', () => {
+    const ref = { MACACO: 'MA.CA.CO', PATINETE: 'PA.TI.NE.TE', NAVIO: 'NA.VI.O', DINOSSAURO: 'DI.NOS.SAU.RO', CACHORRO: 'CA.CHOR.RO', BICICLETA: 'BI.CI.CLE.TA', FOGUETE: 'FO.GUE.TE',
+      ÁRVORE: 'ÁR.VO.RE', ESTRELA: 'ES.TRE.LA', TESOURA: 'TE.SOU.RA', BALEIA: 'BA.LEI.A', COELHO: 'CO.E.LHO', CORAÇÃO: 'CO.RA.ÇÃO', TARTARUGA: 'TAR.TA.RU.GA', PÉ: 'PÉ', AVIÃO: 'A.VI.ÃO' };
+    for (const p in ref) igual(W(p).s.join('.'), ref[p], p);
+  });
+  teste('com TODAS as letras, as decodáveis são exatamente o 1º bloco do banco (67 palavras, separadas à mão)', () => {
+    const lib = new Set(J.SEQ), dec = J.decodaveis(lib).map(w => w.p);
+    const bloco1 = J.BANCO.slice(0, J.BANCO.indexOf(J.BANCO.find(l => l.startsWith('ABELHA|')))).map(l => l.split('|')[0]);
+    igual(bloco1.length, 67, 'tamanho do bloco');
+    igual(dec, bloco1);
+  });
+  teste('com A E I O U M D L P lê exatamente MALA MAPA MOEDA DADO DEDO DUDA LUA LUPA PIPA PÉ', () => {
+    const dec = J.decodaveis(new Set('AEIOUMDLP'.split(''))).map(w => w.p).sort();
+    igual(dec, ['DADO', 'DEDO', 'DUDA', 'LUA', 'LUPA', 'MALA', 'MAPA', 'MOEDA', 'PIPA', 'PÉ'].sort());
+  });
+  teste('regras do som: S e R entre vogais, CE/GE e sílabas complexas NÃO são decodáveis', () => {
+    const lib = new Set(J.SEQ);
+    for (const p of ['CASA', 'ROSA', 'RAPOSA', 'CAMISA', 'PERU', 'JACARÉ', 'PIRULITO', 'DOCE', 'TESOURA', 'PANDA', 'BALEIA', 'MEL', 'ILHA', 'ABACAXI', 'RELÓGIO']) verdade(!J.decodavel(W(p), lib), p);
+    for (const p of ['RATO', 'RUA', 'SAPO', 'SETE', 'CAFÉ', 'BEBÊ', 'VOVÔ', 'GATO', 'JOGO', 'JANELA', 'OVO', 'PÉ']) verdade(J.decodavel(W(p), lib), p);
+  });
+  teste('letras de que a palavra precisa (sem acento)', () => {
+    igual(W('CAFÉ').letras.sort(), ['A', 'C', 'E', 'F']); igual(W('BEBÊ').letras.sort(), ['B', 'E']); igual(W('TOMATE').letras.sort(), ['A', 'E', 'M', 'O', 'T']);
+  });
+  teste('sílaba tônica e rima conferem com a referência', () => {
+    const ref = { PATO: 'ATO', CAFÉ: 'É', AVIÃO: 'ÃO', 'ÍMÃ': 'ÍMÃ', FOGUETE: 'ETE', BALEIA: 'EIA', ÁRVORE: 'ÁRVORE', LÁPIS: 'ÁPIS', ÔNIBUS: 'ÔNIBUS', RELÓGIO: 'ÓGIO',
+      ABACAXI: 'I', SOL: 'OL', NUVEM: 'UVEM', TREM: 'EM', PÉ: 'É', LUA: 'UA', COELHO: 'ELHO', ESTRELA: 'ELA', DINOSSAURO: 'AURO', PERU: 'U', NARIZ: 'IZ' };
+    for (const p in ref) igual(W(p).rima, ref[p], p);
+  });
+  teste('grupos de rima conhecidos', () => {
+    const grupo = r => J.PALAVRAS.filter(w => w.rima === r).map(w => w.p).sort();
+    igual(grupo('ATO'), ['GATO', 'PATO', 'RATO', 'SAPATO']);
+    igual(grupo('OCA'), ['BOCA', 'FOCA', 'PIPOCA']);
+    igual(grupo('INO'), ['MENINO', 'PEPINO', 'SINO']);
+    igual(grupo('É'), ['BONÉ', 'CAFÉ', 'JACARÉ', 'PÉ']);
+  });
+  teste('palavras ruins para palmas (hiato e ditongo crescente) ficam de fora — e só elas', () => {
+    const fora = J.PALAVRAS.filter(w => !w.palmas).map(w => w.p).sort();
+    igual(fora, ['AVIÃO', 'BALEIA', 'CANOA', 'COELHO', 'COROA', 'JOANINHA', 'LEÃO', 'LUA', 'MOEDA', 'NAVIO', 'PIANO', 'RELÓGIO', 'RUA', 'UNICÓRNIO', 'VIOLÃO'].sort());
+  });
+  teste('há palavras de 1, 2, 3 e 4 pedacinhos para bater palmas', () => { for (const n of [1, 2, 3, 4]) verdade(J.PALAVRAS.filter(w => w.palmas && w.s.length === n).length >= 4, 'n=' + n); });
+  teste('letra do começo: ZEBRA fica de fora (Z ainda não é ensinado); CACHORRO começa com C', () => {
+    igual(J.PALAVRAS.filter(w => !w.ini).map(w => w.p), ['ZEBRA']);
+    igual(W('CACHORRO').ini, 'C'); igual(W('ÁRVORE').ini, 'A'); igual(W('ÔNIBUS').ini, 'O');
+  });
+  teste('toda letra da ordem tem palavra-chave que começa com ela e pelo menos 3 palavras', () => {
+    for (const l of J.SEQ) { igual(W(J.LETRA[l].chave).ini, l, 'chave ' + l); verdade(J.PALAVRAS.filter(w => w.ini === l).length >= 3, 'poucas palavras com ' + l); }
+  });
+  teste('lugares das frases existem, são decodáveis com todas as letras e têm gênero', () => {
+    for (const p of J.LUGARES) { verdade(W(p), p); verdade(J.decodavel(W(p), new Set(J.SEQ)), p); }
+  });
+  teste('ordem das letras: 5 vogais primeiro; pares que confundem (P/B, T/D, F/V) longe um do outro', () => {
+    igual(J.SEQ.slice(0, 5), ['A', 'E', 'I', 'O', 'U']);
+    for (const [a, b] of [['P', 'B'], ['T', 'D'], ['F', 'V']]) verdade(Math.abs(J.SEQ.indexOf(a) - J.SEQ.indexOf(b)) >= 2, a + b);
+  });
+
+  // ======================================================================
+  secao('Fala');
+  teste('sílaba vira texto com vogal aberta (ba-bé-bi-bó-bu)', () => {
+    igual(['MA', 'ME', 'MI', 'MO', 'MU', 'CA', 'PÉ', 'BÊ', 'A', 'E', 'LHA', 'GUE'].map(J.falaSilaba), ['má', 'mé', 'mi', 'mó', 'mu', 'cá', 'pé', 'bê', 'á', 'é', 'lhá', 'gué']);
+  });
+  teste('nome das letras', () => { igual(['M', 'J', 'R', 'A'].map(J.falaLetra), ['eme', 'jota', 'erre', 'á']); });
+  teste('família silábica: C e G só com A, O, U', () => { igual(J.familia('C'), ['CA', 'CO', 'CU']); igual(J.familia('M'), ['MA', 'ME', 'MI', 'MO', 'MU']); igual(J.familia('A'), ['A']); });
+  teste('exemplos da letra: começam com ela, figuras diferentes, a chave primeiro', () => {
+    for (const l of J.SEQ) { const ex = J.exemplos(l, new Set(J.SEQ), 3); igual(ex[0].p, J.LETRA[l].chave, l); verdade(ex.every(w => w.ini === l), l); igual(new Set(ex.map(w => w.e)).size, ex.length, l); }
+  });
+
+  // ======================================================================
+  secao('Os 9 tipos de pergunta (milhares de sorteios)');
+  const estados = [
+    ['só vogais', comLetras('AEIOU')], ['vogais+M', comLetras('AEIOUM')], ['vogais+M D L P', comLetras('AEIOUMDLP')],
+    ['10 letras', comLetras(J.SEQ.slice(0, 10))], ['13 letras', comLetras(J.SEQ.slice(0, 13))], ['15 letras', comLetras(J.SEQ.slice(0, 15))], ['todas', comLetras(J.SEQ)],
+  ];
+  const N = 250;
+  function cadaPergunta(tipo, fn, comFoco) {
+    let geradas = 0;
+    for (const [nomeE, e] of estados) {
+      const lib = J.liberadas(e), r = J.criarRng(tipo.length * 977 + nomeE.length);
+      for (let i = 0; i < N; i++) {
+        const foco = comFoco ? J.escolher(r, [...lib]) : null;
+        const q = J.gerarTipo(tipo, e, r, foco);
+        if (!q) continue;
+        geradas++;
+        igual(JSON.parse(JSON.stringify(q)), q, 'só dados');
+        fn(q, e, lib, foco, nomeE);
+      }
+    }
+    return geradas;
+  }
+  const umaCerta = (q, ctx) => { verdade(q.correta >= 0 && q.correta < q.opcoes.length, 'índice da certa ' + ctx); igual(new Set(q.opcoes.map(o => JSON.stringify(o))).size, q.opcoes.length, 'opções repetidas ' + ctx); };
+  const figurasDistintas = (ps, ctx) => igual(new Set(ps.map(p => W(p).e)).size, ps.length, 'figuras repetidas ' + ctx);
+  teste('silabas: a certa é o nº de sílabas; palavra boa de palmas', () => {
+    verdade(cadaPergunta('silabas', q => { umaCerta(q, q.palavra); igual(q.opcoes[q.correta], W(q.palavra).s.length, q.palavra); verdade(W(q.palavra).palmas, q.palavra); }) > 1000);
+  });
+  teste('comeca: exatamente UMA opção começa com a mesma sílaba do alvo; figuras distintas', () => {
+    verdade(cadaPergunta('comeca', q => {
+      umaCerta(q, q.palavra); const s0 = W(q.palavra).s[0];
+      igual(q.opcoes.filter(o => W(o).s[0] === s0), [q.opcoes[q.correta]], q.palavra);
+      verdade(!q.opcoes.includes(q.palavra), 'alvo nas opções'); figurasDistintas(q.opcoes.concat(q.palavra), q.palavra);
+    }) > 1000);
+  });
+  teste('rima: exatamente UMA opção rima com o alvo; distrator não termina com a mesma sílaba', () => {
+    verdade(cadaPergunta('rima', q => {
+      umaCerta(q, q.palavra); const a = W(q.palavra);
+      igual(q.opcoes.filter(o => W(o).rima === a.rima), [q.opcoes[q.correta]], q.palavra);
+      for (const o of q.opcoes) if (o !== q.opcoes[q.correta]) verdade(W(o).s.at(-1) !== a.s.at(-1), `${o} termina como ${q.palavra}`);
+      figurasDistintas(q.opcoes.concat(q.palavra), q.palavra);
+    }) > 1000);
+  });
+  teste('letra: a certa é a letra do foco e a palavra começa com ela (som de sempre)', () => {
+    verdade(cadaPergunta('letra', (q, e, lib, foco) => {
+      umaCerta(q, q.palavra); igual(q.opcoes[q.correta], foco); igual(W(q.palavra).ini, foco, q.palavra); igual(q.opcoes.length, 3);
+      verdade(q.opcoes.every(l => J.SEQ.includes(l)), 'letra fora da ordem');
+    }, true) > 1000);
+  });
+  teste('letra: com letras suficientes, os distratores são letras que ela já viu', () => {
+    cadaPergunta('letra', (q, e, lib) => { if (lib.size >= 3) verdade(q.opcoes.every(l => lib.has(l)), q.opcoes.join()); }, true);
+  });
+  teste('silaba: alvo = foco + vogal; sílabas válidas (sem CE/CI/GE/GI); 3 opções distintas', () => {
+    verdade(cadaPergunta('silaba', (q, e, lib, foco) => {
+      umaCerta(q, q.alvo); igual(q.opcoes[q.correta], q.alvo); igual(q.alvo[0], foco); igual(q.opcoes.length, 3);
+      for (const s of q.opcoes) { verdade(/^[A-Z]?[AEIOU]$/.test(s), s); verdade(!/^[CG][EI]$/.test(s), s); }
+    }, true) > 1000);
+  });
+  teste('ler: a palavra é decodável com as letras dela; figuras distintas; distrator parecido', () => {
+    let parecidos = 0, n = 0;
+    verdade(cadaPergunta('ler', (q, e, lib) => {
+      umaCerta(q, q.palavra); igual(q.opcoes[q.correta], q.palavra); verdade(J.decodavel(W(q.palavra), lib), q.palavra + ' não decodável');
+      figurasDistintas(q.opcoes, q.palavra);
+      for (const o of q.opcoes) if (o !== q.palavra) verdade(J.semAcento(o) !== J.semAcento(q.palavra), `${o} x ${q.palavra}: só o acento muda`);
+      n++; if (q.opcoes.some(o => o !== q.palavra && (W(o).s[0] === W(q.palavra).s[0] || W(o).s.at(-1) === W(q.palavra).s.at(-1)))) parecidos++;
+    }) > 800);
+    verdade(parecidos / n > 0.8, `só ${Math.round(100 * parecidos / n)}% com distrator parecido`);
+  });
+  teste('montar: as peças contêm as sílabas da resposta; extras não repetem sílaba da palavra', () => {
+    verdade(cadaPergunta('montar', (q, e, lib) => {
+      verdade(J.decodavel(W(q.palavra), lib), q.palavra); igual(q.resposta.join(''), q.palavra);
+      const resto = q.pecas.slice(); for (const s of q.resposta) { const k = resto.indexOf(s); verdade(k >= 0, 'falta ' + s); resto.splice(k, 1); }
+      for (const x of resto) verdade(!q.resposta.map(J.semAcento).includes(J.semAcento(x)), 'extra ambíguo ' + x);
+      verdade(J.verificarMontagem(q, q.resposta), 'a resposta passa');
+    }) > 800);
+  });
+  teste('letras: as peças contêm as letras; extras não são a mesma letra com/sem acento', () => {
+    verdade(cadaPergunta('letras', (q, e, lib) => {
+      verdade(J.decodavel(W(q.palavra), lib), q.palavra); igual(q.resposta.join(''), q.palavra); igual(q.grupos.reduce((a, b) => a + b, 0), q.palavra.length);
+      const resto = q.pecas.slice(); for (const s of q.resposta) { const k = resto.indexOf(s); verdade(k >= 0, 'falta ' + s); resto.splice(k, 1); }
+      const bases = new Set(q.resposta.map(J.base)); for (const x of resto) verdade(!bases.has(J.base(x)), 'extra ambíguo ' + x + ' em ' + q.palavra);
+    }) > 500);
+  });
+  teste('frase: todas as palavras da frase são decodáveis; uma só figura certa', () => {
+    verdade(cadaPergunta('frase', (q, e, lib) => {
+      umaCerta(q, q.texto);
+      for (const p of q.texto.replace('.', '').split(' ')) {
+        if (['O', 'A', 'E', 'NA', 'NO'].includes(p)) verdade(p.split('').every(l => lib.has(l)), 'função ' + p);
+        else verdade(J.decodavel(W(p), lib), p + ' não decodável');
+      }
+      igual(q.opcoes[q.correta], q.palavras);
+      igual(q.opcoes.filter(o => o[0] === q.palavras[0] && o[1] === q.palavras[1]).length, 1);
+      const figs = q.opcoes.map(o => W(o[0]).e + W(o[1]).e); igual(new Set(figs).size, 3, 'pares de figuras iguais');
+      if (q.modelo === 'lugar') { const y = W(q.palavras[1]); verdade(q.texto.includes(y.g === 'f' ? ' NA ' : ' NO '), 'NA/NO ' + q.texto); }
+      const x = W(q.palavras[0]); verdade(q.texto.startsWith(x.g === 'f' ? 'A ' : 'O '), 'artigo ' + q.texto);
+    }) > 400);
+  });
+  teste('tipos que dependem de leitura não aparecem sem palavras decodáveis', () => {
+    const e = comLetras('AEIOU');
+    igual(J.gerarTipo('ler', e, J.criarRng(1)), null); igual(J.gerarTipo('montar', e, J.criarRng(1)), null); igual(J.gerarTipo('frase', e, J.criarRng(1)), null);
+  });
+
+  // ======================================================================
+  secao('Mundos e pesos');
+  teste('mundos abrem com o progresso', () => {
+    igual(J.mundosAbertos(comLetras('AEIOU')), { 1: true, 2: true, 3: false, 4: false, 5: false });
+    igual(J.mundosAbertos(comLetras('AEIOUMDLP')), { 1: true, 2: true, 3: true, 4: false, 5: false });
+    igual(J.mundosAbertos(comLetras('AEIOUMDLPV'))[4], true, '10 letras e 15 palavras');
+    const t = J.mundosAbertos(comLetras(J.SEQ)); verdade(t[3] && t[4] && t[5], JSON.stringify(t));
+  });
+  teste('o papai pode abrir um mundo na mão', () => { const e = comLetras('AEIOU'); e.forcados[4] = true; verdade(J.mundosAbertos(e)[4]); });
+  teste('pesos: sem mundo 3, nada de ler/montar; brincar só com som perde peso quando há muitas letras', () => {
+    const a = J.pesosTipos(comLetras('AEIOU')); verdade(!('ler' in a) && !('montar' in a)); verdade(a.silabas > 1);
+    verdade(!('ler' in J.pesosTipos(comLetras('AEIOUM'))), 'com só M ainda não há palavra para ler');
+    const b = J.pesosTipos(comLetras(J.SEQ)); verdade(b.silabas < 0.5 && b.frase > 0 && b.letras > 0);
+  });
+
+  // ======================================================================
+  secao('Descoberta de letras (primeira vez)');
+  teste('estado novo: a primeira missão é a descoberta, com uma pergunta por letra (4 opções)', () => {
+    const e = J.estadoInicial(); const m = J.criarMissao(e, HOJE, J.criarRng(3), 1);
+    igual(m.tipo, 'descoberta'); igual(m.perguntas.length, J.SEQ.length);
+    m.perguntas.forEach((q, i) => { igual(q.foco, J.SEQ[i]); igual(q.opcoes.length, 4); igual(q.opcoes[q.correta], q.foco); igual(q.palavra, J.LETRA[q.foco].chave); });
+  });
+  teste('para depois de 3 erros e libera só o que ela acertou', () => {
+    const e = J.estadoInicial(), m = J.criarMissao(e, HOJE, J.criarRng(3), 1);
+    const sabe = new Set(['A', 'E', 'I', 'O', 'U', 'D']);
+    while (!m.finalizada) { const q = J.perguntaAtual(m); J.registrar(e, m, { acertou: sabe.has(q.foco) }, HOJE, J.criarRng(1)); }
+    igual([...J.liberadas(e)], ['A', 'E', 'I', 'O', 'U', 'D']);
+    igual(m.conquistas, ['A', 'E', 'I', 'O', 'U', 'D']); igual(m.erros, 3);
+    igual(m.perguntas.filter(q => q.tentativas > 0).length, 9, 'A E I O U M D L P');
+    const r = J.finalizarMissao(e, m, HOJE, '10h00');
+    verdade(e.descoberta.feita); igual(e.bambus, 6 + J.BAMBU.missao); igual(r.total, e.bambus);
+    igual(e.dia.missoes.filter(x => x.feita).length, 0, 'descoberta não gasta missão do dia');
+    igual(J.proximaLetra(e), 'M');
+  });
+
+  // ======================================================================
+  secao('Missões normais');
+  function depoisDaDescoberta(sabe) {
+    const e = J.estadoInicial(), m = J.criarMissao(e, HOJE, J.criarRng(3), 1), s = new Set(sabe);
+    while (!m.finalizada) { const q = J.perguntaAtual(m); J.registrar(e, m, { acertou: s.has(q.foco) }, HOJE, J.criarRng(1)); }
+    J.finalizarMissao(e, m, HOJE); return e;
+  }
+  teste('missão 1 apresenta a próxima letra (M) e começa por ela', () => {
+    const e = depoisDaDescoberta('AEIOUD'); const m = J.criarMissao(e, HOJE, J.criarRng(5), 1);
+    igual(m.intro, { letra: 'M', tipo: 'nova' }); igual(m.introVista, false); verdade(e.letras.M.lib); igual(e.dia.novas, 1);
+    igual(m.perguntas.length, e.config.perguntasPorMissao);
+    igual(m.perguntas[0].foco, 'M');
+    verdade(m.perguntas.filter(q => q.foco === 'M').length >= 3, 'pelo menos 3 perguntas da letra nova');
+    igual(new Set(m.perguntas.map(q => q.id)).size, m.perguntas.length);
+  });
+  teste('acertar 4 seguidas da letra nova no dia: fica firme e, sem erro, conta como "já sabia" (devolve a cota)', () => {
+    const e = depoisDaDescoberta('AEIOUD'); J.criarMissao(e, HOJE, J.criarRng(5), 1);
+    let conq = null;
+    for (let i = 0; i < 4; i++) conq = J.atualizarLetra(e, 'M', true, true, HOJE) || conq;
+    igual(conq, 'M'); verdade(e.letras.M.dominada && e.letras.M.conhecida); igual(e.dia.novas, 0);
+    verdade(J.podeNovaLetra(e));
+  });
+  teste('com erro no caminho fica firme mas gasta a cota; cota 1/dia barra a próxima', () => {
+    const e = depoisDaDescoberta('AEIOUD'); e.config.novasPorDia = 1; J.criarMissao(e, HOJE, J.criarRng(5), 1);
+    J.atualizarLetra(e, 'M', false, true, HOJE);
+    for (let i = 0; i < 4; i++) J.atualizarLetra(e, 'M', true, true, HOJE);
+    verdade(e.letras.M.dominada && !e.letras.M.conhecida); igual(e.dia.novas, 1); verdade(!J.podeNovaLetra(e));
+    const m2 = J.criarMissao(e, HOJE, J.criarRng(6), 2); igual(m2.intro, null);
+  });
+  teste('enquanto a letra não está firme, não entra outra', () => {
+    const e = depoisDaDescoberta('AEIOUD'); J.criarMissao(e, HOJE, J.criarRng(5), 1);
+    verdade(!J.podeNovaLetra(e)); igual(J.criarMissao(e, HOJE, J.criarRng(7), 2).intro, null);
+  });
+  teste('acerto com ajuda não conta para firmar; caixa só sobe uma vez por dia', () => {
+    const e = comLetras('AEIOU'); J.liberarLetra(e, 'M', HOJE);
+    J.atualizarLetra(e, 'M', true, false, HOJE); igual(e.letras.M.seguidos, 0);
+    J.atualizarLetra(e, 'M', true, true, HOJE); J.atualizarLetra(e, 'M', true, true, HOJE);
+    igual(e.letras.M.caixa, 2); igual(e.letras.M.vence, HOJE + J.INTERVALOS[2]);
+  });
+  teste('dois erros seguidos: a letra ganha reforço e a próxima missão a reapresenta', () => {
+    const e = comLetras('AEIOUMD');
+    J.atualizarLetra(e, 'D', false, true, HOJE); J.atualizarLetra(e, 'D', false, true, HOJE);
+    verdade(e.letras.D.reforco);
+    const m = J.criarMissao(e, HOJE, J.criarRng(8), 1); igual(m.intro, { letra: 'D', tipo: 'reforco' }); verdade(!e.letras.D.reforco);
+  });
+  teste('erro: a pergunta volta 2 a 4 posições depois; a missão só acaba quando tudo for acertado', () => {
+    const e = comLetras('AEIOUMDLP'), r = J.criarRng(9), m = J.criarMissao(e, HOJE, r, 1);
+    const q0 = J.perguntaAtual(m), n = m.fila.length;
+    J.registrar(e, m, { acertou: false }, HOJE, r);
+    igual(m.fila.length, n); const pos = m.fila.indexOf(q0.id); verdade(pos >= 2 && pos <= 4, 'posição ' + pos);
+    let guarda = 0;
+    while (!m.finalizada && guarda++ < 100) J.registrar(e, m, { acertou: true }, HOJE, r);
+    verdade(m.finalizada); verdade(m.perguntas.every(q => q.acertou)); igual(q0.tentativas, 2);
+  });
+  teste('bambus: 1 por acerto de primeira + missão + bônus do dia ao completar as 3', () => {
+    const e = comLetras('AEIOUMDLP'), r = J.criarRng(10);
+    let ultimo;
+    for (const numero of [1, 2, 3]) {
+      const m = J.criarMissao(e, HOJE, r, numero), antes = e.bambus;
+      const primeira = J.perguntaAtual(m).id;
+      while (!m.finalizada) { const q = J.perguntaAtual(m); J.registrar(e, m, { acertou: !(q.id === primeira && q.tentativas === 0) }, HOJE, r); }
+      ultimo = J.finalizarMissao(e, m, HOJE);
+      const esperado = (m.perguntas.length - 1) + J.BAMBU.missao + J.BAMBU.letra * m.conquistas.length + (numero === 3 ? J.BAMBU.dia : 0);
+      igual(e.bambus - antes, esperado, 'missão ' + numero);
+    }
+    verdade(ultimo.diaCompleto); verdade(e.dia.bonus);
+    igual(e.historico.find(h => h.dia === HOJE).missoes, 3);
+    verdade(e.dia.revisar.length >= 3, 'o que ela errou vai para o painel');
+  });
+  teste('ler/montar/frase registram a palavra lida (de primeira e sem ajuda)', () => {
+    const e = comLetras(J.SEQ), r = J.criarRng(11);
+    const m = { tipo: 'normal', perguntas: [Object.assign(J.gerarTipo('ler', e, r), { id: 1, tentativas: 0 }), Object.assign(J.gerarTipo('frase', e, r), { id: 2, tentativas: 0 })], fila: [1, 2], bambus: 0, conquistas: [] };
+    J.registrar(e, m, { acertou: true }, HOJE, r); J.registrar(e, m, { acertou: true }, HOJE, r);
+    igual(e.palavras[m.perguntas[0].palavra].lidas, 1); for (const p of m.perguntas[1].palavras) verdade(e.palavras[p].lidas >= 1, p);
+  });
+  teste('missão é só dado (salva e recarrega igual)', () => { const m = J.criarMissao(comLetras(J.SEQ), HOJE, J.criarRng(12), 1); igual(JSON.parse(JSON.stringify(m)), m); });
+  teste('dia novo: missões zeram, cota zera, missão de ontem é descartada', () => {
+    const e = comLetras('AEIOUM'); e.missaoAtiva = J.criarMissao(e, HOJE, J.criarRng(1), 1); e.dia.missoes[0].feita = true; e.dia.novas = 2;
+    J.garantirDia(e, HOJE + 1); igual(e.missaoAtiva, null); igual(e.dia.novas, 0); verdade(e.dia.missoes.every(x => !x.feita));
+  });
+
+  // ======================================================================
+  secao('Estado salvo');
+  teste('completarEstado preenche um save antigo sem perder nada (e é idempotente)', () => {
+    const velho = { letras: { A: { lib: true, acertos: 7 } }, bambus: 12, roupas: { tem: ['laco'], veste: { cabeca: 'laco' } }, prefs: { nome: 'Duda' } };
+    const e = J.completarEstado(JSON.parse(JSON.stringify(velho)));
+    igual(e.letras.A.acertos, 7); verdade(e.letras.A.lib); igual(e.bambus, 12); verdade(e.roupas.tem.includes('laco') && e.roupas.tem.includes('bambuzal'));
+    igual(e.roupas.veste.cabeca, 'laco'); igual(e.roupas.veste.fundo, 'bambuzal'); igual(Object.keys(e.letras).length, J.SEQ.length);
+    igual(e.prefs.amigo, 'Panda'); igual(e.config, J.CONFIG_PADRAO);
+    igual(J.completarEstado(JSON.parse(JSON.stringify(e))), e);
+  });
+  teste('importar recusa arquivo que não é deste jogo', () => {
+    let erro = null; try { J.validarImportacao('{"cartoes":{}}'); } catch (x) { erro = x; } verdade(erro);
+    verdade(J.validarImportacao(JSON.stringify(J.estadoInicial())).letras.A);
+  });
+
+  // ======================================================================
+  secao('Roupinhas');
+  teste('comprar: só com bambus suficientes; desconta e já veste', () => {
+    const e = J.estadoInicial(); e.bambus = 4;
+    verdade(!J.comprar(e, 'laco')); e.bambus = 5; verdade(J.comprar(e, 'laco')); igual(e.bambus, 0); igual(e.roupas.veste.cabeca, 'laco'); verdade(!J.comprar(e, 'laco'));
+  });
+  teste('vestir/tirar alterna; o lugar (fundo) nunca fica vazio', () => {
+    const e = J.estadoInicial(); e.bambus = 100; J.comprar(e, 'praia'); J.comprar(e, 'coroa');
+    J.vestir(e, 'coroa'); igual(e.roupas.veste.cabeca, null); J.vestir(e, 'coroa'); igual(e.roupas.veste.cabeca, 'coroa');
+    J.vestir(e, 'praia'); igual(e.roupas.veste.fundo, 'praia'); verdade(!J.vestir(e, 'espaco'));
+  });
+  teste('todo item tem lugar válido e preço; ids únicos', () => {
+    const slots = J.SLOTS.map(s => s.id); igual(new Set(J.ITENS.map(i => i.id)).size, J.ITENS.length);
+    for (const it of J.ITENS) { verdade(slots.includes(it.slot), it.id); verdade(it.preco >= 0, it.id); }
+  });
+
+  // ======================================================================
+  secao('Simulação de 40 dias');
+  function simular(taxaAcerto, semente) {
+    const r = J.criarRng(semente), e = J.estadoInicial();
+    const log = { dias: 0, letrasPorDia: [], erros: [] };
+    for (let d = 0; d < 40; d++) {
+      const dia = HOJE + d; J.garantirDia(e, dia);
+      for (const numero of [1, 2, 3]) {
+        const m = J.criarMissao(e, dia, r, numero);
+        if (m.tipo !== 'descoberta' && m.perguntas.length < e.config.perguntasPorMissao) log.erros.push(`dia ${d}: missão com ${m.perguntas.length} perguntas`);
+        const chaves = m.perguntas.map(q => q.tipo + (q.palavra || q.alvo || q.texto) + (q.foco || ''));
+        if (new Set(chaves).size !== chaves.length) log.erros.push(`dia ${d}: pergunta repetida na missão`);
+        let guarda = 0;
+        while (!m.finalizada && guarda++ < 300) { const q = J.perguntaAtual(m); J.registrar(e, m, { acertou: r() < taxaAcerto || (m.tipo !== 'descoberta' && q.tentativas >= 2) }, dia, r); }
+        if (!m.finalizada) log.erros.push(`dia ${d}: missão não terminou`);
+        J.finalizarMissao(e, m, dia);
+      }
+      log.letrasPorDia.push(J.liberadas(e).size);
+    }
+    return { e, log };
+  }
+  teste('criança que acerta 95%: chega em todas as letras e nos 5 mundos, sem missão quebrada', () => {
+    const { e, log } = simular(0.95, 21);
+    igual(log.erros, []); igual(J.liberadas(e).size, J.SEQ.length, 'letras: ' + log.letrasPorDia.join(','));
+    const ab = J.mundosAbertos(e); verdade(ab[3] && ab[4] && ab[5]);
+    verdade(Object.values(e.palavras).filter(p => p.lidas > 0).length > 30, 'palavras lidas');
+  });
+  teste('criança que acerta 60%: anda devagar mas nunca trava nem quebra', () => {
+    const { e, log } = simular(0.6, 22);
+    igual(log.erros, []); verdade(J.liberadas(e).size >= 6, 'letras: ' + log.letrasPorDia.join(','));
+  });
+  teste('nunca entram mais letras novas no dia do que a cota (fora as que ela já sabia)', () => {
+    const r = J.criarRng(23), e = depoisDaDescoberta('');
+    for (let d = 0; d < 10; d++) {
+      const dia = HOJE + d; J.garantirDia(e, dia); const antes = J.liberadas(e).size;
+      for (const numero of [1, 2, 3, 'extra', 'extra']) {
+        const m = J.criarMissao(e, dia, r, numero); let g = 0;
+        while (!m.finalizada && g++ < 300) { const q = J.perguntaAtual(m); J.registrar(e, m, { acertou: q.tentativas > 0 || r() < 0.8 }, dia, r); }
+        J.finalizarMissao(e, m, dia);
+      }
+      const novasDeVerdade = J.SEQ.filter(l => e.letras[l].introDia === dia && !e.letras[l].conhecida).length;
+      verdade(novasDeVerdade <= e.config.novasPorDia, `dia ${d}: ${novasDeVerdade} novas`);
+      verdade(J.liberadas(e).size - antes <= e.config.novasPorDia + 3, 'salto grande demais');
+    }
+  });
+
+  fim();
+  function fim() {
+    const resumo = document.getElementById('resumo');
+    resumo.textContent = falhas ? `${falhas} de ${total} testes FALHARAM` : `Todos os ${total} testes passaram ✔`;
+    resumo.className = falhas ? 'falha' : 'ok';
+    document.title = (falhas ? 'FALHA ' : 'OK ') + (total - falhas) + '/' + total;
+    window.RESULTADO = { total, falhas, falhos: resultados.filter(r => !r.ok) };
+  }
+})();
+</script>
+</body>
+</html>
