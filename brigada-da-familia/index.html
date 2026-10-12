@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1E4FA6">
+<title>Brigada da Família</title>
+<style>
+  /* Bancada de azulejo; cada papel tem uma cor e aparece como comanda de cozinha. Tudo grande: mão suja, tela longe. */
+  :root {
+    --bg: #F2F5F9; --surface: #FFFFFF; --ink: #16213A; --muted: #56617A; --line: #D5DCE7;
+    --cobalto: #1E4FA6; --cobalto-claro: #E3EBF8; --gema: #F4B63A; --gema-ink: #3A2A00;
+    --quente: #C2412D; --quente-claro: #FBE7E3; --folha: #2F7A4B; --folha-claro: #E2F2E8;
+    --f: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --raio: 14px;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    font-family: var(--f); background: var(--bg); color: var(--ink); font-size: 18px; line-height: 1.45;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 56px 56px; -webkit-tap-highlight-color: transparent;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  #app { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; }
+  h1, h2, h3 { margin: 0; line-height: 1.15; text-wrap: balance; }
+  h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.01em; }
+  h2 { font-size: 24px; font-weight: 800; }
+  h3 { font-size: 19px; font-weight: 800; }
+  p { margin: 0; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 4px solid var(--gema); outline-offset: 2px; }
+  .pilha { display: flex; flex-direction: column; gap: 16px; }
+  .pilha-p { display: flex; flex-direction: column; gap: 8px; }
+  .linha { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .entre { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .mudo { color: var(--muted); }
+  .rotulo { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .cartao { background: var(--surface); border-radius: var(--raio); padding: 16px; box-shadow: 0 1px 0 var(--line), 0 8px 20px -14px rgba(10,20,50,.4); }
+
+  /* botões grandes */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; padding: 12px 22px;
+    border-radius: 16px; border: 3px solid var(--ink); background: var(--surface); font-size: 20px; font-weight: 800; text-align: center; }
+  .btn.prim { background: var(--cobalto); border-color: var(--cobalto); color: #fff; }
+  .btn.perigo { background: var(--quente); border-color: var(--quente); color: #fff; }
+  .btn.cheio { width: 100%; display: flex; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-texto { background: none; border: 0; padding: 10px 6px; min-height: 48px; font-weight: 700; color: var(--cobalto); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* topo */
+  .topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+  .marca { display: flex; align-items: center; gap: 10px; }
+  .marca .logo { font-size: 34px; }
+  .cadeado { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); font-size: 22px; position: relative; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .cadeado.segurando::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 4px solid var(--cobalto); clip-path: inset(0 0 0 0); animation: encher 3s linear forwards; }
+  @keyframes encher { from { opacity: .2; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+
+  /* presença */
+  .pessoas { display: flex; flex-wrap: wrap; gap: 10px; }
+  .pessoa { display: inline-flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 16px 8px 8px; border-radius: 999px;
+    border: 3px solid var(--line); background: var(--surface); font-size: 19px; font-weight: 700; }
+  .bola { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 18px; }
+  .pessoa[aria-pressed="true"] { border-color: var(--ink); }
+  .pessoa[aria-pressed="false"] { opacity: .55; }
+  .pessoa[aria-pressed="false"] .bola { filter: grayscale(1); }
+
+  /* trilha */
+  .nivel { display: flex; flex-direction: column; gap: 10px; }
+  .nivel-cab { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .nivel-num { font-family: var(--mono); font-weight: 700; color: #fff; background: var(--cor); border-radius: 8px; padding: 2px 10px; font-size: 14px; }
+  .paradas { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .parada { text-align: left; display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; padding: 14px; border-radius: var(--raio);
+    background: var(--surface); border: 3px solid transparent; box-shadow: 0 1px 0 var(--line), 0 8px 20px -14px rgba(10,20,50,.4); min-height: 88px; }
+  .parada .emo { font-size: 44px; line-height: 1; text-align: center; }
+  .parada .nome { font-weight: 800; font-size: 19px; }
+  .parada .info { font-size: 14px; color: var(--muted); }
+  .parada.sugerida { border-color: var(--gema); }
+  .parada.travada { opacity: .6; }
+  .parada.breve { background: transparent; box-shadow: none; border: 2px dashed var(--line); cursor: default; }
+  .selo { display: inline-block; font-size: 13px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: var(--folha-claro); color: var(--folha); }
+  .selo.sug { background: var(--gema); color: var(--gema-ink); }
+  .selo.pede { background: var(--cobalto-claro); color: var(--cobalto); }
+
+  /* ficha */
+  .ficha-cab { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; }
+  .ficha-cab .emo { font-size: 84px; line-height: 1; text-align: center; }
+  .fatos { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fato { background: var(--cobalto-claro); color: var(--cobalto); border-radius: 999px; padding: 4px 12px; font-weight: 700; font-size: 15px; }
+  .aviso { border-radius: 12px; padding: 12px 14px; background: var(--gema); color: var(--gema-ink); font-weight: 700; }
+  .aviso.quente { background: var(--quente-claro); color: var(--quente); border: 2px solid var(--quente); }
+  ul.lista { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+
+  /* comandas */
+  .comandas { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .comanda { position: relative; text-align: left; background: var(--surface); border: 0; border-top: 8px solid var(--cor); border-radius: 6px; padding: 12px 14px 14px;
+    box-shadow: 0 1px 0 var(--line), 0 8px 20px -14px rgba(10,20,50,.45); display: flex; flex-direction: column; gap: 4px; min-height: 120px; }
+  .comanda .tit { font-weight: 800; font-size: 17px; color: var(--cor); }
+  .comanda .quem { font-size: 22px; font-weight: 800; }
+  .comanda .faz { font-size: 14px; color: var(--muted); }
+  .comanda .trocar { font-size: 13px; color: var(--cobalto); font-weight: 700; margin-top: auto; }
+
+  /* checklists */
+  .checks { display: flex; flex-direction: column; gap: 10px; }
+  .check { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; text-align: left; min-height: 68px; padding: 10px 14px;
+    background: var(--surface); border: 3px solid var(--line); border-radius: var(--raio); font-size: 19px; font-weight: 700; }
+  .check .caixa { width: 44px; height: 44px; border-radius: 12px; border: 3px solid var(--ink); display: grid; place-items: center; font-size: 26px; }
+  .check[aria-pressed="true"] { border-color: var(--folha); background: var(--folha-claro); }
+  .check[aria-pressed="true"] .caixa { background: var(--folha); border-color: var(--folha); color: #fff; }
+  .check .qtd { font-family: var(--mono); font-size: 15px; color: var(--muted); }
+
+  /* barra da sessão */
+  .barra { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--bg); padding-block: 8px; margin-bottom: 10px; border-bottom: 2px solid var(--line); }
+  .timer-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 6px 16px; border-radius: 999px; border: 3px solid var(--ink);
+    background: var(--surface); font-family: var(--mono); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .timer-pill.acabou { background: var(--quente); border-color: var(--quente); color: #fff; animation: pisca 0.8s steps(2) infinite; }
+  @keyframes pisca { 50% { opacity: .55; } }
+
+  /* modo cozinhar */
+  .palco { position: relative; min-height: 62vh; display: flex; flex-direction: column; gap: 18px; padding: 22px; border-radius: 22px;
+    background: var(--surface); border: 4px solid var(--cor); cursor: pointer; user-select: none; -webkit-user-select: none; }
+  .palco .vez { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .palco .vez .emo { font-size: 40px; }
+  .palco .vez .papel { font-weight: 800; color: var(--cor); font-size: 20px; }
+  .palco .vez .nomes { font-weight: 800; font-size: 30px; }
+  .palco .texto { font-size: clamp(26px, 4.4vw, 40px); font-weight: 700; line-height: 1.25; }
+  .palco .contador { font-family: var(--mono); color: var(--muted); font-size: 16px; white-space: nowrap; }
+  .palco .dica-toque { margin-top: auto; display: flex; justify-content: space-between; color: var(--muted); font-size: 15px; font-weight: 700; }
+  .alerta { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--quente-claro); color: var(--quente); font-weight: 800; font-size: 18px; border: 2px solid var(--quente); }
+  .nav-passos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+
+  /* prova */
+  .prova-pessoa { display: flex; flex-direction: column; gap: 10px; }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opcao { min-height: 56px; min-width: 56px; padding: 6px 14px; border-radius: 14px; border: 3px solid var(--line); background: var(--surface); font-size: 18px; font-weight: 700; }
+  .opcao.grande { font-size: 30px; padding: 4px 12px; }
+  .opcao[aria-pressed="true"] { border-color: var(--cobalto); background: var(--cobalto-claro); color: var(--cobalto); }
+  input[type=text], input[type=number], textarea { font: inherit; font-size: 19px; padding: 12px 14px; border-radius: 12px; border: 3px solid var(--line); background: var(--surface); color: var(--ink); width: 100%; }
+  textarea { min-height: 120px; font-family: var(--mono); font-size: 14px; }
+  .campo { display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
+  .form-perfil { display: grid; grid-template-columns: 1fr 120px auto; gap: 10px; align-items: end; }
+  @media (max-width: 560px) { .form-perfil { grid-template-columns: 1fr 1fr; } .form-perfil .btn { grid-column: 1 / -1; } }
+  .erro { color: var(--quente); font-weight: 700; }
+
+  /* livro */
+  .pagina { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; }
+  .pagina .emo { font-size: 52px; line-height: 1; }
+  .frase { font-size: 20px; font-style: italic; }
+  .mini { font-size: 15px; }
+  .tabela { width: 100%; border-collapse: collapse; font-size: 16px; }
+  .tabela td { padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script id="logica">
+// Lógica pura da Brigada da Família: dados das receitas e regras (papéis, rotação, carteirinhas, save).
+// Nada aqui toca DOM ou relógio; o tests.html extrai este bloco por regex e testa.
+const Brigada = (function () {
+  'use strict';
+  const VERSAO = 1;
+  const IDADE_ADULTO = 16;   // Sous-chef (calor, aparelho, faca grande) só a partir daqui
+  const IDADE_LEITOR = 6;    // abaixo disso a pessoa é Ajudante Mirim
+
+  const PAPEIS = {
+    chef:     { nome: 'Chef do Dia', emoji: '🧑‍🍳', cor: '#1E4FA6', faz: 'Lê cada passo em voz alta e lidera a brigada.' },
+    sous:     { nome: 'Sous-chef', emoji: '🍳', cor: '#C2412D', faz: 'Faz o que é de adulto: calor, aparelho e faca grande. Demonstra a técnica.' },
+    mise:     { nome: 'Mestre do Mise en place', emoji: '📋', cor: '#2F7A4B', faz: 'Separa, confere e mede os ingredientes.' },
+    guarda:   { nome: 'Guarda da Segurança', emoji: '🛡️', cor: '#9A6200', faz: 'Confere as regras e pode pedir pausa para qualquer pessoa.' },
+    cronista: { nome: 'Provador e Cronista', emoji: '📸', cor: '#7A3FA0', faz: 'Prova na hora certa e escreve a frase da página do Livro.' },
+    mirim:    { nome: 'Ajudante Mirim', emoji: '🧒', cor: '#C25A0A', faz: 'Lava, rasga, despeja e mexe. Sem calor e sem lâmina.' }
+  };
+  const ORDEM_PAPEIS = ['chef', 'sous', 'mise', 'guarda', 'cronista', 'mirim'];
+
+  const CARTEIRINHAS = {
+    'faca-pequena': { nome: 'Carteira de Faca', emoji: '🔪', teste: 'Mostrou a garra e a ponte numa banana, sem ajuda, e deixou a faca ao lado da tábua (nunca dentro da pia).' },
+    fogao: { nome: 'Carteira de Fogão', emoji: '🔥', teste: 'Explicou a Zona Quente, virou o cabo da panela para dentro e mexeu com colher longa sem largar a panela.' },
+    forno: { nome: 'Carteira de Forno', emoji: '🧤', teste: 'Usou luva nas duas mãos e explicou que quem tira a forma do forno é o adulto.' }
+  };
+
+  const ALERTAS = {
+    faca: { emoji: '🔪', texto: 'Atenção: faca' },
+    calor: { emoji: '🔥', texto: 'Atenção: quente' },
+    eletrico: { emoji: '⚡', texto: 'Atenção: aparelho ligado' }
+  };
+
+  const TECNICAS = {
+    'cortar-macio': { nome: 'Cortar fruta macia', emoji: '🍌', passos: ['Fruta deitada na tábua, com um pano úmido embaixo para a tábua não escorregar.', 'Faca de mesa serrilhada: vai e volta devagar, como um serrote.', 'A outra mão segura a ponta da fruta, longe de onde a faca passa.'], dica: 'Fruta dura (maçã, mamão) fica com o adulto.' },
+    'medir-liquido': { nome: 'Medir líquido', emoji: '🥛', passos: ['Xícara medidora parada em cima da mesa, nunca na mão.', 'Abaixe até os olhos ficarem na altura da marca.', 'Despeje devagar e pare quando o líquido encostar na linha.'], dica: 'Olhando de cima, parece que tem mais do que tem.' },
+    espalhar: { nome: 'Espalhar e montar', emoji: '🥪', passos: ['Pouca pasta, bem no meio do pão.', 'Faca deitada: espalhe do meio até as bordas.', 'Monte em camadas, do mais firme para o mais molhado.'], dica: 'Pasta até a borda segura as camadas no lugar.' },
+    'medir-secos': { nome: 'Medir secos nivelando', emoji: '🥄', passos: ['Encha a colher medidora passando do ponto, sem apertar.', 'Passe as costas da faca por cima para tirar o excesso.', 'Colher de medir não é colher de comer: o tamanho é exato.'], dica: 'Nivelar é o que faz o bolo dar certo toda vez.' },
+    garra: { nome: 'A garra', emoji: '🐻', passos: ['Dedos dobrados como garra de urso, com as pontas para trás.', 'A lâmina encosta de leve nos nós dos dedos, nunca nas pontas.', 'A garra anda para trás devagar, um pedaço de cada vez.'], dica: 'Primeiro treine em banana, que é macia e não rola.' },
+    ponte: { nome: 'A ponte', emoji: '🌉', passos: ['A mão faz uma ponte por cima do alimento: polegar de um lado, dedos do outro.', 'A faca passa por baixo da ponte, como um trem.', 'Alimento redondo sempre com a parte reta para baixo.'], dica: 'Tomate-cereja é o treino perfeito para a ponte.' }
+  };
+
+  const NIVEIS = [
+    { n: 1, nome: 'Aprendiz', cor: '#2F7A4B', sobre: 'Sem fogo e sem faca de ponta.' },
+    { n: 2, nome: 'Cortador', cor: '#1E4FA6', sobre: 'A faca pequena, com garra e ponte.' },
+    { n: 3, nome: 'Fogão com adulto', cor: '#C2412D', sobre: 'Fogo baixo, sempre com o Sous-chef.' },
+    { n: 4, nome: 'Chef da Casa', cor: '#7A3FA0', sobre: 'Receita longa, forno e refeição completa.' }
+  ];
+
+  const RECEITAS = [
+    { id: 'salada-de-frutas', nome: 'Salada de frutas', emoji: '🍓', nivel: 1, tecnica: 'cortar-macio', carteirinhas: [], porcoes: 4, tempo_min: 20,
+      ingredientes: [
+        { item: 'banana', qtd: '2' }, { item: 'morango', qtd: '10' }, { item: 'maçã', qtd: '1' },
+        { item: 'mamão papaia', qtd: '½' }, { item: 'laranja', qtd: '1' } ],
+      utensilios: ['tábua', 'pano úmido', 'faca de mesa', 'faca do adulto', 'tigela grande', 'colher grande', 'espremedor'],
+      passos: [
+        { texto: 'Lavem as frutas em água corrente, esfregando com as mãos.', papel: 'mirim' },
+        { texto: 'Corte a maçã e o mamão em pedaços. Fruta dura fica com o adulto.', papel: 'sous', alerta: 'faca' },
+        { texto: 'Descasque as bananas e corte em rodelas com a faca de mesa.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Tire as folhinhas dos morangos e corte cada um ao meio.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Esprema a laranja e regue as frutas. O suco impede a banana de escurecer.', papel: 'mise' },
+        { texto: 'Misture devagar com a colher grande, de baixo para cima.', papel: 'mirim' },
+        { texto: 'Prove um pedaço de cada fruta. Qual é a mais doce? E a mais azeda?', papel: 'cronista' } ] },
+
+    { id: 'vitamina-de-banana', nome: 'Vitamina de banana', emoji: '🍌', nivel: 1, tecnica: 'medir-liquido', carteirinhas: [], porcoes: 3, tempo_min: 10,
+      ingredientes: [
+        { item: 'banana madura', qtd: '2' }, { item: 'leite', qtd: '2 xícaras' }, { item: 'aveia', qtd: '2 colheres de sopa' },
+        { item: 'mel (opcional; nunca para bebê com menos de 1 ano)', qtd: '1 colher de sopa' } ],
+      utensilios: ['xícara medidora', 'colher medidora', 'faca de mesa', 'liquidificador', 'copos'],
+      passos: [
+        { texto: 'Descasque as bananas e quebre em pedaços com as mãos, direto no copo do liquidificador.', papel: 'mirim' },
+        { texto: 'Meça 2 xícaras de leite: xícara na mesa e olhos na altura da marca.', papel: 'chef' },
+        { texto: 'Meça a aveia (e o mel, se quiserem): colher cheia, nivelada com as costas da faca.', papel: 'mise' },
+        { texto: 'Conferência: tampa bem fechada? Mãos longe das lâminas?', papel: 'guarda' },
+        { texto: 'Bata por 1 minuto, segurando a tampa.', papel: 'sous', alerta: 'eletrico', timer_s: 60 },
+        { texto: 'Desligue e tire da tomada antes de abrir.', papel: 'sous', alerta: 'eletrico' },
+        { texto: 'Sirva nos copos devagar, sem encher até a boca.', papel: 'chef' },
+        { texto: 'Prove. Ficou grossa ou fina? Doce ou pouco doce?', papel: 'cronista' } ] },
+
+    { id: 'sanduiche-natural', nome: 'Sanduíche natural', emoji: '🥪', nivel: 1, tecnica: 'espalhar', carteirinhas: [], porcoes: 2, tempo_min: 15,
+      ingredientes: [
+        { item: 'pão de forma integral', qtd: '4 fatias' }, { item: 'requeijão ou ricota', qtd: '4 colheres de sopa' },
+        { item: 'queijo branco', qtd: '4 fatias' }, { item: 'alface', qtd: '4 folhas' }, { item: 'tomate', qtd: '1' }, { item: 'cenoura', qtd: '1' } ],
+      utensilios: ['tábua', 'faca de mesa', 'faca do adulto', 'ralador (do adulto)', 'colher de sopa', 'pano limpo', 'prato'],
+      passos: [
+        { texto: 'Lavem as folhas de alface e sequem com um pano limpo.', papel: 'mirim' },
+        { texto: 'Rasguem a alface em pedaços do tamanho do pão.', papel: 'mirim' },
+        { texto: 'Rale a cenoura e corte o tomate em rodelas finas. O ralador corta: fica com o adulto.', papel: 'sous', alerta: 'faca' },
+        { texto: 'Espalhe 1 colher de requeijão em cada fatia, do meio até as bordas.', papel: 'chef' },
+        { texto: 'Monte as camadas: queijo, alface, tomate e cenoura.', papel: 'chef' },
+        { texto: 'Feche com a outra fatia e aperte de leve com a mão aberta.', papel: 'mise' },
+        { texto: 'Corte na diagonal com a faca de mesa, fazendo dois triângulos.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Prove. Qual camada aparece mais: a crocante ou a macia?', papel: 'cronista' } ] },
+
+    { id: 'bolo-de-caneca', nome: 'Bolo de caneca', emoji: '🧁', nivel: 1, tecnica: 'medir-secos', carteirinhas: [], porcoes: 2, tempo_min: 10,
+      ingredientes: [
+        { item: 'ovo', qtd: '1' }, { item: 'leite', qtd: '4 colheres de sopa' }, { item: 'óleo', qtd: '2 colheres de sopa' },
+        { item: 'açúcar', qtd: '3 colheres de sopa' }, { item: 'farinha de trigo', qtd: '4 colheres de sopa' },
+        { item: 'chocolate em pó', qtd: '2 colheres de sopa' }, { item: 'fermento em pó', qtd: '1 colher de chá' } ],
+      utensilios: ['caneca grande (300 ml ou mais) que pode ir ao micro-ondas', 'colheres medidoras', 'garfo', 'faca de mesa (para nivelar)', 'pano de prato'],
+      passos: [
+        { texto: 'Quebre o ovo dentro da caneca e bata com o garfo.', papel: 'chef' },
+        { texto: 'Meça o leite e o óleo e junte ao ovo.', papel: 'mise' },
+        { texto: 'Meça o açúcar, a farinha e o chocolate: colher cheia, nivelada com as costas da faca.', papel: 'chef' },
+        { texto: 'Misture com o garfo até sumirem as bolinhas.', papel: 'mirim' },
+        { texto: 'Junte o fermento por último e misture só um pouquinho.', papel: 'mise' },
+        { texto: 'Micro-ondas na potência alta por cerca de 1 min 30 s. Se o meio ainda estiver molhado, mais 15 s.', papel: 'sous', alerta: 'calor', timer_s: 90 },
+        { texto: 'A caneca sai quente: só o adulto tira, com pano. Esperem 2 minutos.', papel: 'guarda', alerta: 'calor', timer_s: 120 },
+        { texto: 'Prove. Ficou fofinho, molhadinho ou seco?', papel: 'cronista' } ] },
+
+    { id: 'espetinho-de-frutas', nome: 'Espetinho de frutas', emoji: '🍡', nivel: 2, tecnica: 'garra', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 20,
+      ingredientes: [
+        { item: 'banana', qtd: '2' }, { item: 'morango', qtd: '12' }, { item: 'uva', qtd: '1 cacho pequeno' }, { item: 'palito de churrasco', qtd: '8' } ],
+      utensilios: ['tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'potinhos', 'prato'],
+      passos: [
+        { texto: 'Lavem as frutas e soltem as uvas do cacho.', papel: 'mirim' },
+        { texto: 'Revisão da garra: todo mundo mostra os dedos dobrados, pontas para trás. Pano úmido embaixo da tábua?', papel: 'guarda' },
+        { texto: 'Descasque as bananas e corte rodelas grossas usando a garra.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Tire as folhinhas dos morangos e corte ao meio, ainda com a garra.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Separe as frutas em potinhos, um para cada cor.', papel: 'mise' },
+        { texto: 'Monte os espetinhos repetindo um padrão de cores: vermelho, amarelo, verde, vermelho...', papel: 'chef' },
+        { texto: 'Espetinho pronto deita no prato com as pontas todas para o mesmo lado, longe de quem vai pegar.', papel: 'guarda' },
+        { texto: 'Cada um pega um espetinho e tenta descobrir o padrão do outro.', papel: 'cronista' } ] },
+
+    { id: 'salada-tomate-pepino', nome: 'Salada de tomate e pepino', emoji: '🥒', nivel: 2, tecnica: 'ponte', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 15,
+      ingredientes: [
+        { item: 'tomate-cereja', qtd: '1 xícara (uns 15)' }, { item: 'pepino', qtd: '1' }, { item: 'azeite', qtd: '1 colher de sopa' },
+        { item: 'limão', qtd: '½' }, { item: 'sal', qtd: '1 pitada' }, { item: 'orégano', qtd: '1 pitada' } ],
+      utensilios: ['tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'faca do adulto', 'tigela', 'colher medidora', 'espremedor'],
+      passos: [
+        { texto: 'Lavem os tomates e o pepino.', papel: 'mirim' },
+        { texto: 'Corte o pepino ao meio no comprimento e deite a parte reta na tábua, para ele não rolar.', papel: 'sous', alerta: 'faca' },
+        { texto: 'Ponte nos tomates-cereja: mão em arco por cima, a faca passa por baixo. Corte cada um ao meio.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Garra no pepino: corte meias-luas, com a garra andando para trás devagar.', papel: 'chef', alerta: 'faca' },
+        { texto: 'A faca terminou? Ela fica ao lado da tábua, nunca dentro da pia com água.', papel: 'guarda' },
+        { texto: 'Esprema o limão e meça 1 colher de azeite.', papel: 'mise' },
+        { texto: 'Jogue o sal e o orégano por cima, de bem alto, como chuva.', papel: 'mirim' },
+        { texto: 'Misturem e provem. Precisa de mais sal ou de mais limão?', papel: 'cronista' } ] }
+  ];
+
+  const EM_BREVE = [
+    { nivel: 3, nome: 'Ovo mexido', emoji: '🍳' }, { nivel: 3, nome: 'Tapioca', emoji: '🫓' },
+    { nivel: 3, nome: 'Pipoca de panela', emoji: '🍿' }, { nivel: 3, nome: 'Arroz soltinho', emoji: '🍚' },
+    { nivel: 4, nome: 'Bolo de cenoura', emoji: '🥕' }, { nivel: 4, nome: 'Prato feito da Brigada', emoji: '🍛' },
+    { nivel: 4, nome: 'Receita de herança', emoji: '📜' }
+  ];
+
+  const CARINHAS = [
+    { v: 3, emoji: '😋', texto: 'amei' }, { v: 2, emoji: '🙂', texto: 'gostei' }, { v: 1, emoji: '😐', texto: 'não é pra mim' } ];
+  const PALAVRAS = ['doce', 'azedo', 'salgado', 'crocante', 'macio', 'cremoso', 'suculento', 'gelado', 'fresco', 'amargo'];
+  const CAPAZ = [
+    { v: 1, emoji: '🌱', texto: 'pouco' }, { v: 2, emoji: '🌿', texto: 'mais ou menos' }, { v: 3, emoji: '🌳', texto: 'muito' } ];
+  const CORES_PERFIL = ['#1E4FA6', '#C2412D', '#2F7A4B', '#7A3FA0', '#9A6200', '#C25A0A', '#0F766E', '#A3245E'];
+
+  // ---------------------------------------------------------------- estado / save
+  function estadoInicial() {
+    return { versao: VERSAO, perfis: [], sessoes: [], presentes: [], proximoId: 1, sessaoAtual: null };
+  }
+  // completa um save antigo ou incompleto com os padrões; nunca migra, nunca apaga o que é válido (D-JC-3)
+  function completarEstado(e) {
+    const base = estadoInicial();
+    if (!e || typeof e !== 'object' || Array.isArray(e)) return base;
+    const perfis = (Array.isArray(e.perfis) ? e.perfis : [])
+      .filter(p => p && typeof p === 'object' && Number.isFinite(Number(p.id)))
+      .map((p, i) => ({
+        id: Number(p.id), nome: String(p.nome || '?').slice(0, 20),
+        idade: Number.isFinite(Number(p.idade)) ? Number(p.idade) : 8,
+        cor: typeof p.cor === 'string' ? p.cor : CORES_PERFIL[i % CORES_PERFIL.length],
+        carteirinhas: Object.assign({}, p.carteirinhas && typeof p.carteirinhas === 'object' ? p.carteirinhas : {})
+      }));
+    const ids = new Set(perfis.map(p => p.id));
+    const maxId = perfis.reduce((m, p) => Math.max(m, p.id), 0);
+    const sessaoAtual = e.sessaoAtual && typeof e.sessaoAtual === 'object' && receita(e.sessaoAtual.receitaId) ? e.sessaoAtual : null;
+    return {
+      versao: VERSAO,
+      perfis,
+      sessoes: Array.isArray(e.sessoes) ? e.sessoes.filter(s => s && typeof s === 'object') : [],
+      presentes: (Array.isArray(e.presentes) ? e.presentes : []).map(Number).filter((id, i, a) => ids.has(id) && a.indexOf(id) === i),
+      proximoId: Math.max(Number(e.proximoId) || 1, maxId + 1),
+      sessaoAtual
+    };
+  }
+
+  // ---------------------------------------------------------------- perfis
+  const ehAdulto = p => p.idade >= IDADE_ADULTO;
+  const ehMirim = p => p.idade < IDADE_LEITOR;
+  const temCarteirinha = (p, c) => ehAdulto(p) || !!(p.carteirinhas && p.carteirinhas[c]);
+  function perfil(e, id) { return e.perfis.find(p => p.id === id) || null; }
+  function perfisPresentes(e) { return e.presentes.map(id => perfil(e, id)).filter(Boolean); }
+
+  function adicionarPerfil(e, nome, idade) {
+    nome = String(nome || '').trim().slice(0, 20);
+    idade = Math.round(Number(idade));
+    if (!nome) return { erro: 'Escreva um apelido.' };
+    if (!(idade >= 1 && idade <= 110)) return { erro: 'Coloque uma idade entre 1 e 110.' };
+    if (e.perfis.some(p => p.nome.toLowerCase() === nome.toLowerCase())) return { erro: 'Já tem alguém com esse apelido.' };
+    const usadas = new Set(e.perfis.map(p => p.cor));
+    const cor = CORES_PERFIL.find(c => !usadas.has(c)) || CORES_PERFIL[e.perfis.length % CORES_PERFIL.length];
+    const p = { id: e.proximoId++, nome, idade, cor, carteirinhas: {} };
+    e.perfis.push(p);
+    e.presentes.push(p.id);
+    return { perfil: p };
+  }
+  function removerPerfil(e, id) {
+    e.perfis = e.perfis.filter(p => p.id !== id);
+    e.presentes = e.presentes.filter(x => x !== id);
+  }
+  function alternarPresenca(e, id) {
+    if (!perfil(e, id)) return;
+    e.presentes = e.presentes.includes(id) ? e.presentes.filter(x => x !== id) : e.presentes.concat(id);
+  }
+  function assinarCarteirinha(e, id, c, valor) {
+    const p = perfil(e, id);
+    if (!p || !CARTEIRINHAS[c] || ehAdulto(p)) return false;
+    if (valor) p.carteirinhas[c] = true; else delete p.carteirinhas[c];
+    return true;
+  }
+
+  // ---------------------------------------------------------------- receitas e trilha
+  function receita(id) { return RECEITAS.find(r => r.id === id) || null; }
+  const podeLiderar = (p, r) => !ehMirim(p) && r.carteirinhas.every(c => temCarteirinha(p, c));
+  function vezes(e, id) { return e.sessoes.filter(s => s.receitaId === id).length; }
+
+  function statusReceita(e, id) {
+    const r = receita(id);
+    if (!r) return { livre: false, motivo: 'Receita não encontrada.' };
+    const pres = perfisPresentes(e);
+    if (!pres.length) return { livre: false, motivo: 'Marque quem está na cozinha.' };
+    if (!pres.some(ehAdulto)) return { livre: false, motivo: 'Precisa de um adulto na brigada.' };
+    const aprendizes = pres.filter(p => !ehAdulto(p) && !ehMirim(p));
+    let aviso = '';
+    if (r.carteirinhas.length && aprendizes.length && !aprendizes.some(p => podeLiderar(p, r))) {
+      const nomes = r.carteirinhas.map(c => CARTEIRINHAS[c].nome).join(' e ');
+      aviso = 'Ninguém da brigada tem a ' + nomes + ' ainda: hoje um adulto é o Chef do Dia e demonstra.';
+    }
+    return { livre: true, motivo: '', aviso };
+  }
+  // a próxima receita sugerida: a primeira da trilha que a brigada ainda não fez
+  function sugerida(e) {
+    const r = RECEITAS.find(x => vezes(e, x.id) === 0 && statusReceita(e, x.id).livre);
+    return r ? r.id : null;
+  }
+  function andaime(vez) {
+    if (vez <= 1) return '1ª vez: o Sous-chef demonstra cada técnica antes de passar a vez.';
+    if (vez === 2) return '2ª vez: o Chef do Dia lê e faz; o Sous-chef só ajuda quando for chamado.';
+    return vez + 'ª vez: receita quase dominada. O Chef faz a parte dele sozinho.';
+  }
+
+  // ---------------------------------------------------------------- papéis
+  function contagemPapeis(e) {
+    const c = {};
+    for (const s of e.sessoes) {
+      for (const [papel, quem] of Object.entries(s.papeis || {})) {
+        for (const id of [].concat(quem)) {
+          if (id == null) continue;
+          c[id] = c[id] || {};
+          c[id][papel] = (c[id][papel] || 0) + 1;
+        }
+      }
+    }
+    return c;
+  }
+  // distribui as comandas: Sous-chef adulto que menos foi Sous; Chef quem menos liderou (aprendiz antes de adulto);
+  // guarda, mise e cronista vão para quem tem menos papéis hoje (a Guarda prefere criança: inverte a autoridade).
+  function distribuirPapeis(e, id) {
+    const r = receita(id);
+    const pres = perfisPresentes(e);
+    const adultos = pres.filter(ehAdulto);
+    if (!r || !adultos.length) return null;
+    const cont = contagemPapeis(e);
+    const n = (p, papel) => (cont[p.id] && cont[p.id][papel]) || 0;
+    const ad = p => (ehAdulto(p) ? 1 : 0);
+    const sous = adultos.slice().sort((a, b) => n(a, 'sous') - n(b, 'sous') || a.id - b.id)[0];
+    const naoMirim = pres.filter(p => !ehMirim(p));
+    let cands = naoMirim.filter(p => p !== sous && podeLiderar(p, r));
+    if (!cands.length) cands = [sous];
+    const chef = cands.slice().sort((a, b) => n(a, 'chef') - n(b, 'chef') || ad(a) - ad(b) || a.id - b.id)[0];
+    const papeis = { chef: chef.id, sous: sous.id, mise: null, guarda: null, cronista: null, mirim: pres.filter(ehMirim).map(p => p.id) };
+    const carga = new Map(naoMirim.map(p => [p.id, 0]));
+    carga.set(chef.id, carga.get(chef.id) + 1);
+    carga.set(sous.id, carga.get(sous.id) + 1);
+    for (const papel of ['guarda', 'mise', 'cronista']) {
+      const quem = naoMirim.slice().sort((a, b) =>
+        carga.get(a.id) - carga.get(b.id) ||
+        (papel === 'guarda' ? ad(a) - ad(b) : 0) ||
+        n(a, papel) - n(b, papel) || ad(a) - ad(b) || a.id - b.id)[0];
+      papeis[papel] = quem.id;
+      carga.set(quem.id, carga.get(quem.id) + 1);
+    }
+    return papeis;
+  }
+  function elegiveis(e, id, papel) {
+    const r = receita(id);
+    const pres = perfisPresentes(e);
+    if (!r || papel === 'mirim') return [];
+    if (papel === 'sous') return pres.filter(ehAdulto);
+    if (papel === 'chef') return pres.filter(p => podeLiderar(p, r));
+    return pres.filter(p => !ehMirim(p));
+  }
+  // passa a comanda para a próxima pessoa elegível (em círculo); devolve um objeto novo
+  function trocarPapel(e, id, papeis, papel) {
+    const lista = elegiveis(e, id, papel);
+    if (lista.length < 2) return Object.assign({}, papeis);
+    const i = lista.findIndex(p => p.id === papeis[papel]);
+    return Object.assign({}, papeis, { [papel]: lista[(i + 1) % lista.length].id });
+  }
+  // quem executa um passo: o Ajudante Mirim cai para o Mise en place quando não há criança pequena
+  function responsaveis(papeis, papel) {
+    if (papel === 'mirim') return papeis.mirim && papeis.mirim.length ? papeis.mirim.slice() : [papeis.mise];
+    return [papeis[papel]];
+  }
+  function papelEfetivo(papeis, papel) {
+    return papel === 'mirim' && !(papeis.mirim && papeis.mirim.length) ? 'mise' : papel;
+  }
+  function temCriancaPequena(e) { return perfisPresentes(e).some(ehMirim); }
+
+  // ---------------------------------------------------------------- sessão
+  function iniciarSessao(e, id, papeis) {
+    if (!statusReceita(e, id).livre || !papeis) return false;
+    e.sessaoAtual = { receitaId: id, papeis, passo: 0 };
+    return true;
+  }
+  function provaCompleta(e, provas) {
+    return perfisPresentes(e).every(p => {
+      const x = provas[p.id];
+      return x && x.carinha && (ehMirim(p) || x.capaz);
+    });
+  }
+  function registrarSessao(e, provas, frase, data) {
+    const s = e.sessaoAtual;
+    if (!s) return null;
+    const pagina = {
+      n: e.sessoes.length + 1, receitaId: s.receitaId, data: String(data || ''),
+      presentes: e.presentes.slice(), papeis: s.papeis,
+      provas: JSON.parse(JSON.stringify(provas || {})), frase: String(frase || '').trim().slice(0, 200)
+    };
+    e.sessoes.push(pagina);
+    e.sessaoAtual = null;
+    return pagina;
+  }
+  function resumoLivro(e) {
+    return {
+      paginas: e.sessoes.length,
+      receitas: new Set(e.sessoes.map(s => s.receitaId)).size,
+      tecnicas: new Set(e.sessoes.map(s => (receita(s.receitaId) || {}).tecnica).filter(Boolean)).size
+    };
+  }
+
+  // ---------------------------------------------------------------- exportar / importar
+  function exportar(e) { return JSON.stringify({ app: 'brigada-da-familia', versao: VERSAO, estado: e }); }
+  function importar(texto) {
+    let obj;
+    try { obj = JSON.parse(texto); } catch (err) { return { erro: 'Esse texto não é um progresso válido. Copie de novo, inteiro.' }; }
+    if (!obj || obj.app !== 'brigada-da-familia' || typeof obj.estado !== 'object') return { erro: 'Esse texto não veio da Brigada da Família.' };
+    return { estado: completarEstado(obj.estado) };
+  }
+
+  return {
+    VERSAO, IDADE_ADULTO, IDADE_LEITOR, PAPEIS, ORDEM_PAPEIS, CARTEIRINHAS, ALERTAS, TECNICAS, NIVEIS, RECEITAS, EM_BREVE,
+    CARINHAS, PALAVRAS, CAPAZ, CORES_PERFIL,
+    estadoInicial, completarEstado, ehAdulto, ehMirim, temCarteirinha, perfil, perfisPresentes,
+    adicionarPerfil, removerPerfil, alternarPresenca, assinarCarteirinha,
+    receita, podeLiderar, vezes, statusReceita, sugerida, andaime,
+    contagemPapeis, distribuirPapeis, elegiveis, trocarPapel, responsaveis, papelEfetivo, temCriancaPequena,
+    iniciarSessao, provaCompleta, registrarSessao, resumoLivro, exportar, importar
+  };
+})();
+</script>
+
+<script>
+(function () {
+  'use strict';
+  const B = Brigada;
+  const CHAVE = 'brigada-da-familia-v1'; // nunca trocar: trocar a chave apaga o progresso da família (D-JC-3)
+  const app = document.getElementById('app');
+
+  function carregar() {
+    try { return B.completarEstado(JSON.parse(localStorage.getItem(CHAVE) || 'null')); } catch (e) { return B.estadoInicial(); }
+  }
+  function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(E)); } catch (e) { /* sem armazenamento: segue na memória */ } }
+  let E = carregar();
+  let T = {}; // estado da tela (checklists, respostas da prova), descartável
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const nomeDe = id => { const p = B.perfil(E, id); return p ? p.nome : '?'; };
+  const nomesDe = ids => ids.map(nomeDe).join(' e ');
+  const bola = p => `<span class="bola" style="background:${p.cor}">${esc(p.nome.slice(0, 1).toUpperCase())}</span>`;
+  const hoje = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const dataBonita = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
+  const ir = h => { if (location.hash === h) render(); else location.hash = h; };
+
+  // ---------------------------------------------------------------- tela acesa
+  let trava = null;
+  async function pedirTelaAcesa() {
+    try { if ('wakeLock' in navigator && !trava && document.visibilityState === 'visible') { trava = await navigator.wakeLock.request('screen'); trava.addEventListener('release', () => { trava = null; }); } } catch (e) { trava = null; }
+  }
+  function soltarTelaAcesa() { try { if (trava) trava.release(); } catch (e) { } trava = null; }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && E.sessaoAtual) pedirTelaAcesa(); });
+
+  // ---------------------------------------------------------------- timer (som + vibração)
+  let timer = null; // { fim, rotulo, acabou }
+  let tique = null;
+  let audio = null;
+  function bip() {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.35, 0.7].forEach(t => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
+        g.gain.setValueAtTime(0.0001, audio.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.4, audio.currentTime + t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + t + 0.25);
+        o.start(audio.currentTime + t); o.stop(audio.currentTime + t + 0.3);
+      });
+    } catch (e) { }
+    try { navigator.vibrate && navigator.vibrate([300, 150, 300, 150, 300]); } catch (e) { }
+  }
+  function destravarAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) { } }
+  function iniciarTimer(s, rotulo) {
+    destravarAudio();
+    timer = { fim: Date.now() + s * 1000, rotulo, acabou: false };
+    if (!tique) tique = setInterval(atualizarTimer, 250);
+    atualizarTimer();
+  }
+  function pararTimer() { timer = null; clearInterval(tique); tique = null; atualizarTimer(); }
+  const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  function atualizarTimer() {
+    if (timer && !timer.acabou && Date.now() >= timer.fim) { timer.acabou = true; bip(); }
+    const el = document.getElementById('timer');
+    if (!el) return;
+    if (!timer) { el.hidden = true; return; }
+    el.hidden = false;
+    el.className = 'timer-pill' + (timer.acabou ? ' acabou' : '');
+    el.innerHTML = timer.acabou ? '⏰ Tempo! Toque para parar' : '⏱️ ' + mmss(timer.fim - Date.now());
+  }
+
+  // ---------------------------------------------------------------- telas
+  function topo(extra) {
+    return `<header class="topo">
+      <div class="marca"><span class="logo" aria-hidden="true">🧑‍🍳</span><div><h1>Brigada da Família</h1></div></div>
+      ${extra || ''}
+    </header>`;
+  }
+  function barraSessao(titulo) {
+    return `<div class="barra">
+      <button class="btn-texto" data-acao="sair">✕ Sair</button>
+      <strong>${esc(titulo)}</strong>
+      <button id="timer" class="timer-pill" data-acao="timer-parar" hidden></button>
+    </div>`;
+  }
+
+  function telaInicio() {
+    const sug = B.sugerida(E);
+    const pessoas = E.perfis.length
+      ? `<div class="pessoas">${E.perfis.map(p => `<button class="pessoa" data-acao="presenca" data-id="${p.id}" aria-pressed="${E.presentes.includes(p.id)}">${bola(p)}${esc(p.nome)}</button>`).join('')}
+          <button class="pessoa" data-acao="ir" data-h="#/brigada" aria-pressed="true"><span class="bola" style="background:var(--muted)">+</span>Brigada</button></div>`
+      : `<div class="cartao pilha-p"><h3>Primeiro, montem a brigada</h3><p class="mudo">Cada pessoa da família ganha um perfil com apelido e idade. Leva um minuto.</p>
+          <button class="btn prim" data-acao="ir" data-h="#/brigada">Montar a brigada</button></div>`;
+    const niveis = B.NIVEIS.map(nv => {
+      const rs = B.RECEITAS.filter(r => r.nivel === nv.n);
+      const breve = B.EM_BREVE.filter(r => r.nivel === nv.n);
+      const cards = rs.map(r => {
+        const st = B.statusReceita(E, r.id), v = B.vezes(E, r.id);
+        const selos = [];
+        if (v) selos.push(`<span class="selo">✓ ${v}× feita</span>`);
+        if (r.id === sug) selos.push('<span class="selo sug">próxima</span>');
+        r.carteirinhas.forEach(c => selos.push(`<span class="selo pede">${B.CARTEIRINHAS[c].emoji} ${esc(B.CARTEIRINHAS[c].nome)}</span>`));
+        return `<button class="parada${r.id === sug ? ' sugerida' : ''}${st.livre ? '' : ' travada'}" data-acao="ir" data-h="#/receita/${r.id}">
+          <span class="emo" aria-hidden="true">${r.emoji}</span>
+          <span class="pilha-p" style="gap:4px"><span class="nome">${esc(r.nome)}</span>
+          <span class="info">${esc(B.TECNICAS[r.tecnica].nome)} · ${r.tempo_min} min</span>
+          ${selos.length ? `<span class="linha" style="gap:6px">${selos.join('')}</span>` : ''}</span></button>`;
+      }).join('') + breve.map(r => `<div class="parada breve"><span class="emo" aria-hidden="true">${r.emoji}</span>
+          <span class="pilha-p" style="gap:4px"><span class="nome">${esc(r.nome)}</span><span class="info">chega na próxima versão</span></span></div>`).join('');
+      return `<section class="nivel" style="--cor:${nv.cor}">
+        <div class="nivel-cab"><span class="nivel-num">NÍVEL ${nv.n}</span><h2>${esc(nv.nome)}</h2><span class="mudo">${esc(nv.sobre)}</span></div>
+        <div class="paradas">${cards}</div></section>`;
+    }).join('');
+    const r = B.resumoLivro(E);
+    return topo(`<button class="cadeado" id="cadeado" aria-label="Painel do adulto: segure 3 segundos" title="Segure 3 segundos">🔒</button>`) + `
+      <div class="pilha">
+        <section class="pilha-p"><span class="rotulo">Quem está na cozinha hoje?</span>${pessoas}</section>
+        ${E.sessoes.length ? `<button class="btn" data-acao="ir" data-h="#/livro">📖 Livro da Família · ${r.paginas} ${r.paginas === 1 ? 'página' : 'páginas'}</button>` : ''}
+        ${E.sessaoAtual ? `<div class="aviso">Tem uma receita no meio do caminho: ${esc(B.receita(E.sessaoAtual.receitaId).nome)}. <button class="btn-texto" data-acao="ir" data-h="#/cozinhar">Continuar</button></div>` : ''}
+        ${niveis}
+      </div>`;
+  }
+
+  function telaBrigada() {
+    const lista = E.perfis.map(p => {
+      const tipo = B.ehAdulto(p) ? 'adulto · Sous-chef possível' : B.ehMirim(p) ? 'Ajudante Mirim' : 'aprendiz';
+      const cart = Object.keys(B.CARTEIRINHAS).filter(c => !B.ehAdulto(p) && p.carteirinhas[c]).map(c => B.CARTEIRINHAS[c].emoji).join(' ');
+      const confirmar = T.remover === p.id
+        ? `<span class="linha"><span class="erro">Apagar ${esc(p.nome)}?</span><button class="btn perigo" data-acao="remover-sim" data-id="${p.id}">Apagar</button><button class="btn" data-acao="remover-nao">Não</button></span>`
+        : `<button class="btn-texto" data-acao="remover" data-id="${p.id}">apagar</button>`;
+      return `<div class="cartao entre" style="flex-wrap:wrap"><div class="linha">${bola(p)}
+        <div><h3>${esc(p.nome)}</h3><span class="mudo mini">${p.idade} anos · ${tipo}${cart ? ' · ' + cart : ''}</span></div></div>${confirmar}</div>`;
+    }).join('');
+    return topo(`<button class="btn" data-acao="ir" data-h="#/">Pronto</button>`) + `
+      <div class="pilha">
+        <h2>A brigada</h2>
+        <p class="mudo">Só apelidos. Tudo fica guardado neste aparelho. Com menos de ${B.IDADE_LEITOR} anos a pessoa é Ajudante Mirim; a partir de ${B.IDADE_ADULTO}, pode ser Sous-chef.</p>
+        ${lista || '<p class="mudo">Ainda ninguém. Comecem por quem está na cozinha agora.</p>'}
+        <form class="cartao form-perfil" id="form-perfil" autocomplete="off">
+          <label class="campo">Apelido<input type="text" id="novo-nome" maxlength="20" placeholder="Ex.: Benjamin"></label>
+          <label class="campo">Idade<input type="number" id="nova-idade" min="1" max="110" inputmode="numeric" placeholder="8"></label>
+          <button class="btn prim" type="submit">Adicionar</button>
+          ${T.erroPerfil ? `<p class="erro" style="grid-column:1/-1">${esc(T.erroPerfil)}</p>` : ''}
+        </form>
+      </div>`;
+  }
+
+  function telaPainel() {
+    const aprendizes = E.perfis.filter(p => !B.ehAdulto(p) && !B.ehMirim(p));
+    const cart = aprendizes.length ? aprendizes.map(p => `<div class="cartao pilha-p"><h3>${esc(p.nome)}</h3>
+        ${Object.entries(B.CARTEIRINHAS).map(([c, d]) => `<button class="check" data-acao="carteira" data-id="${p.id}" data-c="${c}" aria-pressed="${!!p.carteirinhas[c]}">
+          <span class="caixa">${p.carteirinhas[c] ? '✓' : ''}</span><span>${d.emoji} ${esc(d.nome)}<br><span class="mudo mini" style="font-weight:400">${esc(d.teste)}</span></span><span></span></button>`).join('')}
+      </div>`).join('') : '<p class="mudo">Nenhum aprendiz de 6 a 15 anos na brigada ainda.</p>';
+    return topo(`<button class="btn" data-acao="ir" data-h="#/">Fechar</button>`) + `
+      <div class="pilha">
+        <h2>Painel do adulto</h2>
+        <section class="pilha-p"><h3>Carteirinhas</h3>
+          <p class="mudo">Marque só depois de ver a demonstração, sem ajuda. A carteirinha deixa a pessoa ser Chef do Dia nas receitas que usam a ferramenta. Panela de pressão e água fervente ficam sempre com adulto.</p>
+          ${cart}</section>
+        <section class="pilha-p"><h3>Guardar ou passar o progresso</h3>
+          <p class="mudo">O progresso mora só neste aparelho. Para trocar de aparelho, copie o texto e cole no outro.</p>
+          <textarea id="export" readonly>${esc(B.exportar(E))}</textarea>
+          <div class="linha"><button class="btn" data-acao="copiar">Copiar</button>${T.copiado ? '<span class="mudo">Copiado.</span>' : ''}</div>
+          <textarea id="import" placeholder="Cole aqui o progresso de outro aparelho"></textarea>
+          <div class="linha"><button class="btn" data-acao="importar">Trazer o progresso colado</button>${T.msgImport ? `<span class="${T.msgImportErro ? 'erro' : 'mudo'}">${esc(T.msgImport)}</span>` : ''}</div>
+        </section>
+        <section class="pilha-p"><h3>Começar do zero</h3>
+          ${T.zerar ? `<div class="linha"><span class="erro">Apaga perfis, carteirinhas e o Livro inteiro.</span><button class="btn perigo" data-acao="zerar-sim">Apagar tudo</button><button class="btn" data-acao="zerar-nao">Não</button></div>`
+                    : '<div><button class="btn" data-acao="zerar">Apagar tudo…</button></div>'}
+        </section>
+        <section class="pilha-p"><h3>Como o app ensina</h3>
+          <ul class="lista mudo">
+            <li>Uma técnica por receita. A mesma receita repetida é como ela vira dominada: na 1ª vez o adulto demonstra, na 2ª a criança faz e chama se precisar, na 3ª faz sozinha.</li>
+            <li>Os papéis giram: quem menos liderou é o próximo Chef do Dia.</li>
+            <li>Sem pontos, ranking ou sequência diária. Recompensa prometida diminui a vontade; retorno sobre a habilidade aumenta.</li>
+            <li>No fim, cada um diz o quanto se sentiu capaz. É a medida que importa.</li>
+          </ul></section>
+      </div>`;
+  }
+
+  function comandas(r, papeis) {
+    return `<div class="comandas">${B.ORDEM_PAPEIS.filter(k => k !== 'mirim' || papeis.mirim.length).map(k => {
+      const d = B.PAPEIS[k];
+      const quem = k === 'mirim' ? nomesDe(papeis.mirim) : nomeDe(papeis[k]);
+      const troca = k !== 'mirim' && B.elegiveis(E, r.id, k).length > 1;
+      const tag = troca ? 'button' : 'div';
+      return `<${tag} class="comanda" style="--cor:${d.cor}" ${troca ? `data-acao="trocar" data-papel="${k}" aria-label="Trocar quem é ${esc(d.nome)}"` : ''}>
+        <span class="tit">${d.emoji} ${esc(d.nome)}</span><span class="quem">${esc(quem)}</span><span class="faz">${esc(d.faz)}</span>
+        ${troca ? '<span class="trocar">tocar para trocar ↻</span>' : ''}</${tag}>`;
+    }).join('')}</div>`;
+  }
+
+  function telaReceita(id) {
+    const r = B.receita(id);
+    if (!r) return telaInicio();
+    const st = B.statusReceita(E, id);
+    if (st.livre && (!T.papeis || T.papeisDe !== id)) { T.papeis = B.distribuirPapeis(E, id); T.papeisDe = id; }
+    const vez = B.vezes(E, id) + 1;
+    const tec = B.TECNICAS[r.tecnica];
+    const quente = r.passos.some(p => p.alerta === 'calor') && B.temCriancaPequena(E);
+    return topo(`<button class="btn" data-acao="ir" data-h="#/">◀ Trilha</button>`) + `
+      <div class="pilha">
+        <div class="ficha-cab"><span class="emo" aria-hidden="true">${r.emoji}</span>
+          <div class="pilha-p"><span class="rotulo">Nível ${r.nivel} · ${vez}ª vez</span><h2 style="font-size:30px">${esc(r.nome)}</h2>
+          <div class="fatos"><span class="fato">${tec.emoji} Técnica do dia: ${esc(tec.nome)}</span><span class="fato">⏱️ ${r.tempo_min} min</span><span class="fato">🍽️ ${r.porcoes} porções</span></div></div></div>
+        ${st.livre ? '' : `<div class="aviso">🔒 ${esc(st.motivo)}</div>`}
+        ${st.aviso ? `<div class="aviso">${esc(st.aviso)}</div>` : ''}
+        ${quente ? '<div class="aviso quente">🔥 Tem criança pequena na brigada e esta receita tem calor. Zona Quente: só o Sous-chef chega perto.</div>' : ''}
+        ${st.livre ? `<section class="pilha-p"><span class="rotulo">As comandas de hoje</span>${comandas(r, T.papeis)}<p class="mudo mini">${esc(B.andaime(vez))}</p></section>` : ''}
+        <div class="cartao pilha-p"><h3>Ingredientes</h3><ul class="lista">${r.ingredientes.map(i => `<li><strong>${esc(i.qtd)}</strong> ${esc(i.item)}</li>`).join('')}</ul></div>
+        ${st.livre ? `<button class="btn prim cheio" data-acao="comecar" data-id="${r.id}">Vamos cozinhar!</button>` : ''}
+      </div>`;
+  }
+
+  function sessaoOk() { return E.sessaoAtual && B.receita(E.sessaoAtual.receitaId); }
+
+  function telaRitual() {
+    const s = E.sessaoAtual, r = B.receita(s.receitaId);
+    T.ritual = T.ritual || {};
+    const guarda = nomeDe(s.papeis.guarda);
+    const quente = r.passos.some(p => p.alerta === 'calor');
+    const itens = [
+      { k: 'maos', t: 'Mãos lavadas com sabão por 20 segundos', extra: T.maosAte ? (Date.now() < T.maosAte ? mmss(T.maosAte - Date.now()) : '') : '<span class="selo pede">⏱️ 20 s</span>' },
+      { k: 'cabelo', t: 'Cabelo preso e manga dobrada' },
+      { k: 'bancada', t: 'Bancada limpa e pano úmido embaixo da tábua' }
+    ];
+    if (quente || B.temCriancaPequena(E)) itens.push({ k: 'zona', t: 'Zona Quente combinada: só o Sous-chef chega perto do fogão e do micro-ondas' });
+    const tudo = itens.every(i => T.ritual[i.k]);
+    return barraSessao('Ritual de abertura') + `
+      <div class="pilha">
+        <h2>🛡️ ${esc(guarda)} confere</h2>
+        <p class="mudo">A lavagem das mãos dura o tempo de cantar parabéns duas vezes. Toque em “Mãos” para ligar o cronômetro.</p>
+        <div class="checks">${itens.map(i => `<button class="check" data-acao="${i.k === 'maos' && !T.ritual.maos ? 'maos' : 'ritual'}" data-k="${i.k}" aria-pressed="${!!T.ritual[i.k]}">
+          <span class="caixa">${T.ritual[i.k] ? '✓' : ''}</span><span>${esc(i.t)}</span><span class="qtd" id="ck-${i.k}">${i.extra || ''}</span></button>`).join('')}</div>
+        <button class="btn prim cheio" data-acao="ir" data-h="#/tecnica" ${tudo ? '' : 'disabled'}>Tudo certo</button>
+      </div>`;
+  }
+
+  function telaTecnica() {
+    const s = E.sessaoAtual, r = B.receita(s.receitaId), t = B.TECNICAS[r.tecnica];
+    const vez = B.vezes(E, r.id) + 1;
+    return barraSessao('Técnica do dia') + `
+      <div class="pilha">
+        <div class="cartao pilha" style="border-top:8px solid var(--cobalto)">
+          <div class="linha"><span style="font-size:64px" aria-hidden="true">${t.emoji}</span><h2 style="font-size:32px">${esc(t.nome)}</h2></div>
+          <ol class="lista" style="font-size:22px;gap:10px">${t.passos.map(p => `<li>${esc(p)}</li>`).join('')}</ol>
+          <p class="aviso">💡 ${esc(t.dica)}</p>
+        </div>
+        <p class="mudo">${vez === 1 ? `🍳 ${esc(nomeDe(s.papeis.sous))} mostra a técnica primeiro; depois passa a vez.` : esc(B.andaime(vez))}</p>
+        <button class="btn prim cheio" data-acao="ir" data-h="#/mise">Entendemos</button>
+      </div>`;
+  }
+
+  function telaMise() {
+    const s = E.sessaoAtual, r = B.receita(s.receitaId);
+    T.mise = T.mise || {};
+    const itens = r.ingredientes.map((i, n) => ({ k: 'i' + n, t: i.item, q: i.qtd })).concat(r.utensilios.map((u, n) => ({ k: 'u' + n, t: u, q: '' })));
+    const tudo = itens.every(i => T.mise[i.k]);
+    const ids = B.responsaveis(s.papeis, 'mise').concat(s.papeis.mirim || []).filter((v, i, a) => a.indexOf(v) === i);
+    return barraSessao('Mise en place') + `
+      <div class="pilha">
+        <h2>📋 ${esc(nomesDe(ids))} ${ids.length > 1 ? 'separam' : 'separa'} tudo</h2>
+        <p class="mudo">Leiam cada item em voz alta e toquem quando ele estiver na bancada. Nada liga antes disso.</p>
+        <span class="rotulo">Ingredientes</span>
+        <div class="checks">${itens.filter(i => i.k[0] === 'i').map(item).join('')}</div>
+        <span class="rotulo">Utensílios</span>
+        <div class="checks">${itens.filter(i => i.k[0] === 'u').map(item).join('')}</div>
+        <button class="btn prim cheio" data-acao="cozinhar-inicio" ${tudo ? '' : 'disabled'}>Tudo na bancada</button>
+      </div>`;
+    function item(i) {
+      return `<button class="check" data-acao="mise" data-k="${i.k}" aria-pressed="${!!T.mise[i.k]}"><span class="caixa">${T.mise[i.k] ? '✓' : ''}</span><span>${esc(i.t)}</span><span class="qtd">${esc(i.q)}</span></button>`;
+    }
+  }
+
+  function telaCozinhar() {
+    const s = E.sessaoAtual, r = B.receita(s.receitaId);
+    const i = Math.min(s.passo, r.passos.length - 1);
+    const p = r.passos[i];
+    const papel = B.papelEfetivo(s.papeis, p.papel);
+    const d = B.PAPEIS[papel];
+    const quem = nomesDe(B.responsaveis(s.papeis, p.papel));
+    const al = p.alerta ? B.ALERTAS[p.alerta] : null;
+    const ultimo = i === r.passos.length - 1;
+    return barraSessao(r.nome) + `
+      <div class="palco" id="palco" style="--cor:${d.cor}" aria-live="polite">
+        <div class="entre"><span class="contador">Passo ${i + 1} de ${r.passos.length}</span>${al ? `<span class="alerta">${al.emoji} ${esc(al.texto)}</span>` : ''}</div>
+        <div class="vez"><span class="emo" aria-hidden="true">${d.emoji}</span><div><div class="papel">${esc(d.nome)}</div><div class="nomes">vez de ${esc(quem)}</div></div></div>
+        <p class="texto">${esc(p.texto)}</p>
+        ${p.timer_s ? `<div><button class="btn" data-acao="timer" data-s="${p.timer_s}" data-rotulo="${esc(r.nome)}">⏱️ Ligar ${mmss(p.timer_s * 1000)}</button></div>` : ''}
+        <div class="dica-toque" aria-hidden="true"><span>${i > 0 ? '◀ toque: voltar' : ''}</span><span>${ultimo ? 'toque: terminar ▶' : 'toque: avançar ▶'}</span></div>
+      </div>
+      <div class="nav-passos">
+        <button class="btn" data-acao="passo" data-dir="-1" ${i === 0 ? 'disabled' : ''}>◀ Voltar</button>
+        <button class="btn prim" data-acao="passo" data-dir="1">${ultimo ? 'Terminamos!' : 'Feito ▶'}</button>
+      </div>`;
+  }
+
+  function telaProva() {
+    const s = E.sessaoAtual, r = B.receita(s.receitaId);
+    T.provas = T.provas || {};
+    const pres = B.perfisPresentes(E);
+    const completa = B.provaCompleta(E, T.provas);
+    const op = (pid, campo, v, rotulo, grande) => `<button class="opcao${grande ? ' grande' : ''}" data-acao="prova" data-pid="${pid}" data-campo="${campo}" data-v="${esc(v)}" aria-pressed="${(T.provas[pid] || {})[campo] === v || (T.provas[pid] || {})[campo] === String(v)}">${rotulo}</button>`;
+    return barraSessao('Prova da Brigada') + `
+      <div class="pilha">
+        <h2>${r.emoji} Hora de provar</h2>
+        <p class="mudo">Ninguém precisa gostar. Vale provar e dizer o que sentiu.</p>
+        ${pres.map(p => {
+          const x = T.provas[p.id] || {};
+          return `<div class="cartao prova-pessoa"><div class="linha">${bola(p)}<h3>${esc(p.nome)}</h3></div>
+            <div class="opcoes">${B.CARINHAS.map(c => op(p.id, 'carinha', c.v, `${c.emoji}<span class="mini"> ${c.texto}</span>`, true)).join('')}</div>
+            <div class="opcoes">${B.PALAVRAS.map(w => op(p.id, 'palavra', w, esc(w))).join('')}</div>
+            ${B.ehMirim(p) ? '' : `<span class="rotulo">Quanto me senti capaz hoje?</span><div class="opcoes">${B.CAPAZ.map(c => op(p.id, 'capaz', c.v, `${c.emoji}<span class="mini"> ${c.texto}</span>`, true)).join('')}</div>`}
+          </div>`;
+        }).join('')}
+        <label class="campo">📸 ${esc(nomeDe(s.papeis.cronista))}, a frase da página do Livro<input type="text" id="frase" maxlength="200" value="${esc(T.frase || '')}" placeholder="Ex.: A banana escureceu menos com a laranja!"></label>
+        <button class="btn prim cheio" data-acao="salvar-prova" ${completa ? '' : 'disabled'}>Guardar no Livro</button>
+        ${completa ? '' : '<p class="mudo mini">Falta alguém escolher a carinha ou dizer o quanto se sentiu capaz.</p>'}
+      </div>`;
+  }
+
+  function paginaHtml(pg, grande) {
+    const r = B.receita(pg.receitaId) || { nome: '?', emoji: '📄', tecnica: '' };
+    const tec = B.TECNICAS[r.tecnica];
+    const linhas = pg.presentes.map(id => {
+      const x = (pg.provas || {})[id] || {};
+      const car = B.CARINHAS.find(c => String(c.v) === String(x.carinha));
+      const cap = B.CAPAZ.find(c => String(c.v) === String(x.capaz));
+      const papeis = B.ORDEM_PAPEIS.filter(k => [].concat(pg.papeis[k]).includes(id)).map(k => B.PAPEIS[k].emoji).join('');
+      return `<tr><td><strong>${esc(nomeDe(id))}</strong> ${papeis}</td><td>${car ? car.emoji : ''} ${x.palavra ? esc(x.palavra) : ''}</td><td>${cap ? cap.emoji + ' ' + cap.texto : ''}</td></tr>`;
+    }).join('');
+    return `<article class="cartao pilha-p"><div class="pagina"><span class="emo" aria-hidden="true">${r.emoji}</span><div class="pilha-p">
+      <span class="rotulo">Página ${pg.n} · ${dataBonita(pg.data)}</span><h3 style="font-size:${grande ? 26 : 20}px">${esc(r.nome)}</h3>
+      ${tec ? `<span class="mudo mini">${tec.emoji} ${esc(tec.nome)}</span>` : ''}
+      ${pg.frase ? `<p class="frase">“${esc(pg.frase)}”</p>` : ''}</div></div>
+      <div style="overflow-x:auto"><table class="tabela"><tbody>${linhas}</tbody></table></div></article>`;
+  }
+
+  function telaFim() {
+    const pg = E.sessoes[E.sessoes.length - 1];
+    if (!pg) return telaInicio();
+    return topo() + `<div class="pilha"><h2>Página nova no Livro da Família 📖</h2>${paginaHtml(pg, true)}
+      <button class="btn prim cheio" data-acao="ir" data-h="#/">Voltar para a Trilha</button></div>`;
+  }
+
+  function telaLivro() {
+    const r = B.resumoLivro(E);
+    return topo(`<button class="btn" data-acao="ir" data-h="#/">◀ Trilha</button>`) + `
+      <div class="pilha"><h2>📖 Livro da Família</h2>
+        <p class="mudo">${r.paginas} ${r.paginas === 1 ? 'página' : 'páginas'} · ${r.receitas} ${r.receitas === 1 ? 'receita diferente' : 'receitas diferentes'} · ${r.tecnicas} ${r.tecnicas === 1 ? 'técnica' : 'técnicas'}</p>
+        ${E.sessoes.slice().reverse().map(pg => paginaHtml(pg)).join('') || '<p class="mudo">Ainda em branco. A primeira receita escreve a primeira página.</p>'}
+      </div>`;
+  }
+
+  function telaSair() {
+    return barraSessao('Sair da receita') + `<div class="pilha cartao"><h2>Parar esta receita?</h2>
+      <p class="mudo">Ela não vai para o Livro. Dá para recomeçar quando quiserem.</p>
+      <div class="linha"><button class="btn perigo" data-acao="sair-sim">Parar</button><button class="btn" data-acao="sair-nao">Continuar cozinhando</button></div></div>`;
+  }
+
+  // ---------------------------------------------------------------- roteador
+  const SESSAO = ['ritual', 'tecnica', 'mise', 'cozinhar', 'prova'];
+  function render() {
+    const partes = (location.hash || '#/').replace(/^#\/?/, '').split('/');
+    const rota = partes[0] || '';
+    if (SESSAO.includes(rota) && !sessaoOk()) { location.hash = '#/'; return; }
+    if (SESSAO.includes(rota)) pedirTelaAcesa(); else soltarTelaAcesa();
+    let html;
+    if (T.sair && SESSAO.includes(rota)) html = telaSair();
+    else if (rota === 'brigada') html = telaBrigada();
+    else if (rota === 'painel') html = telaPainel();
+    else if (rota === 'receita') html = telaReceita(partes[1]);
+    else if (rota === 'ritual') html = telaRitual();
+    else if (rota === 'tecnica') html = telaTecnica();
+    else if (rota === 'mise') html = telaMise();
+    else if (rota === 'cozinhar') html = telaCozinhar();
+    else if (rota === 'prova') html = telaProva();
+    else if (rota === 'fim') html = telaFim();
+    else if (rota === 'livro') html = telaLivro();
+    else html = telaInicio();
+    app.innerHTML = html;
+    atualizarTimer();
+    ligarCadeado();
+  }
+  window.addEventListener('hashchange', () => { T.sair = false; T.erroPerfil = ''; T.copiado = false; T.msgImport = ''; window.scrollTo(0, 0); render(); });
+
+  // segurar o cadeado 3 s abre o painel do adulto (D-JC-4)
+  function ligarCadeado() {
+    const c = document.getElementById('cadeado');
+    if (!c) return;
+    let t = null;
+    const cancelar = () => { clearTimeout(t); t = null; c.classList.remove('segurando'); };
+    c.addEventListener('pointerdown', ev => { ev.preventDefault(); c.classList.add('segurando'); t = setTimeout(() => { cancelar(); ir('#/painel'); }, 3000); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(n => c.addEventListener(n, cancelar));
+    c.addEventListener('contextmenu', ev => ev.preventDefault());
+  }
+
+  function avancarPasso(dir) {
+    const s = E.sessaoAtual, r = B.receita(s.receitaId);
+    const novo = s.passo + dir;
+    if (novo < 0) return;
+    if (novo >= r.passos.length) { pararTimer(); ir('#/prova'); return; }
+    s.passo = novo; salvar(); render();
+  }
+
+  // ---------------------------------------------------------------- ações (delegação)
+  app.addEventListener('click', ev => {
+    const palco = ev.target.closest('#palco');
+    const el = ev.target.closest('[data-acao]');
+    if (palco && (!el || el === palco)) {
+      const box = palco.getBoundingClientRect();
+      avancarPasso(ev.clientX - box.left < box.width / 2 ? -1 : 1);
+      return;
+    }
+    if (!el) return;
+    const a = el.dataset.acao, id = Number(el.dataset.id);
+    destravarAudio();
+    switch (a) {
+      case 'ir': ir(el.dataset.h); break;
+      case 'presenca': B.alternarPresenca(E, id); T.papeis = null; salvar(); render(); break;
+      case 'remover': T.remover = id; render(); break;
+      case 'remover-nao': T.remover = null; render(); break;
+      case 'remover-sim': B.removerPerfil(E, id); T.remover = null; T.papeis = null; salvar(); render(); break;
+      case 'carteira': { const p = B.perfil(E, id); B.assinarCarteirinha(E, id, el.dataset.c, !p.carteirinhas[el.dataset.c]); T.papeis = null; salvar(); render(); break; }
+      case 'copiar': {
+        const ta = document.getElementById('export');
+        const ok = () => { T.copiado = true; render(); };
+        try { navigator.clipboard.writeText(ta.value).then(ok, () => { ta.select(); }); } catch (e) { ta.select(); }
+        break;
+      }
+      case 'importar': {
+        const res = B.importar(document.getElementById('import').value);
+        if (res.erro) { T.msgImport = res.erro; T.msgImportErro = true; }
+        else { E = res.estado; salvar(); T.msgImport = 'Progresso trazido.'; T.msgImportErro = false; }
+        render(); break;
+      }
+      case 'zerar': T.zerar = true; render(); break;
+      case 'zerar-nao': T.zerar = false; render(); break;
+      case 'zerar-sim': E = B.estadoInicial(); T = {}; salvar(); ir('#/'); break;
+      case 'trocar': {
+        const rid = (location.hash.split('/')[2] || '');
+        T.papeis = B.trocarPapel(E, rid, T.papeis, el.dataset.papel); render(); break;
+      }
+      case 'comecar': {
+        if (B.iniciarSessao(E, el.dataset.id, T.papeis)) { T = {}; salvar(); ir('#/ritual'); }
+        break;
+      }
+      case 'maos': {
+        if (T.maosAte && Date.now() < T.maosAte) break;
+        T.maosAte = Date.now() + 20000;
+        const iv = setInterval(() => {
+          const span = document.getElementById('ck-maos');
+          if (Date.now() >= T.maosAte) { clearInterval(iv); T.ritual.maos = true; T.maosAte = 0; bip(); if (location.hash === '#/ritual') render(); return; }
+          if (span) span.textContent = mmss(T.maosAte - Date.now());
+        }, 250);
+        render(); break;
+      }
+      case 'ritual': T.ritual[el.dataset.k] = !T.ritual[el.dataset.k]; render(); break;
+      case 'mise': T.mise[el.dataset.k] = !T.mise[el.dataset.k]; render(); break;
+      case 'cozinhar-inicio': E.sessaoAtual.passo = 0; salvar(); ir('#/cozinhar'); break;
+      case 'passo': avancarPasso(Number(el.dataset.dir)); break;
+      case 'timer': iniciarTimer(Number(el.dataset.s), el.dataset.rotulo); break;
+      case 'timer-parar': pararTimer(); break;
+      case 'prova': {
+        const pid = el.dataset.pid, campo = el.dataset.campo, v = el.dataset.v;
+        T.provas[pid] = T.provas[pid] || {};
+        T.provas[pid][campo] = T.provas[pid][campo] === v ? '' : v;
+        const f = document.getElementById('frase'); if (f) T.frase = f.value;
+        render(); break;
+      }
+      case 'salvar-prova': {
+        const f = document.getElementById('frase'); if (f) T.frase = f.value;
+        if (!B.provaCompleta(E, T.provas)) break;
+        B.registrarSessao(E, T.provas, T.frase, hoje()); T = {}; salvar(); ir('#/fim'); break;
+      }
+      case 'sair': T.sair = true; render(); break;
+      case 'sair-nao': T.sair = false; render(); break;
+      case 'sair-sim': E.sessaoAtual = null; T = {}; pararTimer(); salvar(); ir('#/'); break;
+    }
+  });
+  app.addEventListener('input', ev => { if (ev.target.id === 'frase') T.frase = ev.target.value; });
+  app.addEventListener('submit', ev => {
+    if (ev.target.id !== 'form-perfil') return;
+    ev.preventDefault();
+    const res = B.adicionarPerfil(E, document.getElementById('novo-nome').value, document.getElementById('nova-idade').value);
+    T.erroPerfil = res.erro || '';
+    if (!res.erro) salvar();
+    render();
+    const n = document.getElementById('novo-nome'); if (n && !res.erro) n.focus();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Testes — Brigada da Família</title>
+<style>
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: #f2f5f9; color: #16213a; margin: 0; padding: 16px; font-size: 16px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  #resumo { font-size: 20px; font-weight: 800; padding: 10px 14px; border-radius: 12px; margin: 10px 0 16px; }
+  #resumo.ok { background: #dcfce7; color: #14532d; } #resumo.falha { background: #fee2e2; color: #7f1d1d; }
+  h2 { font-size: 18px; margin: 18px 0 6px; }
+  .t { padding: 3px 0; font-family: Consolas, monospace; font-size: 14px; }
+  .t.ok::before { content: "✔ "; color: #15803d; } .t.falha { color: #b91c1c; } .t.falha::before { content: "✘ "; }
+</style>
+</head>
+<body>
+<h1>Testes da lógica pura</h1>
+<div>Carrega o bloco <code>&lt;script id="logica"&gt;</code> do <code>index.html</code> e testa. Precisa ser aberto por http.</div>
+<div id="resumo">rodando…</div>
+<div id="saida"></div>
+<script>
+(async function () {
+  'use strict';
+  const saida = document.getElementById('saida');
+  let total = 0, falhas = 0;
+  const resultados = [];
+  function secao(nome) { const h = document.createElement('h2'); h.textContent = nome; saida.appendChild(h); }
+  function teste(nome, fn) {
+    total++;
+    let ok = false, msg = '';
+    try { const r = fn(); ok = r === undefined || r === true; if (!ok) msg = String(r); } catch (e) { msg = e && e.message ? e.message : String(e); }
+    if (!ok) falhas++;
+    resultados.push({ nome, ok, msg });
+    const d = document.createElement('div');
+    d.className = 't ' + (ok ? 'ok' : 'falha');
+    d.textContent = nome + (msg ? ' — ' + msg : '');
+    saida.appendChild(d);
+  }
+  function igual(a, b, ctx) { if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${ctx || ''} esperado ${JSON.stringify(b)}, veio ${JSON.stringify(a)}`); }
+  function verdade(c, ctx) { if (!c) throw new Error(ctx || 'condição falsa'); }
+  function fim() {
+    const el = document.getElementById('resumo');
+    el.textContent = (falhas ? 'FALHA ' : 'OK ') + (total - falhas) + '/' + total;
+    el.className = falhas ? 'falha' : 'ok';
+    document.title = el.textContent;
+    window.RESULTADO = { total, falhas, resultados };
+  }
+
+  let B;
+  try {
+    const html = await (await fetch('index.html', { cache: 'no-store' })).text();
+    const m = html.match(/<script id="logica">([\s\S]*?)<\/script>/);
+    B = new Function(m[1] + '\nreturn Brigada;')();
+  } catch (e) { secao('carregar'); teste('carregar a lógica do index.html', () => { throw e; }); fim(); return; }
+
+  // monta uma brigada: [['Pai', 40], ['Benjamin', 8]] → estado com todos presentes
+  function brigada(lista, carteiras) {
+    const e = B.estadoInicial();
+    for (const [nome, idade] of lista) B.adicionarPerfil(e, nome, idade);
+    for (const [nome, c] of (carteiras || [])) B.assinarCarteirinha(e, e.perfis.find(p => p.nome === nome).id, c, true);
+    return e;
+  }
+  const id = (e, nome) => e.perfis.find(p => p.nome === nome).id;
+  const nome = (e, i) => e.perfis.find(p => p.id === i).nome;
+  const nomes = (e, pap) => { const o = {}; for (const k of B.ORDEM_PAPEIS) o[k] = k === 'mirim' ? pap.mirim.map(i => nome(e, i)) : nome(e, pap[k]); return o; };
+  // faz uma sessão completa com os papéis sugeridos
+  function cozinhar(e, rid) {
+    const pap = B.distribuirPapeis(e, rid);
+    verdade(B.iniciarSessao(e, rid, pap), 'iniciar ' + rid);
+    const provas = {};
+    for (const p of B.perfisPresentes(e)) provas[p.id] = { carinha: '3', palavra: 'doce', capaz: '2' };
+    return B.registrarSessao(e, provas, 'frase', '2026-10-12');
+  }
+
+  // ======================================================================
+  secao('Receitas');
+  teste('ids únicos; toda receita tem técnica conhecida, nível válido, ingredientes e utensílios', () => {
+    const vistos = new Set();
+    for (const r of B.RECEITAS) {
+      verdade(!vistos.has(r.id), 'repetida ' + r.id); vistos.add(r.id);
+      verdade(B.TECNICAS[r.tecnica], 'técnica ' + r.id);
+      verdade(B.NIVEIS.some(n => n.n === r.nivel), 'nível ' + r.id);
+      verdade(r.ingredientes.length && r.utensilios.length, 'listas ' + r.id);
+      verdade(r.carteirinhas.every(c => B.CARTEIRINHAS[c]), 'carteirinha ' + r.id);
+    }
+  });
+  teste('níveis 1 e 2 têm no máximo 8 passos (regra da proposta)', () => {
+    for (const r of B.RECEITAS.filter(r => r.nivel <= 2)) verdade(r.passos.length <= 8, r.id + ' tem ' + r.passos.length);
+  });
+  teste('todo passo tem papel válido; alerta e timer, quando existem, são válidos', () => {
+    for (const r of B.RECEITAS) for (const p of r.passos) {
+      verdade(B.PAPEIS[p.papel], r.id + ': papel ' + p.papel);
+      verdade(p.texto && p.texto.length > 10, r.id + ': texto curto');
+      if (p.alerta) verdade(B.ALERTAS[p.alerta], r.id + ': alerta ' + p.alerta);
+      if (p.timer_s != null) verdade(Number.isInteger(p.timer_s) && p.timer_s > 0 && p.timer_s <= 3600, r.id + ': timer');
+    }
+  });
+  teste('toda receita tem passo do Chef do Dia e termina com o Provador', () => {
+    for (const r of B.RECEITAS) {
+      verdade(r.passos.some(p => p.papel === 'chef'), r.id + ' sem chef');
+      igual(r.passos[r.passos.length - 1].papel, 'cronista', r.id);
+    }
+  });
+  teste('segurança: nível 1 não pede faca de ponta e todo passo com calor ou aparelho é do Sous-chef ou da Guarda', () => {
+    for (const r of B.RECEITAS) {
+      if (r.nivel === 1) igual(r.carteirinhas, [], r.id);
+      for (const p of r.passos) if (p.alerta === 'calor' || p.alerta === 'eletrico') verdade(['sous', 'guarda'].includes(p.papel), r.id + ': ' + p.texto);
+    }
+  });
+  teste('o Ajudante Mirim nunca recebe passo com alerta (sem calor, sem lâmina, sem aparelho)', () => {
+    for (const r of B.RECEITAS) for (const p of r.passos) if (p.papel === 'mirim') verdade(!p.alerta, r.id + ': ' + p.texto);
+  });
+  teste('nível 2 pede a Carteira de Faca e usa a garra ou a ponte', () => {
+    for (const r of B.RECEITAS.filter(r => r.nivel === 2)) { igual(r.carteirinhas, ['faca-pequena'], r.id); verdade(['garra', 'ponte'].includes(r.tecnica), r.id); }
+  });
+  teste('a trilha do MVP tem as 6 receitas combinadas', () => {
+    igual(B.RECEITAS.map(r => r.id), ['salada-de-frutas', 'vitamina-de-banana', 'sanduiche-natural', 'bolo-de-caneca', 'espetinho-de-frutas', 'salada-tomate-pepino']);
+  });
+
+  // ======================================================================
+  secao('Perfis');
+  teste('adicionar valida apelido, idade e nome repetido; quem entra já está presente', () => {
+    const e = B.estadoInicial();
+    verdade(B.adicionarPerfil(e, '  ', 8).erro, 'apelido vazio');
+    verdade(B.adicionarPerfil(e, 'Ben', 0).erro, 'idade 0');
+    verdade(B.adicionarPerfil(e, 'Ben', 'x').erro, 'idade texto');
+    const r = B.adicionarPerfil(e, 'Ben', 8);
+    verdade(r.perfil && r.perfil.id === 1, 'id 1');
+    verdade(B.adicionarPerfil(e, 'ben', 9).erro, 'repetido sem diferenciar maiúscula');
+    igual(e.presentes, [1]);
+  });
+  teste('fronteiras de idade: 5 = Mirim, 6 = aprendiz, 15 = aprendiz, 16 = adulto', () => {
+    const p = i => ({ idade: i, carteirinhas: {} });
+    igual([5, 6, 15, 16].map(i => [B.ehMirim(p(i)), B.ehAdulto(p(i))]), [[true, false], [false, false], [false, false], [false, true]]);
+  });
+  teste('adulto tem toda carteirinha; aprendiz só a assinada; adulto não recebe assinatura', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    verdade(B.temCarteirinha(B.perfil(e, id(e, 'Pai')), 'fogao'));
+    verdade(!B.temCarteirinha(B.perfil(e, id(e, 'Ben')), 'faca-pequena'));
+    verdade(B.assinarCarteirinha(e, id(e, 'Ben'), 'faca-pequena', true));
+    verdade(B.temCarteirinha(B.perfil(e, id(e, 'Ben')), 'faca-pequena'));
+    verdade(!B.assinarCarteirinha(e, id(e, 'Pai'), 'fogao', true), 'adulto');
+    verdade(!B.assinarCarteirinha(e, id(e, 'Ben'), 'inventada', true), 'carteirinha inexistente');
+    B.assinarCarteirinha(e, id(e, 'Ben'), 'faca-pequena', false);
+    igual(B.perfil(e, id(e, 'Ben')).carteirinhas, {});
+  });
+  teste('remover tira da presença; presença alterna', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    B.alternarPresenca(e, 1); igual(e.presentes, [2]);
+    B.alternarPresenca(e, 1); igual(e.presentes, [2, 1]);
+    B.removerPerfil(e, 2); igual(e.presentes, [1]); igual(e.perfis.length, 1);
+  });
+
+  // ======================================================================
+  secao('Trilha e carteirinhas');
+  teste('sem ninguém marcado ou sem adulto, nada abre', () => {
+    const e = brigada([['Ben', 8], ['Duda', 6]]);
+    igual(B.statusReceita(e, 'salada-de-frutas').livre, false);
+    verdade(/adulto/.test(B.statusReceita(e, 'salada-de-frutas').motivo));
+    e.presentes = [];
+    verdade(/Marque/.test(B.statusReceita(e, 'salada-de-frutas').motivo));
+    igual(B.distribuirPapeis(e, 'salada-de-frutas'), null);
+  });
+  teste('nível 2 sem Carteira de Faca: abre, com aviso, e o adulto é o Chef do Dia', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    const st = B.statusReceita(e, 'espetinho-de-frutas');
+    verdade(st.livre && /Carteira de Faca/.test(st.aviso), JSON.stringify(st));
+    igual(nomes(e, B.distribuirPapeis(e, 'espetinho-de-frutas')).chef, 'Pai');
+  });
+  teste('nível 2 com a Carteira de Faca assinada: a criança lidera, sem aviso', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]], [['Ben', 'faca-pequena']]);
+    igual(B.statusReceita(e, 'espetinho-de-frutas').aviso, '');
+    igual(nomes(e, B.distribuirPapeis(e, 'espetinho-de-frutas')).chef, 'Ben');
+  });
+  teste('próxima sugerida segue a trilha e pula o que já foi feito', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    igual(B.sugerida(e), 'salada-de-frutas');
+    cozinhar(e, 'salada-de-frutas');
+    igual(B.sugerida(e), 'vitamina-de-banana');
+    igual(B.vezes(e, 'salada-de-frutas'), 1);
+  });
+  teste('andaime: 1ª, 2ª e 3ª vez têm textos diferentes', () => {
+    verdade(/demonstra/.test(B.andaime(1)) && /chamado/.test(B.andaime(2)) && /sozinho/.test(B.andaime(3)));
+  });
+
+  // ======================================================================
+  secao('Comandas (gabarito feito à mão)');
+  teste('Pai + Benjamin (8): Ben é Chef, Guarda e Cronista; Pai é Sous e Mise', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    igual(nomes(e, B.distribuirPapeis(e, 'salada-de-frutas')), { chef: 'Ben', sous: 'Pai', mise: 'Pai', guarda: 'Ben', cronista: 'Ben', mirim: [] });
+  });
+  teste('Pai, Mãe, Ben (8), Duda (6): todos com comanda, Guarda para a criança, ninguém Mirim', () => {
+    const e = brigada([['Pai', 40], ['Mãe', 38], ['Ben', 8], ['Duda', 6]]);
+    igual(nomes(e, B.distribuirPapeis(e, 'salada-de-frutas')), { chef: 'Ben', sous: 'Pai', mise: 'Mãe', guarda: 'Duda', cronista: 'Ben', mirim: [] });
+  });
+  teste('criança de 3 anos vira só Ajudante Mirim e nunca recebe outra comanda', () => {
+    const e = brigada([['Mãe', 38], ['Ben', 8], ['Bebel', 3]]);
+    const p = B.distribuirPapeis(e, 'salada-de-frutas');
+    igual(p.mirim, [id(e, 'Bebel')]);
+    for (const k of ['chef', 'sous', 'mise', 'guarda', 'cronista']) verdade(p[k] !== id(e, 'Bebel'), k);
+    verdade(B.temCriancaPequena(e));
+  });
+  teste('passo de Mirim sem criança pequena cai para o Mise en place', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    const p = B.distribuirPapeis(e, 'salada-de-frutas');
+    igual(B.responsaveis(p, 'mirim'), [p.mise]);
+    igual(B.papelEfetivo(p, 'mirim'), 'mise');
+    igual(B.papelEfetivo(p, 'chef'), 'chef');
+  });
+  teste('só adultos: Chef e Sous são pessoas diferentes quando dá', () => {
+    const e = brigada([['Pai', 40], ['Mãe', 38]]);
+    const p = B.distribuirPapeis(e, 'salada-de-frutas');
+    verdade(p.chef !== p.sous);
+  });
+  teste('um adulto sozinho faz todos os papéis', () => {
+    const e = brigada([['Pai', 40]]);
+    igual(nomes(e, B.distribuirPapeis(e, 'salada-de-frutas')), { chef: 'Pai', sous: 'Pai', mise: 'Pai', guarda: 'Pai', cronista: 'Pai', mirim: [] });
+  });
+  teste('invariantes em 300 brigadas sorteadas: Sous sempre adulto, Chef pode liderar, todo papel em quem está presente', () => {
+    let semente = 7;
+    const rnd = n => { semente = (semente * 16807) % 2147483647; return semente % n; };
+    for (let k = 0; k < 300; k++) {
+      const tam = 1 + rnd(6);
+      const lista = [['Adulto', 20 + rnd(50)]];
+      for (let j = 1; j < tam; j++) lista.push(['P' + j, 1 + rnd(60)]);
+      const e = brigada(lista);
+      for (const r of B.RECEITAS) {
+        const p = B.distribuirPapeis(e, r.id);
+        const pres = new Set(e.presentes);
+        verdade(B.ehAdulto(B.perfil(e, p.sous)), 'sous');
+        verdade(B.podeLiderar(B.perfil(e, p.chef), r), 'chef');
+        for (const x of ['chef', 'sous', 'mise', 'guarda', 'cronista']) verdade(pres.has(p[x]) && !B.ehMirim(B.perfil(e, p[x])), x);
+        igual(p.mirim.length, e.perfis.filter(B.ehMirim).length, 'mirins');
+        // receita sem carteirinha e pelo menos 5 pessoas que não são mirins: ninguém acumula comanda
+        const naoMirim = e.perfis.filter(q => !B.ehMirim(q)).length;
+        if (naoMirim >= 5 && !r.carteirinhas.length) igual(new Set(['chef', 'sous', 'mise', 'guarda', 'cronista'].map(x => p[x])).size, 5, 'sem acúmulo');
+      }
+    }
+  });
+  teste('rotação: com dois aprendizes, o Chef do Dia alterna entre as sessões', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8], ['Duda', 7]]);
+    const chefs = [];
+    for (let k = 0; k < 4; k++) chefs.push(nome(e, cozinhar(e, 'salada-de-frutas').papeis.chef));
+    igual(chefs, ['Ben', 'Duda', 'Ben', 'Duda']);
+  });
+  teste('rotação: com dois adultos, o Sous-chef alterna', () => {
+    const e = brigada([['Pai', 40], ['Mãe', 38], ['Ben', 8]]);
+    const sous = [];
+    for (let k = 0; k < 3; k++) sous.push(nome(e, cozinhar(e, 'vitamina-de-banana').papeis.sous));
+    igual(sous, ['Pai', 'Mãe', 'Pai']);
+  });
+  teste('trocar comanda: gira só entre elegíveis e volta ao começo', () => {
+    const e = brigada([['Pai', 40], ['Mãe', 38], ['Ben', 8]]);
+    let p = B.distribuirPapeis(e, 'espetinho-de-frutas');   // Ben sem carteira: chef adulto
+    const chefs = [nome(e, p.chef)];
+    for (let k = 0; k < 2; k++) { p = B.trocarPapel(e, 'espetinho-de-frutas', p, 'chef'); chefs.push(nome(e, p.chef)); }
+    verdade(!chefs.includes('Ben'), 'Ben não pode liderar sem carteira: ' + chefs);
+    igual(chefs[0], chefs[2]);
+    p = B.trocarPapel(e, 'espetinho-de-frutas', p, 'sous');
+    verdade(B.ehAdulto(B.perfil(e, p.sous)));
+    const antes = JSON.stringify(p.mirim);
+    igual(JSON.stringify(B.trocarPapel(e, 'espetinho-de-frutas', p, 'mirim').mirim), antes);
+  });
+
+  // ======================================================================
+  secao('Sessão e Livro');
+  teste('não começa sem adulto nem sem papéis', () => {
+    const e = brigada([['Ben', 8]]);
+    verdade(!B.iniciarSessao(e, 'salada-de-frutas', { chef: 1 }));
+    const e2 = brigada([['Pai', 40]]);
+    verdade(!B.iniciarSessao(e2, 'salada-de-frutas', null));
+  });
+  teste('prova completa: todos com carinha; capaz obrigatório só para quem não é Mirim', () => {
+    const e = brigada([['Pai', 40], ['Bebel', 3]]);
+    igual(B.provaCompleta(e, {}), false);
+    igual(B.provaCompleta(e, { 1: { carinha: '3' }, 2: { carinha: '2' } }), false);
+    igual(B.provaCompleta(e, { 1: { carinha: '3', capaz: '3' }, 2: { carinha: '2' } }), true);
+    igual(B.provaCompleta(e, { 1: { carinha: '', capaz: '3' }, 2: { carinha: '2' } }), false);
+  });
+  teste('registrar escreve a página, limpa a sessão e o resumo conta', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    const pg = cozinhar(e, 'salada-de-frutas');
+    cozinhar(e, 'salada-de-frutas');
+    cozinhar(e, 'espetinho-de-frutas');
+    igual([pg.n, pg.receitaId, pg.data, pg.frase], [1, 'salada-de-frutas', '2026-10-12', 'frase']);
+    igual(e.sessaoAtual, null);
+    igual(B.resumoLivro(e), { paginas: 3, receitas: 2, tecnicas: 2 });
+    igual(B.registrarSessao(e, {}, '', ''), null, 'sem sessão aberta');
+  });
+
+  // ======================================================================
+  secao('Save (D-JC-3)');
+  teste('estado inicial completado é ele mesmo; completar é idempotente', () => {
+    igual(B.completarEstado(B.estadoInicial()), B.estadoInicial());
+    const e = brigada([['Pai', 40], ['Ben', 8]], [['Ben', 'faca-pequena']]);
+    cozinhar(e, 'salada-de-frutas');
+    const uma = B.completarEstado(JSON.parse(JSON.stringify(e)));
+    igual(B.completarEstado(JSON.parse(JSON.stringify(uma))), uma);
+    igual(uma, JSON.parse(JSON.stringify(e)));
+  });
+  teste('lixo vira estado inicial; save incompleto ganha os campos que faltam', () => {
+    for (const lixo of [null, undefined, 3, 'x', [], {}]) igual(B.completarEstado(lixo), B.estadoInicial(), JSON.stringify(lixo));
+    const velho = { perfis: [{ id: 4, nome: 'Ben', idade: 8 }], presentes: [4, 9, 4] };
+    const c = B.completarEstado(velho);
+    igual(c.perfis[0].carteirinhas, {});
+    igual(c.presentes, [4], 'tira presente inexistente e repetido');
+    igual(c.proximoId, 5);
+    igual(c.sessoes, []);
+  });
+  teste('sessão aberta de receita que não existe mais é descartada', () => {
+    igual(B.completarEstado({ sessaoAtual: { receitaId: 'sumiu', papeis: {} } }).sessaoAtual, null);
+  });
+  teste('exportar → importar devolve o mesmo estado; texto errado dá erro claro', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    cozinhar(e, 'vitamina-de-banana');
+    igual(B.importar(B.exportar(e)).estado, JSON.parse(JSON.stringify(e)));
+    verdade(B.importar('{oi').erro);
+    verdade(B.importar('{"app":"outro","estado":{}}').erro);
+  });
+
+  fim();
+})();
+</script>
+</body>
+</html>
