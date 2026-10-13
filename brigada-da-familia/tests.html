@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Testes — Brigada da Família</title>
+<title>Testes — Vamos Cozinhar</title>
 <style>
   body { font-family: "Segoe UI", system-ui, sans-serif; background: #f2f5f9; color: #16213a; margin: 0; padding: 16px; font-size: 16px; }
   h1 { font-size: 24px; margin: 0 0 4px; }
@@ -115,8 +115,40 @@
   teste('nível 2 pede a Carteira de Faca e usa a garra ou a ponte', () => {
     for (const r of B.RECEITAS.filter(r => r.nivel === 2)) { igual(r.carteirinhas, ['faca-pequena'], r.id); verdade(['garra', 'ponte'].includes(r.tecnica), r.id); }
   });
-  teste('a trilha do MVP tem as 6 receitas combinadas', () => {
-    igual(B.RECEITAS.map(r => r.id), ['salada-de-frutas', 'vitamina-de-banana', 'sanduiche-natural', 'bolo-de-caneca', 'espetinho-de-frutas', 'salada-tomate-pepino']);
+  teste('as 6 receitas da v0.1 continuam com o mesmo id (o Livro guarda o id)', () => {
+    for (const rid of ['salada-de-frutas', 'vitamina-de-banana', 'sanduiche-natural', 'bolo-de-caneca', 'espetinho-de-frutas', 'salada-tomate-pepino']) verdade(B.receita(rid), rid);
+  });
+
+  // ======================================================================
+  secao('Refeições');
+  teste('toda receita e todo "em breve" têm uma refeição conhecida', () => {
+    const ids = B.REFEICOES.map(r => r.id);
+    igual(ids, ['cafe', 'almoco', 'lanche']);
+    for (const r of B.RECEITAS.concat(B.EM_BREVE)) verdade(ids.includes(r.refeicao), r.nome + ': ' + r.refeicao);
+  });
+  teste('cada refeição tem pelo menos 3 receitas no nível 1 (iniciante) e 3 no nível 2 (intermediário)', () => {
+    for (const rf of B.REFEICOES) for (const n of [1, 2]) {
+      const k = B.RECEITAS.filter(r => r.refeicao === rf.id && r.nivel === n).length;
+      verdade(k >= 3, rf.id + ' nível ' + n + ' tem ' + k);
+    }
+  });
+  teste('o nível 1 é iniciante e o 2 é intermediário', () => {
+    igual(B.NIVEIS.slice(0, 2).map(n => n.etapa), ['iniciante', 'intermediário']);
+  });
+  teste('nomes de receita não se repetem', () => {
+    const nomes = B.RECEITAS.concat(B.EM_BREVE).map(r => r.nome.toLowerCase());
+    igual(new Set(nomes).size, nomes.length);
+  });
+  teste('a aba pela hora: 6 h café, 9 h café, 10 h almoço, 14 h almoço, 15 h lanche, 20 h lanche', () => {
+    igual([6, 9, 10, 14, 15, 20].map(B.refeicaoDaHora), ['cafe', 'cafe', 'almoco', 'almoco', 'lanche', 'lanche']);
+  });
+  teste('a próxima sugerida respeita a refeição escolhida', () => {
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    for (const rf of B.REFEICOES) igual(B.receita(B.sugerida(e, rf.id)).refeicao, rf.id, rf.id);
+    igual(B.sugerida(e, 'almoco'), 'wrap-de-frango');
+    cozinhar(e, 'wrap-de-frango');
+    igual(B.sugerida(e, 'almoco'), 'salada-molho-pote');
+    igual(B.sugerida(e, 'lanche'), 'sanduiche-natural');
   });
 
   // ======================================================================

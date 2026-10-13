@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#1E4FA6">
-<title>Brigada da Família</title>
+<title>Vamos Cozinhar</title>
 <style>
   /* Bancada de azulejo; cada papel tem uma cor e aparece como comanda de cozinha. Tudo grande: mão suja, tela longe. */
   :root {
@@ -72,6 +72,13 @@
   .nivel-cab { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .nivel-num { font-family: var(--mono); font-weight: 700; color: #fff; background: var(--cor); border-radius: 8px; padding: 2px 10px; font-size: 14px; }
   .paradas { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .refeicoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .refeicao { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 72px; padding: 6px 4px;
+    border-radius: 16px; border: 3px solid var(--line); background: var(--surface); font-size: 16px; font-weight: 800; line-height: 1.15; text-align: center; }
+  .refeicao .emo { font-size: 28px; line-height: 1; }
+  .refeicao .qtd { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .refeicao[aria-selected="true"] { border-color: var(--ink); background: var(--gema); color: var(--gema-ink); }
+  .refeicao[aria-selected="true"] .qtd { color: var(--gema-ink); }
   .parada { text-align: left; display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; padding: 14px; border-radius: var(--raio);
     background: var(--surface); border: 3px solid transparent; box-shadow: 0 1px 0 var(--line), 0 8px 20px -14px rgba(10,20,50,.4); min-height: 88px; }
   .parada .emo { font-size: 44px; line-height: 1; text-align: center; }
@@ -160,7 +167,7 @@
 <div id="app"></div>
 
 <script id="logica">
-// Lógica pura da Brigada da Família: dados das receitas e regras (papéis, rotação, carteirinhas, save).
+// Lógica pura do Vamos Cozinhar (o time da cozinha é a brigada): dados das receitas e regras (papéis, rotação, carteirinhas, save).
 // Nada aqui toca DOM ou relógio; o tests.html extrai este bloco por regex e testa.
 const Brigada = (function () {
   'use strict';
@@ -196,18 +203,32 @@ const Brigada = (function () {
     espalhar: { nome: 'Espalhar e montar', emoji: '🥪', passos: ['Pouca pasta, bem no meio do pão.', 'Faca deitada: espalhe do meio até as bordas.', 'Monte em camadas, do mais firme para o mais molhado.'], dica: 'Pasta até a borda segura as camadas no lugar.' },
     'medir-secos': { nome: 'Medir secos nivelando', emoji: '🥄', passos: ['Encha a colher medidora passando do ponto, sem apertar.', 'Passe as costas da faca por cima para tirar o excesso.', 'Colher de medir não é colher de comer: o tamanho é exato.'], dica: 'Nivelar é o que faz o bolo dar certo toda vez.' },
     garra: { nome: 'A garra', emoji: '🐻', passos: ['Dedos dobrados como garra de urso, com as pontas para trás.', 'A lâmina encosta de leve nos nós dos dedos, nunca nas pontas.', 'A garra anda para trás devagar, um pedaço de cada vez.'], dica: 'Primeiro treine em banana, que é macia e não rola.' },
-    ponte: { nome: 'A ponte', emoji: '🌉', passos: ['A mão faz uma ponte por cima do alimento: polegar de um lado, dedos do outro.', 'A faca passa por baixo da ponte, como um trem.', 'Alimento redondo sempre com a parte reta para baixo.'], dica: 'Tomate-cereja é o treino perfeito para a ponte.' }
+    ponte: { nome: 'A ponte', emoji: '🌉', passos: ['A mão faz uma ponte por cima do alimento: polegar de um lado, dedos do outro.', 'A faca passa por baixo da ponte, como um trem.', 'Alimento redondo sempre com a parte reta para baixo.'], dica: 'Tomate-cereja é o treino perfeito para a ponte.' },
+    camadas: { nome: 'Montar em camadas', emoji: '🥛', passos: ['Separe cada camada num potinho, em fila, na ordem em que vai entrar.', 'Colher pequena: cada camada cobre a de baixo, sem misturar.', 'O que é crocante entra por último, perto da hora de comer.'], dica: 'Copo transparente mostra se as camadas ficaram certinhas.' },
+    'quebrar-ovo': { nome: 'Quebrar ovo', emoji: '🥚', passos: ['Bata o ovo na mesa reta, não na borda do potinho: a casca quebra sem esmigalhar.', 'Os dois polegares abrem a rachadura por cima de um potinho separado.', 'Caiu casca? Pesque com a metade maior da casca, que ela gruda.'], dica: 'Sempre num potinho antes: se cair casca, não estraga a receita toda.' },
+    desfiar: { nome: 'Desfiar com dois garfos', emoji: '🍗', passos: ['Um garfo segura o pedaço parado, com os dentes para baixo.', 'O outro garfo puxa as fibras para o lado contrário.', 'Puxe sempre no sentido dos fiozinhos da carne.'], dica: 'Frango ainda morno desfia muito mais fácil que gelado.' },
+    'molho-pote': { nome: 'Molho no pote', emoji: '🫙', passos: ['A conta do molho: 3 colheres de azeite para 1 de limão.', 'Sal e tempero entram no pote antes de fechar.', 'Tampa bem fechada e chacoalhe 20 vezes, até o molho ficar turvo.'], dica: 'Azeite e limão não se misturam sozinhos: é a chacoalhada que junta.' },
+    amassar: { nome: 'Amassar', emoji: '🥔', passos: ['Tigela firme na mesa; a outra mão segura a borda.', 'Garfo ou espremedor de pé, apertando de cima para baixo.', 'Amasse tudo antes de pôr o líquido, senão sobram pedaços.'], dica: 'Batata quente amassa melhor: espere só o suficiente para não queimar.' },
+    enrolar: { nome: 'Enrolar bolinhas', emoji: '🟤', passos: ['Mãos levemente úmidas, para a massa não grudar.', 'A mesma colherada de massa para cada bolinha: todas do mesmo tamanho.', 'Role entre as palmas, em círculos, sem apertar.'], dica: 'Se a massa gruda demais, 10 minutos de geladeira ajudam.' }
   };
 
   const NIVEIS = [
-    { n: 1, nome: 'Aprendiz', cor: '#2F7A4B', sobre: 'Sem fogo e sem faca de ponta.' },
-    { n: 2, nome: 'Cortador', cor: '#1E4FA6', sobre: 'A faca pequena, com garra e ponte.' },
-    { n: 3, nome: 'Fogão com adulto', cor: '#C2412D', sobre: 'Fogo baixo, sempre com o Sous-chef.' },
-    { n: 4, nome: 'Chef da Casa', cor: '#7A3FA0', sobre: 'Receita longa, forno e refeição completa.' }
+    { n: 1, nome: 'Aprendiz', etapa: 'iniciante', cor: '#2F7A4B', sobre: 'Sem fogo e sem faca de ponta.' },
+    { n: 2, nome: 'Cortador', etapa: 'intermediário', cor: '#1E4FA6', sobre: 'A faca pequena, com garra e ponte.' },
+    { n: 3, nome: 'Fogão com adulto', etapa: 'avançado', cor: '#C2412D', sobre: 'Fogo baixo, sempre com o Sous-chef.' },
+    { n: 4, nome: 'Chef da Casa', etapa: 'avançado', cor: '#7A3FA0', sobre: 'Receita longa, forno e refeição completa.' }
   ];
 
+  const REFEICOES = [
+    { id: 'cafe', nome: 'Café da manhã', emoji: '☕' },
+    { id: 'almoco', nome: 'Almoço', emoji: '🍽️' },
+    { id: 'lanche', nome: 'Lanche', emoji: '🧃' }
+  ];
+  // a aba que abre primeiro segue o relógio: até 10 h café, até 15 h almoço, depois lanche
+  function refeicaoDaHora(h) { return h < 10 ? 'cafe' : h < 15 ? 'almoco' : 'lanche'; }
+
   const RECEITAS = [
-    { id: 'salada-de-frutas', nome: 'Salada de frutas', emoji: '🍓', nivel: 1, tecnica: 'cortar-macio', carteirinhas: [], porcoes: 4, tempo_min: 20,
+    { id: 'salada-de-frutas', nome: 'Salada de frutas', emoji: '🍓', nivel: 1, refeicao: 'cafe', tecnica: 'cortar-macio', carteirinhas: [], porcoes: 4, tempo_min: 20,
       ingredientes: [
         { item: 'banana', qtd: '2' }, { item: 'morango', qtd: '10' }, { item: 'maçã', qtd: '1' },
         { item: 'mamão papaia', qtd: '½' }, { item: 'laranja', qtd: '1' } ],
@@ -221,7 +242,7 @@ const Brigada = (function () {
         { texto: 'Misture devagar com a colher grande, de baixo para cima.', papel: 'mirim' },
         { texto: 'Prove um pedaço de cada fruta. Qual é a mais doce? E a mais azeda?', papel: 'cronista' } ] },
 
-    { id: 'vitamina-de-banana', nome: 'Vitamina de banana', emoji: '🍌', nivel: 1, tecnica: 'medir-liquido', carteirinhas: [], porcoes: 3, tempo_min: 10,
+    { id: 'vitamina-de-banana', nome: 'Vitamina de banana', emoji: '🍌', nivel: 1, refeicao: 'cafe', tecnica: 'medir-liquido', carteirinhas: [], porcoes: 3, tempo_min: 10,
       ingredientes: [
         { item: 'banana madura', qtd: '2' }, { item: 'leite', qtd: '2 xícaras' }, { item: 'aveia', qtd: '2 colheres de sopa' },
         { item: 'mel (opcional; nunca para bebê com menos de 1 ano)', qtd: '1 colher de sopa' } ],
@@ -236,7 +257,7 @@ const Brigada = (function () {
         { texto: 'Sirva nos copos devagar, sem encher até a boca.', papel: 'chef' },
         { texto: 'Prove. Ficou grossa ou fina? Doce ou pouco doce?', papel: 'cronista' } ] },
 
-    { id: 'sanduiche-natural', nome: 'Sanduíche natural', emoji: '🥪', nivel: 1, tecnica: 'espalhar', carteirinhas: [], porcoes: 2, tempo_min: 15,
+    { id: 'sanduiche-natural', nome: 'Sanduíche natural', emoji: '🥪', nivel: 1, refeicao: 'lanche', tecnica: 'espalhar', carteirinhas: [], porcoes: 2, tempo_min: 15,
       ingredientes: [
         { item: 'pão de forma integral', qtd: '4 fatias' }, { item: 'requeijão ou ricota', qtd: '4 colheres de sopa' },
         { item: 'queijo branco', qtd: '4 fatias' }, { item: 'alface', qtd: '4 folhas' }, { item: 'tomate', qtd: '1' }, { item: 'cenoura', qtd: '1' } ],
@@ -251,7 +272,7 @@ const Brigada = (function () {
         { texto: 'Corte na diagonal com a faca de mesa, fazendo dois triângulos.', papel: 'chef', alerta: 'faca' },
         { texto: 'Prove. Qual camada aparece mais: a crocante ou a macia?', papel: 'cronista' } ] },
 
-    { id: 'bolo-de-caneca', nome: 'Bolo de caneca', emoji: '🧁', nivel: 1, tecnica: 'medir-secos', carteirinhas: [], porcoes: 2, tempo_min: 10,
+    { id: 'bolo-de-caneca', nome: 'Bolo de caneca', emoji: '🧁', nivel: 1, refeicao: 'lanche', tecnica: 'medir-secos', carteirinhas: [], porcoes: 2, tempo_min: 10,
       ingredientes: [
         { item: 'ovo', qtd: '1' }, { item: 'leite', qtd: '4 colheres de sopa' }, { item: 'óleo', qtd: '2 colheres de sopa' },
         { item: 'açúcar', qtd: '3 colheres de sopa' }, { item: 'farinha de trigo', qtd: '4 colheres de sopa' },
@@ -267,7 +288,7 @@ const Brigada = (function () {
         { texto: 'A caneca sai quente: só o adulto tira, com pano. Esperem 2 minutos.', papel: 'guarda', alerta: 'calor', timer_s: 120 },
         { texto: 'Prove. Ficou fofinho, molhadinho ou seco?', papel: 'cronista' } ] },
 
-    { id: 'espetinho-de-frutas', nome: 'Espetinho de frutas', emoji: '🍡', nivel: 2, tecnica: 'garra', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 20,
+    { id: 'espetinho-de-frutas', nome: 'Espetinho de frutas', emoji: '🍡', nivel: 2, refeicao: 'lanche', tecnica: 'garra', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 20,
       ingredientes: [
         { item: 'banana', qtd: '2' }, { item: 'morango', qtd: '12' }, { item: 'uva', qtd: '1 cacho pequeno' }, { item: 'palito de churrasco', qtd: '8' } ],
       utensilios: ['tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'potinhos', 'prato'],
@@ -281,7 +302,7 @@ const Brigada = (function () {
         { texto: 'Espetinho pronto deita no prato com as pontas todas para o mesmo lado, longe de quem vai pegar.', papel: 'guarda' },
         { texto: 'Cada um pega um espetinho e tenta descobrir o padrão do outro.', papel: 'cronista' } ] },
 
-    { id: 'salada-tomate-pepino', nome: 'Salada de tomate e pepino', emoji: '🥒', nivel: 2, tecnica: 'ponte', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 15,
+    { id: 'salada-tomate-pepino', nome: 'Salada de tomate e pepino', emoji: '🥒', nivel: 2, refeicao: 'almoco', tecnica: 'ponte', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 15,
       ingredientes: [
         { item: 'tomate-cereja', qtd: '1 xícara (uns 15)' }, { item: 'pepino', qtd: '1' }, { item: 'azeite', qtd: '1 colher de sopa' },
         { item: 'limão', qtd: '½' }, { item: 'sal', qtd: '1 pitada' }, { item: 'orégano', qtd: '1 pitada' } ],
@@ -294,14 +315,207 @@ const Brigada = (function () {
         { texto: 'A faca terminou? Ela fica ao lado da tábua, nunca dentro da pia com água.', papel: 'guarda' },
         { texto: 'Esprema o limão e meça 1 colher de azeite.', papel: 'mise' },
         { texto: 'Jogue o sal e o orégano por cima, de bem alto, como chuva.', papel: 'mirim' },
-        { texto: 'Misturem e provem. Precisa de mais sal ou de mais limão?', papel: 'cronista' } ] }
+        { texto: 'Misturem e provem. Precisa de mais sal ou de mais limão?', papel: 'cronista' } ] },
+
+    // ---- v0.2: mais receitas de nível 1 e 2, separadas por refeição
+    { id: 'parfait-de-iogurte', nome: 'Copo de iogurte em camadas', emoji: '🥛', nivel: 1, refeicao: 'cafe', tecnica: 'camadas', carteirinhas: [], porcoes: 2, tempo_min: 10,
+      ingredientes: [
+        { item: 'iogurte natural', qtd: '2 potes' }, { item: 'granola', qtd: '6 colheres de sopa' }, { item: 'banana', qtd: '1' },
+        { item: 'morango', qtd: '6' }, { item: 'mel (opcional; nunca para bebê com menos de 1 ano)', qtd: '1 colher de chá' } ],
+      utensilios: ['2 copos transparentes', 'faca de mesa', 'tábua', 'colher pequena', '4 potinhos'],
+      passos: [
+        { texto: 'Lavem os morangos e tirem as folhinhas com os dedos.', papel: 'mirim' },
+        { texto: 'Corte a banana em rodelas e os morangos em pedaços com a faca de mesa.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Ponha iogurte, banana, morango e granola em potinhos, em fila, na ordem das camadas.', papel: 'mise' },
+        { texto: 'Primeira camada: 2 colheres de iogurte no fundo de cada copo.', papel: 'chef' },
+        { texto: 'Por cima, uma camada de frutas. Depois iogurte de novo, até quase a boca do copo.', papel: 'chef' },
+        { texto: 'A granola entra por último, salpicada por cima, para continuar crocante.', papel: 'mirim' },
+        { texto: 'Prove. A granola ficou crocante? Dá para ver todas as camadas pelo copo?', papel: 'cronista' } ] },
+
+    { id: 'ovo-mexido-de-caneca', nome: 'Ovo mexido de caneca', emoji: '🥚', nivel: 1, refeicao: 'cafe', tecnica: 'quebrar-ovo', carteirinhas: [], porcoes: 1, tempo_min: 10,
+      ingredientes: [
+        { item: 'ovo', qtd: '2' }, { item: 'leite', qtd: '1 colher de sopa' }, { item: 'sal', qtd: '1 pitada' }, { item: 'manteiga', qtd: '1 pontinha' } ],
+      utensilios: ['caneca grande que pode ir ao micro-ondas', 'potinho', 'garfo', 'colher de sopa', 'papel-toalha', 'pano de prato'],
+      passos: [
+        { texto: 'Unte o fundo e as paredes da caneca com a manteiga, espalhando com papel-toalha.', papel: 'mirim' },
+        { texto: 'Quebre os ovos no potinho, confira se caiu casca e só então passe para a caneca.', papel: 'chef' },
+        { texto: 'Meça 1 colher de leite e junte com a pitada de sal.', papel: 'mise' },
+        { texto: 'Bata com o garfo até ficar tudo amarelo, sem fio de clara.', papel: 'chef' },
+        { texto: 'Micro-ondas por 30 segundos.', papel: 'sous', alerta: 'calor', timer_s: 30 },
+        { texto: 'O adulto tira com pano, mexe com o garfo e volta mais 30 s. Repita até o ovo firmar.', papel: 'sous', alerta: 'calor', timer_s: 30 },
+        { texto: 'Esperem 1 minuto: ovo de micro-ondas guarda calor por dentro.', papel: 'guarda', alerta: 'calor', timer_s: 60 },
+        { texto: 'Prove. Ficou macio ou firme? Precisa de mais sal?', papel: 'cronista' } ] },
+
+    { id: 'torrada-tomate-queijo', nome: 'Torrada com tomate e queijo', emoji: '🍞', nivel: 2, refeicao: 'cafe', tecnica: 'ponte', carteirinhas: ['faca-pequena'], porcoes: 2, tempo_min: 15,
+      ingredientes: [
+        { item: 'pão de forma ou pão francês', qtd: '4 fatias' }, { item: 'tomate-cereja', qtd: '10' }, { item: 'queijo minas', qtd: '4 fatias' },
+        { item: 'azeite', qtd: '1 fio' }, { item: 'sal', qtd: '1 pitada' }, { item: 'orégano', qtd: '1 pitada' } ],
+      utensilios: ['torradeira', 'tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'prato'],
+      passos: [
+        { texto: 'Lavem os tomates-cereja.', papel: 'mirim' },
+        { texto: 'Pão na torradeira até dourar. A torrada sai quente: quem tira é o adulto.', papel: 'sous', alerta: 'eletrico' },
+        { texto: 'Revisão da ponte: todo mundo mostra a mão em arco. Pano úmido embaixo da tábua?', papel: 'guarda' },
+        { texto: 'Ponte nos tomates-cereja: corte cada um ao meio.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Monte: queijo em cima da torrada e os tomates por cima do queijo.', papel: 'chef' },
+        { texto: 'Um fio de azeite e uma pitada de sal em cada torrada.', papel: 'mise' },
+        { texto: 'Jogue o orégano de bem alto, como chuva.', papel: 'mirim' },
+        { texto: 'Prove. O que aparece mais: o crocante do pão ou o suco do tomate?', papel: 'cronista' } ] },
+
+    { id: 'mingau-de-aveia', nome: 'Mingau de aveia com frutas', emoji: '🥣', nivel: 2, refeicao: 'cafe', tecnica: 'garra', carteirinhas: ['faca-pequena'], porcoes: 2, tempo_min: 15,
+      ingredientes: [
+        { item: 'aveia em flocos', qtd: '6 colheres de sopa' }, { item: 'leite', qtd: '1 xícara e meia' }, { item: 'banana', qtd: '1' },
+        { item: 'morango', qtd: '6' }, { item: 'canela', qtd: '1 pitada' } ],
+      utensilios: ['tigela grande e funda que pode ir ao micro-ondas', 'xícara medidora', 'colher de sopa', 'tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'pano de prato', '2 tigelinhas'],
+      passos: [
+        { texto: 'Meça o leite (olhos na altura da marca) e a aveia, e junte na tigela grande.', papel: 'mise' },
+        { texto: 'Conferência: a tigela é grande e funda? Mingau sobe e derrama no micro-ondas.', papel: 'guarda' },
+        { texto: 'Micro-ondas por 1 minuto. O adulto tira com pano, mexe e volta por mais 1 minuto.', papel: 'sous', alerta: 'calor', timer_s: 60 },
+        { texto: 'Revisão da garra: dedos dobrados, pontas para trás. Pano úmido embaixo da tábua?', papel: 'guarda' },
+        { texto: 'Corte a banana em rodelas usando a garra.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Corte os morangos em quatro, ainda com a garra.', papel: 'chef', alerta: 'faca' },
+        { texto: 'O mingau sai quente: o adulto serve nas tigelinhas. Frutas e canela por cima.', papel: 'sous', alerta: 'calor' },
+        { texto: 'Prove. Ficou grosso ou ralo? Qual fruta combinou mais?', papel: 'cronista' } ] },
+
+    { id: 'omelete-de-caneca', nome: 'Omelete de caneca com legumes', emoji: '🍅', nivel: 2, refeicao: 'cafe', tecnica: 'garra', carteirinhas: ['faca-pequena'], porcoes: 1, tempo_min: 15,
+      ingredientes: [
+        { item: 'ovo', qtd: '2' }, { item: 'leite', qtd: '1 colher de sopa' }, { item: 'tomate', qtd: '½' },
+        { item: 'cebolinha', qtd: '1 talo' }, { item: 'queijo', qtd: '1 fatia' }, { item: 'sal', qtd: '1 pitada' }, { item: 'manteiga', qtd: '1 pontinha' } ],
+      utensilios: ['caneca grande que pode ir ao micro-ondas', 'potinho', 'garfo', 'tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'papel-toalha', 'pano de prato'],
+      passos: [
+        { texto: 'Unte a caneca com a manteiga, espalhando com papel-toalha. Rasguem o queijo em pedacinhos.', papel: 'mirim' },
+        { texto: 'Revisão da garra: dedos dobrados, pontas para trás. Pano úmido embaixo da tábua?', papel: 'guarda' },
+        { texto: 'Tomate deitado com a parte reta para baixo: pique em cubinhos com a garra. Depois, a cebolinha em rodelinhas.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Quebre os ovos no potinho, confira a casca e passe para a caneca. Junte o leite e o sal e bata com o garfo.', papel: 'chef' },
+        { texto: 'Junte o tomate, a cebolinha e o queijo e misture.', papel: 'mise' },
+        { texto: 'Micro-ondas por 1 minuto. O adulto tira com pano, mexe e volta 30 s, até firmar.', papel: 'sous', alerta: 'calor', timer_s: 60 },
+        { texto: 'Esperem 1 minuto: caneca e ovo guardam calor.', papel: 'guarda', alerta: 'calor', timer_s: 60 },
+        { texto: 'Prove. Dá para achar cada legume no meio do ovo?', papel: 'cronista' } ] },
+
+    { id: 'wrap-de-frango', nome: 'Wrap de frango desfiado', emoji: '🌯', nivel: 1, refeicao: 'almoco', tecnica: 'desfiar', carteirinhas: [], porcoes: 4, tempo_min: 20,
+      ingredientes: [
+        { item: 'tortilha (pão folha)', qtd: '4' }, { item: 'peito de frango já cozido pelo adulto (ou frango assado)', qtd: '1 (uns 300 g)' },
+        { item: 'requeijão', qtd: '4 colheres de sopa' }, { item: 'milho', qtd: '4 colheres de sopa' }, { item: 'alface', qtd: '4 folhas' }, { item: 'cenoura', qtd: '1' } ],
+      utensilios: ['2 garfos', 'tigela', 'tábua', 'colher de sopa', 'ralador (do adulto)', 'pano limpo', 'prato'],
+      passos: [
+        { texto: 'Lavem a alface, sequem no pano e rasguem em tiras.', papel: 'mirim' },
+        { texto: 'Rale a cenoura. O ralador corta: fica com o adulto.', papel: 'sous', alerta: 'faca' },
+        { texto: 'Desfie o frango com dois garfos, um segurando e o outro puxando.', papel: 'chef' },
+        { texto: 'Na tigela, misture o frango com o requeijão e o milho.', papel: 'mise' },
+        { texto: 'Tortilha aberta no prato: uma fileira de recheio no meio, sem chegar nas pontas.', papel: 'chef' },
+        { texto: 'Ponham a alface e a cenoura por cima do recheio.', papel: 'mirim' },
+        { texto: 'Enrole: dobre a parte de baixo por cima do recheio, feche as laterais e role até o fim.', papel: 'chef' },
+        { texto: 'Prove. O wrap ficou firme ou desmanchou? O que faria diferente?', papel: 'cronista' } ] },
+
+    { id: 'salada-molho-pote', nome: 'Salada de folhas com molho de pote', emoji: '🥗', nivel: 1, refeicao: 'almoco', tecnica: 'molho-pote', carteirinhas: [], porcoes: 4, tempo_min: 15,
+      ingredientes: [
+        { item: 'alface ou mix de folhas', qtd: '1 pé' }, { item: 'tomate-cereja (inteiro)', qtd: '10' }, { item: 'cenoura', qtd: '1' },
+        { item: 'azeite', qtd: '3 colheres de sopa' }, { item: 'limão', qtd: '1' }, { item: 'sal', qtd: '1 pitada' } ],
+      utensilios: ['pote de vidro com tampa', 'colher de sopa', 'espremedor', 'saladeira', 'pano limpo', 'ralador (do adulto)', '2 talheres de salada'],
+      passos: [
+        { texto: 'Lavem as folhas uma a uma em água corrente e os tomates-cereja.', papel: 'mirim' },
+        { texto: 'Sequem as folhas no pano e rasguem em pedaços de uma garfada, direto na saladeira.', papel: 'mirim' },
+        { texto: 'Rale a cenoura. O ralador corta: fica com o adulto.', papel: 'sous', alerta: 'faca' },
+        { texto: 'Esprema o limão e meça 1 colher dele no pote.', papel: 'mise' },
+        { texto: 'Junte 3 colheres de azeite e o sal no pote: é a conta do molho, 3 para 1.', papel: 'chef' },
+        { texto: 'Tampa bem fechada: chacoalhe 20 vezes, contando em voz alta, até o molho ficar turvo.', papel: 'chef' },
+        { texto: 'Cenoura e tomates por cima das folhas. O molho só entra na hora de comer.', papel: 'mise' },
+        { texto: 'Prove uma folha com molho e uma sem. Qual é melhor?', papel: 'cronista' } ] },
+
+    { id: 'pure-de-batata', nome: 'Purê de batata de micro-ondas', emoji: '🥔', nivel: 1, refeicao: 'almoco', tecnica: 'amassar', carteirinhas: [], porcoes: 4, tempo_min: 25,
+      ingredientes: [
+        { item: 'batata média', qtd: '3' }, { item: 'leite', qtd: '½ xícara' }, { item: 'manteiga', qtd: '1 colher de sopa' }, { item: 'sal', qtd: '1 pitada' } ],
+      utensilios: ['escovinha', 'garfo', 'prato que pode ir ao micro-ondas', 'tigela', 'espremedor de batata (ou garfo)', 'faca do adulto', 'colher', 'xícara medidora', 'pano de prato'],
+      passos: [
+        { texto: 'Esfreguem as batatas com a escovinha debaixo da água.', papel: 'mirim' },
+        { texto: 'Fure cada batata umas 6 vezes com o garfo: é por aí que o vapor sai e ela não estoura.', papel: 'chef' },
+        { texto: 'Micro-ondas por cerca de 8 minutos, virando na metade. Se o garfo não entrar fácil, mais 2 minutos.', papel: 'sous', alerta: 'calor', timer_s: 480 },
+        { texto: 'A batata sai pelando: o adulto corta ao meio e tira a polpa para a tigela. Esperem 3 minutos.', papel: 'sous', alerta: 'calor', timer_s: 180 },
+        { texto: 'Meça ½ xícara de leite e 1 colher de manteiga.', papel: 'mise' },
+        { texto: 'Amasse a batata com o espremedor até sumirem os pedaços.', papel: 'chef' },
+        { texto: 'Junte o leite e a manteiga aos poucos, mexendo até ficar cremoso. Uma pitada de sal.', papel: 'chef' },
+        { texto: 'Prove. Ficou liso ou com pedacinhos? Precisa de mais sal?', papel: 'cronista' } ] },
+
+    { id: 'tabule', nome: 'Tabule de cuscuz', emoji: '🌿', nivel: 2, refeicao: 'almoco', tecnica: 'garra', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 25,
+      ingredientes: [
+        { item: 'cuscuz marroquino', qtd: '1 xícara' }, { item: 'água fervente', qtd: '1 xícara' }, { item: 'tomate', qtd: '2' }, { item: 'pepino', qtd: '1' },
+        { item: 'salsinha e hortelã', qtd: '½ maço de cada' }, { item: 'limão', qtd: '1' }, { item: 'azeite', qtd: '2 colheres de sopa' }, { item: 'sal', qtd: '1 pitada' } ],
+      utensilios: ['tigela com tampa (ou prato para tampar)', 'chaleira (do adulto)', 'xícara medidora', 'tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'faca do adulto', 'garfo', 'espremedor'],
+      passos: [
+        { texto: 'Lavem os legumes e rasguem as folhas de salsinha e hortelã em pedacinhos.', papel: 'mirim' },
+        { texto: 'Meça 1 xícara de cuscuz na tigela.', papel: 'mise' },
+        { texto: 'Água fervente por cima do cuscuz, tampa e 5 minutos de espera.', papel: 'sous', alerta: 'calor', timer_s: 300 },
+        { texto: 'Revisão da garra: dedos dobrados, pontas para trás. Pano úmido embaixo da tábua?', papel: 'guarda' },
+        { texto: 'O adulto corta o tomate e o pepino em tiras compridas e deita cada tira com a parte reta para baixo.', papel: 'sous', alerta: 'faca' },
+        { texto: 'Com a garra, pique as tiras em cubinhos.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Solte o cuscuz com o garfo. Junte legumes, folhas, limão, azeite e sal, e misture.', papel: 'mise' },
+        { texto: 'Prove. Dá para sentir a hortelã? Precisa de mais limão?', papel: 'cronista' } ] },
+
+    { id: 'salada-grao-de-bico', nome: 'Salada de grão-de-bico', emoji: '🫘', nivel: 2, refeicao: 'almoco', tecnica: 'ponte', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 15,
+      ingredientes: [
+        { item: 'grão-de-bico cozido (lata ou cozido antes)', qtd: '1 lata' }, { item: 'tomate-cereja', qtd: '15' }, { item: 'azeitona sem caroço', qtd: '10' },
+        { item: 'cheiro-verde', qtd: '1 punhado' }, { item: 'azeite', qtd: '2 colheres de sopa' }, { item: 'limão', qtd: '½' }, { item: 'sal', qtd: '1 pitada' } ],
+      utensilios: ['abridor de lata (do adulto)', 'escorredor', 'tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'tigela', 'colher grande', 'espremedor'],
+      passos: [
+        { texto: 'O adulto abre a lata (a borda corta como faca) e escorre o grão-de-bico.', papel: 'sous', alerta: 'faca' },
+        { texto: 'Lavem o grão-de-bico no escorredor, os tomates e o cheiro-verde.', papel: 'mirim' },
+        { texto: 'Revisão da ponte: todo mundo mostra a mão em arco. Pano úmido embaixo da tábua?', papel: 'guarda' },
+        { texto: 'Ponte nos tomates-cereja: corte cada um ao meio.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Ponte nas azeitonas: elas escorregam, então devagar. Corte ao meio.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Esprema o limão, meça o azeite e rasgue o cheiro-verde por cima.', papel: 'mise' },
+        { texto: 'Uma pitada de sal e misturem tudo devagar, de baixo para cima.', papel: 'mirim' },
+        { texto: 'Prove. Qual é a textura do grão-de-bico: macia ou firme?', papel: 'cronista' } ] },
+
+    { id: 'bolinha-de-aveia', nome: 'Bolinha de aveia e amendoim', emoji: '🟤', nivel: 1, refeicao: 'lanche', tecnica: 'enrolar', carteirinhas: [], porcoes: 4, tempo_min: 25,
+      ingredientes: [
+        { item: 'aveia em flocos', qtd: '1 xícara' }, { item: 'pasta de amendoim (ou outra pasta, se alguém tiver alergia)', qtd: '4 colheres de sopa' },
+        { item: 'mel (nunca para bebê com menos de 1 ano)', qtd: '2 colheres de sopa' }, { item: 'cacau em pó', qtd: '1 colher de sopa' }, { item: 'coco ralado', qtd: '3 colheres de sopa' } ],
+      utensilios: ['tigela', 'xícara medidora', 'colheres medidoras', 'colher', 'faca de mesa (para nivelar)', 'pratinho', 'pote com tampa'],
+      passos: [
+        { texto: 'Meça a aveia e o cacau, nivelando com as costas da faca, e ponha na tigela.', papel: 'mise' },
+        { texto: 'Meça a pasta de amendoim e o mel e junte na tigela.', papel: 'chef' },
+        { texto: 'Misture com a colher até virar uma massa que gruda.', papel: 'mirim' },
+        { texto: 'Mãos levemente úmidas: separe uma colher de chá de massa para cada bolinha.', papel: 'chef' },
+        { texto: 'Role cada porção entre as palmas, em círculos, até ficar redonda.', papel: 'mirim' },
+        { texto: 'Passe as bolinhas no coco ralado, no pratinho.', papel: 'mirim' },
+        { texto: 'Guarde no pote e leve à geladeira por 15 minutos para firmar.', papel: 'mise', timer_s: 900 },
+        { texto: 'Prove. As bolinhas ficaram do mesmo tamanho? Doce ou pouco doce?', papel: 'cronista' } ] },
+
+    { id: 'guacamole', nome: 'Guacamole com palitos de pepino', emoji: '🥑', nivel: 2, refeicao: 'lanche', tecnica: 'garra', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 20,
+      ingredientes: [
+        { item: 'abacate maduro', qtd: '1 (ou 2 avocados)' }, { item: 'tomate', qtd: '1' }, { item: 'pepino', qtd: '1' },
+        { item: 'limão', qtd: '1' }, { item: 'sal', qtd: '1 pitada' } ],
+      utensilios: ['tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'faca do adulto', 'colher', 'tigela', 'garfo', 'espremedor'],
+      passos: [
+        { texto: 'Lavem o tomate e o pepino.', papel: 'mirim' },
+        { texto: 'O adulto abre o abacate e tira o caroço. A faca escorrega no caroço: é só com adulto.', papel: 'sous', alerta: 'faca' },
+        { texto: 'Tire a polpa com a colher para a tigela e amasse com o garfo.', papel: 'mirim' },
+        { texto: 'Revisão da garra: dedos dobrados, pontas para trás. Pano úmido embaixo da tábua?', papel: 'guarda' },
+        { texto: 'Meio tomate deitado com a parte reta para baixo: pique em cubinhos com a garra.', papel: 'chef', alerta: 'faca' },
+        { texto: 'O adulto parte o pepino no comprimento; com a garra, corte palitos do tamanho de um dedo.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Esprema o limão no abacate, junte o tomate e o sal, e misture.', papel: 'mise' },
+        { texto: 'Prove com os palitos. Ficou azedinho? Precisa de mais sal?', papel: 'cronista' } ] },
+
+    { id: 'mini-pizza', nome: 'Mini pizza de pão sírio', emoji: '🍕', nivel: 2, refeicao: 'lanche', tecnica: 'ponte', carteirinhas: ['faca-pequena'], porcoes: 4, tempo_min: 20,
+      ingredientes: [
+        { item: 'pão sírio pequeno', qtd: '4' }, { item: 'molho de tomate', qtd: '8 colheres de sopa' }, { item: 'mussarela ralada', qtd: '1 xícara' },
+        { item: 'tomate-cereja', qtd: '8' }, { item: 'azeitona sem caroço', qtd: '8' }, { item: 'orégano', qtd: '1 pitada' } ],
+      utensilios: ['tábua', 'pano úmido (embaixo da tábua)', 'faca pequena', 'colher de sopa', 'prato que pode ir ao micro-ondas', 'pano de prato'],
+      passos: [
+        { texto: 'Lavem os tomates-cereja.', papel: 'mirim' },
+        { texto: 'Revisão da ponte: todo mundo mostra a mão em arco. Pano úmido embaixo da tábua?', papel: 'guarda' },
+        { texto: 'Ponte nos tomates-cereja e nas azeitonas: corte cada um ao meio.', papel: 'chef', alerta: 'faca' },
+        { texto: 'Espalhe 2 colheres de molho em cada pão, do meio até perto da borda.', papel: 'chef' },
+        { texto: 'Queijo por cima, depois tomates e azeitonas, e orégano de bem alto.', papel: 'mirim' },
+        { texto: 'Micro-ondas por cerca de 1 minuto, até o queijo derreter.', papel: 'sous', alerta: 'calor', timer_s: 60 },
+        { texto: 'Queijo derretido queima mais do que parece: esperem 2 minutos.', papel: 'guarda', alerta: 'calor', timer_s: 120 },
+        { texto: 'Prove. A borda ficou macia ou crocante? Que cobertura vocês trocariam?', papel: 'cronista' } ] }
   ];
 
   const EM_BREVE = [
-    { nivel: 3, nome: 'Ovo mexido', emoji: '🍳' }, { nivel: 3, nome: 'Tapioca', emoji: '🫓' },
-    { nivel: 3, nome: 'Pipoca de panela', emoji: '🍿' }, { nivel: 3, nome: 'Arroz soltinho', emoji: '🍚' },
-    { nivel: 4, nome: 'Bolo de cenoura', emoji: '🥕' }, { nivel: 4, nome: 'Prato feito da Brigada', emoji: '🍛' },
-    { nivel: 4, nome: 'Receita de herança', emoji: '📜' }
+    { nivel: 3, refeicao: 'cafe', nome: 'Ovo mexido na frigideira', emoji: '🍳' }, { nivel: 3, refeicao: 'cafe', nome: 'Tapioca', emoji: '🫓' },
+    { nivel: 3, refeicao: 'lanche', nome: 'Pipoca de panela', emoji: '🍿' }, { nivel: 3, refeicao: 'almoco', nome: 'Arroz soltinho', emoji: '🍚' },
+    { nivel: 4, refeicao: 'lanche', nome: 'Bolo de cenoura', emoji: '🥕' }, { nivel: 4, refeicao: 'almoco', nome: 'Prato feito da família', emoji: '🍛' },
+    { nivel: 4, refeicao: 'almoco', nome: 'Receita de herança', emoji: '📜' }
   ];
 
   const CARINHAS = [
@@ -394,9 +608,9 @@ const Brigada = (function () {
     }
     return { livre: true, motivo: '', aviso };
   }
-  // a próxima receita sugerida: a primeira da trilha que a brigada ainda não fez
-  function sugerida(e) {
-    const r = RECEITAS.find(x => vezes(e, x.id) === 0 && statusReceita(e, x.id).livre);
+  // a próxima receita sugerida: a primeira da trilha (do nível mais baixo; da refeição, se pedida) que a brigada ainda não fez
+  function sugerida(e, refeicao) {
+    const r = RECEITAS.slice().sort((a, b) => a.nivel - b.nivel).find(x => (!refeicao || x.refeicao === refeicao) && vezes(e, x.id) === 0 && statusReceita(e, x.id).livre);
     return r ? r.id : null;
   }
   function andaime(vez) {
@@ -506,18 +720,19 @@ const Brigada = (function () {
   }
 
   // ---------------------------------------------------------------- exportar / importar
+  // 'brigada-da-familia' é o nome antigo do app; fica no texto exportado para os progressos já copiados continuarem entrando
   function exportar(e) { return JSON.stringify({ app: 'brigada-da-familia', versao: VERSAO, estado: e }); }
   function importar(texto) {
     let obj;
     try { obj = JSON.parse(texto); } catch (err) { return { erro: 'Esse texto não é um progresso válido. Copie de novo, inteiro.' }; }
-    if (!obj || obj.app !== 'brigada-da-familia' || typeof obj.estado !== 'object') return { erro: 'Esse texto não veio da Brigada da Família.' };
+    if (!obj || obj.app !== 'brigada-da-familia' || typeof obj.estado !== 'object') return { erro: 'Esse texto não veio do Vamos Cozinhar.' };
     return { estado: completarEstado(obj.estado) };
   }
 
   return {
-    VERSAO, IDADE_ADULTO, IDADE_LEITOR, PAPEIS, ORDEM_PAPEIS, CARTEIRINHAS, ALERTAS, TECNICAS, NIVEIS, RECEITAS, EM_BREVE,
+    VERSAO, IDADE_ADULTO, IDADE_LEITOR, PAPEIS, ORDEM_PAPEIS, CARTEIRINHAS, ALERTAS, TECNICAS, NIVEIS, REFEICOES, RECEITAS, EM_BREVE,
     CARINHAS, PALAVRAS, CAPAZ, CORES_PERFIL,
-    estadoInicial, completarEstado, ehAdulto, ehMirim, temCarteirinha, perfil, perfisPresentes,
+    refeicaoDaHora, estadoInicial, completarEstado, ehAdulto, ehMirim, temCarteirinha, perfil, perfisPresentes,
     adicionarPerfil, removerPerfil, alternarPresenca, assinarCarteirinha,
     receita, podeLiderar, vezes, statusReceita, sugerida, andaime,
     contagemPapeis, distribuirPapeis, elegiveis, trocarPapel, responsaveis, papelEfetivo, temCriancaPequena,
@@ -539,6 +754,7 @@ const Brigada = (function () {
   function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(E)); } catch (e) { /* sem armazenamento: segue na memória */ } }
   let E = carregar();
   let T = {}; // estado da tela (checklists, respostas da prova), descartável
+  let REF = B.refeicaoDaHora(new Date().getHours()); // aba da Trilha: abre pela hora, a família troca à vontade
 
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nomeDe = id => { const p = B.perfil(E, id); return p ? p.nome : '?'; };
@@ -596,7 +812,7 @@ const Brigada = (function () {
   // ---------------------------------------------------------------- telas
   function topo(extra) {
     return `<header class="topo">
-      <div class="marca"><span class="logo" aria-hidden="true">🧑‍🍳</span><div><h1>Brigada da Família</h1></div></div>
+      <div class="marca"><span class="logo" aria-hidden="true">🧑‍🍳</span><div><h1>Vamos Cozinhar</h1></div></div>
       ${extra || ''}
     </header>`;
   }
@@ -609,15 +825,16 @@ const Brigada = (function () {
   }
 
   function telaInicio() {
-    const sug = B.sugerida(E);
+    const sug = B.sugerida(E, REF);
     const pessoas = E.perfis.length
       ? `<div class="pessoas">${E.perfis.map(p => `<button class="pessoa" data-acao="presenca" data-id="${p.id}" aria-pressed="${E.presentes.includes(p.id)}">${bola(p)}${esc(p.nome)}</button>`).join('')}
           <button class="pessoa" data-acao="ir" data-h="#/brigada" aria-pressed="true"><span class="bola" style="background:var(--muted)">+</span>Brigada</button></div>`
       : `<div class="cartao pilha-p"><h3>Primeiro, montem a brigada</h3><p class="mudo">Cada pessoa da família ganha um perfil com apelido e idade. Leva um minuto.</p>
           <button class="btn prim" data-acao="ir" data-h="#/brigada">Montar a brigada</button></div>`;
     const niveis = B.NIVEIS.map(nv => {
-      const rs = B.RECEITAS.filter(r => r.nivel === nv.n);
-      const breve = B.EM_BREVE.filter(r => r.nivel === nv.n);
+      const rs = B.RECEITAS.filter(r => r.nivel === nv.n && r.refeicao === REF);
+      const breve = B.EM_BREVE.filter(r => r.nivel === nv.n && r.refeicao === REF);
+      if (!rs.length && !breve.length) return '';
       const cards = rs.map(r => {
         const st = B.statusReceita(E, r.id), v = B.vezes(E, r.id);
         const selos = [];
@@ -632,7 +849,7 @@ const Brigada = (function () {
       }).join('') + breve.map(r => `<div class="parada breve"><span class="emo" aria-hidden="true">${r.emoji}</span>
           <span class="pilha-p" style="gap:4px"><span class="nome">${esc(r.nome)}</span><span class="info">chega na próxima versão</span></span></div>`).join('');
       return `<section class="nivel" style="--cor:${nv.cor}">
-        <div class="nivel-cab"><span class="nivel-num">NÍVEL ${nv.n}</span><h2>${esc(nv.nome)}</h2><span class="mudo">${esc(nv.sobre)}</span></div>
+        <div class="nivel-cab"><span class="nivel-num">NÍVEL ${nv.n} · ${esc(nv.etapa.toUpperCase())}</span><h2>${esc(nv.nome)}</h2><span class="mudo">${esc(nv.sobre)}</span></div>
         <div class="paradas">${cards}</div></section>`;
     }).join('');
     const r = B.resumoLivro(E);
@@ -641,6 +858,9 @@ const Brigada = (function () {
         <section class="pilha-p"><span class="rotulo">Quem está na cozinha hoje?</span>${pessoas}</section>
         ${E.sessoes.length ? `<button class="btn" data-acao="ir" data-h="#/livro">📖 Livro da Família · ${r.paginas} ${r.paginas === 1 ? 'página' : 'páginas'}</button>` : ''}
         ${E.sessaoAtual ? `<div class="aviso">Tem uma receita no meio do caminho: ${esc(B.receita(E.sessaoAtual.receitaId).nome)}. <button class="btn-texto" data-acao="ir" data-h="#/cozinhar">Continuar</button></div>` : ''}
+        <section class="pilha-p"><span class="rotulo">Qual refeição?</span>
+          <div class="refeicoes" role="tablist">${B.REFEICOES.map(rf => `<button class="refeicao" role="tab" data-acao="refeicao" data-r="${rf.id}" aria-selected="${rf.id === REF}">
+            <span class="emo" aria-hidden="true">${rf.emoji}</span>${esc(rf.nome)}<span class="qtd">${B.RECEITAS.filter(r => r.refeicao === rf.id).length} receitas</span></button>`).join('')}</div></section>
         ${niveis}
       </div>`;
   }
@@ -941,6 +1161,7 @@ const Brigada = (function () {
     destravarAudio();
     switch (a) {
       case 'ir': ir(el.dataset.h); break;
+      case 'refeicao': REF = el.dataset.r; render(); break;
       case 'presenca': B.alternarPresenca(E, id); T.papeis = null; salvar(); render(); break;
       case 'remover': T.remover = id; render(); break;
       case 'remover-nao': T.remover = null; render(); break;
