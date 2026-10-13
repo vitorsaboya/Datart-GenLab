@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<title>Obras · Datart GenLab</title>
+<meta name="description" content="Cada obra parte de uma base pública real e pode ser aberta de volta ao dado que a gerou: cor, altura e movimento querem dizer algo, e a legenda diz o quê. Clique no nome da obra para entrar nela." />
+
+<link rel="icon" href="marca/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="marca/favicon-32.png" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Obras · Datart GenLab" />
+<meta property="og:description" content="Cada obra parte de uma base pública real e pode ser aberta de volta ao dado que a gerou: cor, altura e movimento querem dizer algo, e a legenda diz o quê. Clique no nome da obra para entrar nela." />
+<meta property="og:url" content="https://vitorsaboya.github.io/Datart-GenLab/obras.html" />
+<meta property="og:image" content="https://vitorsaboya.github.io/Datart-GenLab/capas/012-largo.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&display=swap" rel="stylesheet" />
+<script data-goatcounter="https://datartgenlab.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<style>
+  :root{ --paper:#ecebe6; --card:#f6f5f1; --ink:#161513; --mute:#55534d; }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+
+  /* topo comum */
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:22px 28px}
+  .marca{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+  .logo{font-weight:800;font-size:22px;letter-spacing:-.02em}
+  .marca a.quem{font-size:15px;color:var(--mute);border-bottom:1px solid transparent}
+  .marca a.quem:hover,.marca a.quem.on{color:var(--ink);border-bottom-color:var(--ink)}
+  header nav{display:flex;gap:20px;font-size:15px;color:var(--mute)}
+  header nav a:hover,header nav a.on{color:var(--ink)}
+  header p{margin:0;color:var(--mute);font-size:15px;max-width:52ch;text-align:right}
+
+  /* home: portas */
+  .portas{display:grid;gap:14px;padding:0 14px 14px}
+  .porta{position:relative;display:block;border-radius:6px;overflow:hidden;min-height:62vh;color:#fff;background:#111}
+  .porta img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s ease}
+  a.porta:hover img{transform:scale(1.03)}
+  .porta::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.6));pointer-events:none}
+  .porta .t{position:absolute;left:26px;right:26px;bottom:22px;z-index:1;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;text-shadow:0 1px 18px rgba(0,0,0,.35)}
+  .porta h2{margin:0;font-weight:700;font-size:clamp(44px,8vw,120px);line-height:.9;letter-spacing:-.035em;font-variation-settings:"opsz" 96}
+  .porta .k{font-size:15px;max-width:36ch}
+  .porta .n{position:absolute;top:18px;left:26px;z-index:1;font-size:14px;letter-spacing:.02em;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
+  .dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .dois .porta{min-height:46vh}
+  .lista{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:6px 14px 30px}
+  .item{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:center;padding:10px;border-radius:6px;background:var(--card);transition:background .2s}
+  .item:hover{background:#fff}
+  .item img{width:104px;height:78px;object-fit:cover;border-radius:3px;background:#111}
+  .item b{display:block;font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .item span{display:block;color:var(--mute);font-size:13.5px;line-height:1.4}
+
+  /* páginas internas */
+  .abre{padding:30px 28px 26px;max-width:1100px}
+  .abre h1{margin:0;font-weight:700;font-size:clamp(48px,9vw,128px);line-height:.9;letter-spacing:-.04em;font-variation-settings:"opsz" 96}
+  .abre p{margin:20px 0 0;font-size:19px;line-height:1.45;max-width:58ch;color:var(--mute)}
+  .abre .aviso{display:inline-block;margin-top:16px;font-size:14px;background:var(--ink);color:var(--paper);padding:5px 10px;border-radius:3px}
+
+  /* obras.html: um banner por obra; só o NOME abre a obra */
+  .obra{margin:0 14px 46px}
+  .banner{position:relative;border-radius:6px;overflow:hidden;min-height:58vh;background:#111;color:#fff}
+  .banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.62));pointer-events:none}
+  .banner .num{position:absolute;top:18px;left:26px;z-index:1;font-size:14px;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
+  .banner h2{position:absolute;left:26px;right:26px;bottom:20px;z-index:1;margin:0;font-weight:700;font-size:clamp(44px,8vw,116px);line-height:.92;letter-spacing:-.035em;font-variation-settings:"opsz" 96;text-shadow:0 1px 18px rgba(0,0,0,.35)}
+  .banner h2 a{border-bottom:3px solid rgba(255,255,255,.55);transition:border-color .2s}
+  .banner h2 a:hover{border-bottom-color:#fff}
+  .banner h2 a::after{content:" ↗";font-size:.42em;vertical-align:.9em;font-weight:500}
+  .texto{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:34px;padding:22px 12px 0}
+  .texto p{margin:0 0 14px;font-size:18px;line-height:1.5}
+  .texto h3{margin:0 0 10px;font-size:14px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+  .texto ul{margin:0 0 18px;padding-left:18px;font-size:15.5px;line-height:1.5}
+  .texto ul li{margin-bottom:6px}
+  .ficha{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14.5px;margin:0 0 18px}
+  .ficha dt{color:var(--mute)}
+  .ficha dd{margin:0}
+  .texto .aberto{font-size:14.5px;color:var(--mute);border-left:2px solid var(--ink);padding-left:12px}
+
+  /* em-casa.html */
+  .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;padding:0 14px 30px}
+  .app{display:block;border-radius:6px;overflow:hidden;background:var(--card);transition:background .2s}
+  .app:hover{background:#fff}
+  .app img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#ddd}
+  .app div{padding:14px 16px 18px}
+  .app b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+  .app span{color:var(--mute);font-size:15px;line-height:1.45}
+
+  /* sobre.html */
+  .sobre{padding:0 28px 30px;max-width:1100px}
+  .bloco{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:22px 0;border-top:1px solid #cfcdc6}
+  .bloco h2{margin:0;font-size:15px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+  .bloco p{margin:0 0 14px;font-size:20px;line-height:1.5;max-width:60ch}
+
+  footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 28px 40px;color:var(--mute);font-size:14px}
+  footer a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+
+  @media (max-width:760px){
+    header{flex-direction:column;padding:18px 16px;gap:10px} header p{text-align:left}
+    .portas{padding:0 8px 8px;gap:8px} .dois{grid-template-columns:1fr;gap:8px}
+    .porta{min-height:52vh} .dois .porta{min-height:38vh}
+    .porta .t{left:16px;right:16px;bottom:16px} .porta .n,.banner .num{left:16px}
+    .lista,.apps{padding:6px 8px 24px;gap:8px}
+    .abre{padding:20px 16px} .obra{margin:0 8px 36px} .banner{min-height:46vh} .banner h2{left:16px;right:16px}
+    .texto{grid-template-columns:1fr;gap:6px;padding:16px 8px 0}
+    .sobre{padding:0 16px 24px} .bloco{grid-template-columns:1fr;gap:8px} .bloco p{font-size:18px}
+    footer{padding:14px 16px 32px}
+  }
+  @media (prefers-reduced-motion:reduce){ .porta img{transition:none} }
+</style>
+</head>
+<body>
+<header>
+  <div class="marca"><a class="logo" href="./">Datart GenLab</a><a class="quem" href="sobre.html">Quem somos</a></div>
+  <nav><a href="obras.html" class="on">Obras</a><a href="em-casa.html">Em casa</a><a href="raio-x/">Raio-X</a></nav>
+</header>
+
+<main>
+<section class="abre"><h1>Obras</h1><p>Cada obra parte de uma base pública real e pode ser aberta de volta ao dado que a gerou: cor, altura e movimento querem dizer algo, e a legenda diz o quê. Clique no nome da obra para entrar nela.</p></section>
+<article class="obra" id="012-sahara-amazonia">
+  <div class="banner"><img src="capas/012-largo.jpg" alt="Poeira do Saara cruzando o Atlântico em 15 de fevereiro de 2007, dado MERRA-2" loading="lazy" /><span class="num">obra 012</span><h2><a href="012-sahara-amazonia/" title="abrir a obra">A Ponte de Poeira</a></h2></div>
+  <div class="texto"><div><p>Todo ano, um rio de poeira mineral sai do Saara, atravessa mais de 5.000 km de Atlântico e pousa na Amazônia, levando o fósforo que fertiliza a floresta. A obra dá corpo a essa ponte invisível: a nuvem é um volume 3D calculado da reanálise MERRA-2 da NASA, o vento real empurra a poeira de uma semana para a outra, e no chão acende a poeira que chega.</p><p>A janela é a estação de dezembro de 2006 a abril de 2007, a de maior transporte para a Amazônia na série do satélite CALIPSO.</p></div><div><h3>Como ler</h3><ul><li>No ar, a cor é a concentração de poeira (com um máximo fixo para todas as datas) e a altura é a altitude real: a rota sul voa baixo, perto de 1 km.</li><li>No chão, a cor é a poeira acumulada e o brilho é a chegada.</li><li>Arraste a barra do tempo: a nuvem flui empurrada pelo vento medido.</li></ul><dl class="ficha"><dt>dado</dt><dd>NASA MERRA-2</dd><dt>período</dt><dd>dez 2006 – abr 2007</dd><dt>estado</dt><dd>atualizada em 12 set 2026</dd></dl><p class="aberto">Em aberto: A data na tela se sobrepõe à legenda; entre uma semana e outra o movimento é interpolado pelo vento, não medido; pesa em celulares mais simples.</p></div></div>
+</article>
+<article class="obra" id="011-el-nino">
+  <div class="banner"><img src="capas/011-globo.jpg" alt="O Pacífico em setembro de 2026, temperatura real do mar" loading="lazy" /><span class="num">obra 011</span><h2><a href="011-el-nino/cinematic.html" title="abrir a obra">El Niño</a></h2></div>
+  <div class="texto"><div><p>Um globo do Pacífico onde a temperatura real da superfície do mar, medida por satélite pela NOAA, governa a obra mês a mês. Abre com um filme narrado que mergulha no globo, e a série segue até o mês mais recente publicado.</p><p>Em setembro de 2026 a região Niño 3.4 marcou +2,53 °C acima do normal, o maior valor da série, acima do pico de dezembro de 2023 (+2,32 °C).</p></div><div><h3>Como ler</h3><ul><li>A cor é a temperatura real do mar, de 0 a 32 °C.</li><li>A agitação e o brilho da água são a anomalia: o mar se revolve onde está mais quente que o normal.</li><li>Na linha do tempo, os dois picos aparecem marcados com o valor.</li></ul><dl class="ficha"><dt>dado</dt><dd>NOAA OISST</dd><dt>período</dt><dd>jan 2020 – set 2026</dd><dt>estado</dt><dd>atualizada em 11 out 2026</dd></dl><p class="aberto">Em aberto: O filme de abertura ainda chama dezembro de 2023 de auge; o novo pico está só na linha do tempo, por escolha.</p></div></div>
+</article>
+<article class="obra" id="013-terra-nua">
+  <div class="banner"><img src="capas/013-globo.jpg" alt="O relevo do planeta sem água, pintado por altitude" loading="lazy" /><span class="num">obra 013</span><h2><a href="013-terra-nua/" title="abrir a obra">A Terra Nua</a></h2></div>
+  <div class="texto"><div><p>O planeta sem água e sem nome: o relevo global, terra e fundo do oceano juntos, pintado por altitude e esculpido por sombra dura. Cada placa tectônica gira pelo seu polo de Euler real e leva o relevo junto, cinquenta milhões de anos à frente.</p><p>É um cenário, não uma previsão: a velocidade de hoje é estendida em linha reta.</p></div><div><h3>Como ler</h3><ul><li>A cor é a altitude, numa rampa única para o planeta inteiro; a sombra vem de um sol fixo.</li><li>Onde nenhuma placa cobre, fica um vazio declarado, não pintado. Onde duas se sobrepõem, a mais baixa afunda.</li></ul><dl class="ficha"><dt>dado</dt><dd>relevo global + polos de Euler (NNR-MORVEL56)</dd><dt>período</dt><dd>hoje → +50 milhões de anos (cenário)</dd><dt>estado</dt><dd>atualizada em 12 set 2026</dd></dl><p class="aberto">Em aberto: Em 50 milhões de anos sobra um vazio de cerca de 20% da superfície, e as bordas dos rasgos ficam serrilhadas.</p></div></div>
+</article>
+</main>
+
+<footer><span>Datart GenLab · 2026</span><span>Quer isto com o dado da sua empresa? Conversar</span></footer>
+<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-13 10:37 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
+</body>
+</html>
