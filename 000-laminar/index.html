@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A primeira obra do Datart GenLab: 14 mil partículas revelando, pelo acúmulo dos rastros, um campo de movimento invisível. Matemática pura, antes de qualquer dado.">
+<link rel="icon" href="../marca/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="../marca/favicon-32.png">
+<meta property="og:title" content="Laminar - Datart GenLab">
+<meta property="og:description" content="A primeira obra do Datart GenLab: 14 mil partículas revelando, pelo acúmulo dos rastros, um campo de movimento invisível. Matemática pura, antes de qualquer dado.">
+<meta property="og:image" content="../marca/og.png">
+<script data-goatcounter="https://datartgenlab.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<title>—</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#stage {
+    position: relative;
+    width: 1080px;
+    height: 1080px;
+    transform-origin: center;
+}
+
+canvas { display: block; }
+
+#ui {
+    position: absolute;
+    bottom: 18px;
+    right: 18px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#elapsed {
+    display: none;
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: .2em;
+    color: rgba(255,255,255,.18);
+}
+
+#btn {
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.2);
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.1);
+    padding: 6px 10px;
+    cursor: pointer;
+    outline: none;
+    transition: color .3s, border-color .3s;
+}
+
+#btn:hover    { color: rgba(255,255,255,.5); border-color: rgba(255,255,255,.3); }
+#btn.on       { color: rgba(200,50,50,.7);   border-color: rgba(200,50,50,.35); }
+#btn:disabled { color: rgba(255,255,255,.1); border-color: rgba(255,255,255,.05); cursor: default; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="ui">
+    <span id="elapsed"></span>
+    <button id="btn">rec</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/three@0.152.0/build/three.min.js"></script>
+<script>
+(function () {
+
+const W = 1080, H = 1080, FPS = 30;
+const N              = 14000;
+const SPEED          = 5.5e-4;
+const FADE           = 0.016;
+const FRAME_DUR_US   = Math.round(1e6 / FPS);
+
+const stage = document.getElementById('stage');
+function fit() {
+    const s = Math.min(window.innerWidth / W, window.innerHeight / H) * .97;
+    stage.style.transform = `scale(${s})`;
+}
+fit();
+window.addEventListener('resize', fit);
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(1);
+renderer.autoClear = false;
+
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+camera.position.z = 1;
+
+const fadeScene = new THREE.Scene();
+fadeScene.add(new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 2),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: FADE })
+));
+
+const arr = new Float32Array(N * 3);
+for (let i = 0; i < N; i++) {
+    arr[i * 3]     = Math.random() * 2 - 1;
+    arr[i * 3 + 1] = Math.random() * 2 - 1;
+    arr[i * 3 + 2] = 0;
+}
+const geo = new THREE.BufferGeometry();
+geo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+
+const mat = new THREE.ShaderMaterial({
+    vertexShader: `
+        void main() {
+            gl_PointSize = 1.5;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        void main() {
+            float d = length(gl_PointCoord - .5) * 2.0;
+            float a = 1.0 - smoothstep(.35, 1.0, d);
+            gl_FragColor = vec4(1.0, 1.0, 1.0, a * .8);
+        }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+});
+
+const partScene = new THREE.Scene();
+partScene.add(new THREE.Points(geo, mat));
+
+function flow(x, y, t) {
+    const s1 = Math.sin(x * 1.8 + t * .22), c1 = Math.cos(x * 1.8 + t * .22);
+    const s2 = Math.sin(y * 2.3 + t * .17), c2 = Math.cos(y * 2.3 + t * .17);
+    let vx = -2.3 * s1 * s2, vy = -1.8 * c1 * c2;
+
+    const q2 = Math.cos(x * 1.1 - y * 1.6 + t * .09);
+    vx += .4 * (-1.6 * q2);
+    vy += .4 * (-1.1 * q2);
+
+    const q3 = Math.cos(x * .7 + y * 2.9 + t * .31);
+    vx += .25 * (2.9 * q3);
+    vy += .25 * (-.7 * q3);
+
+    const len = Math.sqrt(vx * vx + vy * vy) || 1;
+    return [vx / len, vy / len];
+}
+
+const btn     = document.getElementById('btn');
+const elapsed = document.getElementById('elapsed');
+
+let encoder = null, muxer = null, muxTarget = null, MuxLib = null;
+let isRec = false, frameCount = 0, lastCaptureMs = 0, recStartMs = 0;
+
+async function getMuxLib() {
+    if (!MuxLib) MuxLib = await import('https://esm.sh/mp4-muxer@5');
+    return MuxLib;
+}
+
+function recError(e) {
+    console.error(e);
+    isRec = false;
+    encoder = null; muxer = null; muxTarget = null;
+    btn.disabled = false;
+    btn.classList.remove('on');
+    elapsed.style.display = 'none';
+    btn.textContent = 'erro';
+    setTimeout(() => { btn.textContent = 'rec'; }, 2500);
+}
+
+async function startRec() {
+    if (!window.VideoEncoder) throw new Error('VideoEncoder não disponível — use Chrome ou Edge 94+');
+
+    const { Muxer, ArrayBufferTarget } = await getMuxLib();
+
+    muxTarget = new ArrayBufferTarget();
+    muxer = new Muxer({
+        target: muxTarget,
+        video: { codec: 'avc', width: W, height: H },
+        firstTimestampBehavior: 'offset',
+        fastStart: 'in-memory',
+    });
+
+    encoder = new VideoEncoder({
+        output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+        error: e => recError(e),
+    });
+
+    let codec = 'avc1.640028';
+    const check = await VideoEncoder.isConfigSupported({ codec, width: W, height: H, bitrate: 8e6, framerate: FPS });
+    if (!check.supported) codec = 'avc1.42001f';
+
+    encoder.configure({ codec, width: W, height: H, bitrate: 8_000_000, framerate: FPS });
+
+    frameCount = 0;
+    lastCaptureMs = recStartMs = performance.now();
+    isRec = true;
+    btn.textContent = 'stop';
+    btn.classList.add('on');
+    elapsed.style.display = 'inline';
+}
+
+async function stopRec() {
+    isRec = false;
+    btn.disabled = true;
+    btn.textContent = '…';
+
+    await encoder.flush();
+    muxer.finalize();
+    encoder.close();
+
+    const blob = new Blob([muxTarget.buffer], { type: 'video/mp4' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'obra.mp4';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    encoder = null; muxer = null; muxTarget = null;
+    btn.disabled = false;
+    btn.textContent = 'rec';
+    btn.classList.remove('on');
+    elapsed.style.display = 'none';
+}
+
+btn.addEventListener('click', () => {
+    if (!isRec) startRec().catch(recError);
+    else        stopRec().catch(recError);
+});
+
+let t = 0;
+
+function tick(now) {
+    requestAnimationFrame(tick);
+    t += .004;
+
+    for (let i = 0; i < N; i++) {
+        const ix = i * 3, iy = i * 3 + 1;
+        const [vx, vy] = flow(arr[ix], arr[iy], t);
+        arr[ix] += vx * SPEED;
+        arr[iy] += vy * SPEED;
+        if (arr[ix] < -1.05 || arr[ix] > 1.05 || arr[iy] < -1.05 || arr[iy] > 1.05) {
+            arr[ix] = Math.random() * 2 - 1;
+            arr[iy] = Math.random() * 2 - 1;
+        }
+    }
+    geo.attributes.position.needsUpdate = true;
+
+    renderer.render(fadeScene, camera);
+    renderer.render(partScene, camera);
+
+    if (isRec && now - lastCaptureMs >= 1000 / FPS - 1) {
+        lastCaptureMs = now;
+        const frame = new VideoFrame(canvas, {
+            timestamp: frameCount * FRAME_DUR_US,
+            duration:  FRAME_DUR_US,
+        });
+        encoder.encode(frame, { keyFrame: frameCount % FPS === 0 });
+        frame.close();
+        frameCount++;
+
+        const s = ((now - recStartMs) / 1000) | 0;
+        elapsed.textContent = `${String((s / 60) | 0).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    }
+}
+
+tick(performance.now());
+
+})();
+</script>
+<a href="../obras.html#000-laminar" style="position:fixed;top:16px;left:20px;z-index:20;font:12px/1 system-ui,sans-serif;letter-spacing:.06em;color:#7d8794;text-decoration:none;border:1px solid #232a33;border-radius:8px;padding:7px 11px;background:rgba(10,12,16,.55)">Datart GenLab</a>
+</body>
+</html>
