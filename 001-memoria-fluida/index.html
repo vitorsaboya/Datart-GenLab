@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Estudo de 2026 do Datart GenLab: 262 mil partículas num campo turbulento, cada uma deixando um rastro lento, como a memória de calor do oceano.">
+<link rel="icon" href="../marca/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="../marca/favicon-32.png">
+<meta property="og:title" content="Memória Fluida - Datart GenLab">
+<meta property="og:description" content="Estudo de 2026 do Datart GenLab: 262 mil partículas num campo turbulento, cada uma deixando um rastro lento, como a memória de calor do oceano.">
+<meta property="og:image" content="../marca/og.png">
+<script data-goatcounter="https://datartgenlab.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<title>001 — memória fluida</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+    width: 100%; height: 100%;
+    background: #020818;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+}
+#stage { position: relative; width: 1080px; height: 1080px; transform-origin: center; }
+canvas { display: block; }
+#ui {
+    position: absolute; bottom: 18px; right: 18px; z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+}
+#elapsed {
+    display: none; font-family: 'Courier New', monospace;
+    font-size: 9px; letter-spacing: .2em; color: rgba(255,255,255,.18);
+}
+#btn {
+    font-family: 'Courier New', monospace; font-size: 9px; letter-spacing: .22em;
+    text-transform: uppercase; color: rgba(255,255,255,.2);
+    background: transparent; border: 1px solid rgba(255,255,255,.1);
+    padding: 6px 10px; cursor: pointer; outline: none;
+    transition: color .3s, border-color .3s;
+}
+#btn:hover    { color: rgba(255,255,255,.5); border-color: rgba(255,255,255,.3); }
+#btn.on       { color: rgba(200,50,50,.7);   border-color: rgba(200,50,50,.35); }
+#btn:disabled { color: rgba(255,255,255,.1); border-color: rgba(255,255,255,.05); cursor: default; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="ui"><span id="elapsed"></span><button id="btn">rec</button></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.152.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.152.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }     from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const W = 1080, H = 1080, FPS = 30;
+const SIM_W = 512, SIM_H = 512;
+const N = SIM_W * SIM_H;
+const TRAIL_FADE   = 0.99;
+const EXPOSURE     = 0.01;  // tone mapping Reinhard — x/(x+1); 0.01 = half-point em trail=100
+const MAX_SPEED    = 0.13;
+const ORBIT_SPEED  = 0.0022;
+const CAM_DIST     = 2.6;
+const FRAME_DUR_US = Math.round(1e6 / FPS);
+
+const BG         = new THREE.Color(0x020818);
+const C_DARK     = new THREE.Color(0x061020);
+const C_MID      = new THREE.Color(0xb04c12);
+const C_BRIGHT   = new THREE.Color(0xffb040);
+
+const dataset = (() => {
+    const d = new Float32Array(365);
+    for (let i = 0; i < 365; i++) {
+        const s = 23.5 + 5.5 * Math.sin(i / 365 * Math.PI * 2 - Math.PI / 2);
+        const u1 = Math.random() + 1e-9;
+        const noise = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * Math.random()) * 0.8;
+        d[i] = Math.max(18, Math.min(29, s + noise));
+    }
+    return d;
+})();
+
+const VERT_PASSTHRU = `void main(){ gl_Position=vec4(position.xy,0.,1.); }`;
+
+const FRAG_VEL = `
+precision highp float;
+uniform sampler2D texPos;
+uniform sampler2D texVel;
+uniform float time;
+uniform float amplitude;
+
+const vec2  SIM_RES = vec2(${SIM_W}.,${SIM_H}.);
+const float MAX_SPD = ${MAX_SPEED};
+const float DT      = 0.018;
+const float DAMP    = 0.055;
+
+vec3 curlNoise(vec3 p, float t) {
+    float sa1=sin(1.8*p.x+0.22*t), ca1=cos(1.8*p.x+0.22*t);
+    float sc1=sin(2.1*p.y+0.17*t), cc1=cos(2.1*p.y+0.17*t);
+    float se1=sin(1.5*p.z),         ce1=cos(1.5*p.z);
+    float dp1dy=-2.1*sa1*sc1*se1,  dp1dz=1.5*sa1*cc1*ce1;
+
+    float ca2=cos(1.3*p.x+0.15*t), sa2=sin(1.3*p.x+0.15*t);
+    float sc2=sin(2.4*p.y);
+    float ce2=cos(1.7*p.z+0.25*t), se2=sin(1.7*p.z+0.25*t);
+    float dp2dx=-1.3*sa2*sc2*ce2,  dp2dz=-1.7*ca2*sc2*se2;
+
+    float sac3=sin(0.9*p.x-1.6*p.y+0.10*t), cac3=cos(0.9*p.x-1.6*p.y+0.10*t);
+    float ce3=cos(2.2*p.z+0.18*t);
+    float dp3dy=-1.6*cac3*ce3, dp3dx=0.9*cac3*ce3;
+
+    return vec3(dp3dy-dp2dz, dp1dz-dp3dx, dp2dx-dp1dy);
+}
+
+void main(){
+    vec2 uv  = gl_FragCoord.xy / SIM_RES;
+    vec3 pos = texture2D(texPos,uv).xyz;
+    vec3 vel = texture2D(texVel,uv).xyz;
+
+    vec3 f = curlNoise(pos,            time)          * amplitude
+           + curlNoise(pos*2.6+1.7,    time*1.65+0.3) * amplitude * 0.40
+           + curlNoise(pos*6.3+vec3(4.1,2.7,8.3), time*3.2+1.9) * amplitude * 0.18;
+
+    vec3 nv = vel + (f - vel*DAMP) * DT;
+    float spd = length(nv);
+    if(spd>MAX_SPD) nv *= MAX_SPD/spd;
+
+    gl_FragColor = vec4(nv, spd/MAX_SPD);
+}
+`;
+
+const FRAG_POS = `
+precision highp float;
+uniform sampler2D texPos;
+uniform sampler2D texVel;
+uniform float time;
+
+const vec2  SIM_RES = vec2(${SIM_W}.,${SIM_H}.);
+const float DT      = 0.018;
+
+float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5); }
+
+void main(){
+    vec2 uv  = gl_FragCoord.xy / SIM_RES;
+    vec3 pos = texture2D(texPos,uv).xyz;
+    vec3 vel = texture2D(texVel,uv).xyz;
+    pos += vel * DT;
+
+    if(length(pos)>1.35){
+        float h1=h(uv+time*.011), h2=h(uv.yx+time*.013), h3=h(uv+vec2(.5,time*.007));
+        float ct=2.*h1-1., st=sqrt(max(0.,1.-ct*ct)), phi=h2*6.28318;
+        pos = (.12+h3*.7)*vec3(st*cos(phi),st*sin(phi),ct);
+    }
+    gl_FragColor = vec4(pos,1.);
+}
+`;
+
+const VERT_UV = `
+varying vec2 vUv;
+void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }
+`;
+const FRAG_FADE = `
+precision highp float;
+uniform sampler2D tPrev;
+uniform float fade;
+varying vec2 vUv;
+void main(){ gl_FragColor=texture2D(tPrev,vUv)*fade; }
+`;
+
+const FRAG_DISPLAY = `
+precision highp float;
+uniform sampler2D tTrail;
+uniform vec3 bgColor;
+uniform float exposure;
+varying vec2 vUv;
+void main(){
+    vec4 t=texture2D(tTrail,vUv);
+    vec3 x=t.rgb*exposure; vec3 mapped=x/(x+1.0);
+    gl_FragColor=vec4(bgColor+mapped,1.);
+}
+`;
+
+const VERT_PARTICLE = `
+precision highp float;
+uniform sampler2D texPos;
+uniform sampler2D texVel;
+attribute float aIndex;
+varying float vSpeed;
+varying float vZ;
+
+const vec2 SIM_RES = vec2(${SIM_W}.,${SIM_H}.);
+
+void main(){
+    vec2 uv = (vec2(mod(aIndex,SIM_RES.x), floor(aIndex/SIM_RES.x))+.5)/SIM_RES;
+    vec3 pos = texture2D(texPos,uv).xyz;
+    float spd = texture2D(texVel,uv).w;
+    vSpeed = spd;
+
+    vec4 mvPos = modelViewMatrix * vec4(pos,1.);
+    vZ = -mvPos.z;
+
+    float sz = clamp(360.0/vZ, 0.4, 5.5) * (0.3 + spd*1.8);
+    gl_PointSize = sz;
+    gl_Position  = projectionMatrix * mvPos;
+}
+`;
+
+const FRAG_PARTICLE = `
+precision highp float;
+uniform vec3 colorDark;
+uniform vec3 colorMid;
+uniform vec3 colorBright;
+varying float vSpeed;
+varying float vZ;
+
+void main(){
+    vec2 uv = gl_PointCoord*2.-1.;
+    float r2 = dot(uv,uv);
+    if(r2>1.) discard;
+
+    float nz  = sqrt(1.-r2);
+    vec3  N   = vec3(uv, nz);
+
+    float t  = smoothstep(0.05, 0.88, vSpeed);
+    vec3 base = t<.5
+        ? mix(colorDark, colorMid,   smoothstep(0.,.5,t)*2.)
+        : mix(colorMid,  colorBright, smoothstep(.5,1.,t)*2.-1.);
+
+    vec3 L1 = normalize(vec3( 0.7, 0.8, 0.55));
+    vec3 L2 = normalize(vec3(-0.5,-0.3, 0.50));
+    vec3 V  = vec3(0.,0.,1.);
+    vec3 H1 = normalize(L1+V);
+
+    float diff = max(dot(N,L1),0.)*0.72 + max(dot(N,L2),0.)*0.14;
+    float spec = pow(max(dot(N,H1),0.), 90.+vSpeed*60.) * (0.1+vSpeed*0.3);
+    float fres = pow(1.-nz, 2.8);
+
+    vec3 lit = base*(0.06+diff)
+             + vec3(.96,.93,.89)*spec
+             + colorDark*fres*0.65;
+
+    float dof   = 1. - smoothstep(0., 2.0, abs(vZ - ${CAM_DIST}));
+    float alpha = nz * 0.02 * (0.18 + dof*0.82);
+
+    gl_FragColor = vec4(lit, alpha);
+}
+`;
+
+const canvas   = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(1);
+renderer.autoClear = false;
+renderer.setClearColor(BG, 1);
+
+const simCam  = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const quadCam = new THREE.OrthographicCamera(-1,1,1,-1,0.1,10);
+quadCam.position.z = 1;
+const orbitCam = new THREE.PerspectiveCamera(60, 1, 0.01, 100);
+orbitCam.position.set(0, 0.35, CAM_DIST);
+orbitCam.lookAt(0,0,0);
+
+function makeRT(w, h, type = THREE.HalfFloatType) {
+    return new THREE.WebGLRenderTarget(w, h, {
+        minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter,
+        format: THREE.RGBAFormat, type, depthBuffer: false,
+        stencilBuffer: false, generateMipmaps: false,
+    });
+}
+let posRT  = [makeRT(SIM_W,SIM_H), makeRT(SIM_W,SIM_H)];
+let velRT  = [makeRT(SIM_W,SIM_H), makeRT(SIM_W,SIM_H)];
+let trailRT = [makeRT(W,H), makeRT(W,H)];
+let rp = 0, tp = 0;
+
+{
+    const data = new Float32Array(N * 4);
+    for (let i = 0; i < N; i++) {
+        const ct = 2*Math.random()-1, st = Math.sqrt(1-ct*ct);
+        const phi = Math.random()*Math.PI*2;
+        const r   = Math.cbrt(Math.random()) * 0.8;
+        data[i*4]=r*st*Math.cos(phi); data[i*4+1]=r*st*Math.sin(phi);
+        data[i*4+2]=r*ct;             data[i*4+3]=1;
+    }
+    const initTex = new THREE.DataTexture(data, SIM_W, SIM_H, THREE.RGBAFormat, THREE.FloatType);
+    initTex.needsUpdate = true;
+
+    const s0 = new THREE.Scene();
+    const m0 = new THREE.Mesh(new THREE.PlaneGeometry(2,2), new THREE.MeshBasicMaterial({ map: initTex }));
+    m0.frustumCulled = false;
+    s0.add(m0);
+    renderer.setRenderTarget(posRT[0]);  renderer.render(s0, simCam);
+    renderer.setRenderTarget(velRT[0]);  renderer.clear();
+    renderer.setRenderTarget(trailRT[0]); renderer.clear();
+    renderer.setRenderTarget(trailRT[1]); renderer.clear();
+    renderer.setRenderTarget(null);
+    initTex.dispose();
+}
+
+const simScene = new THREE.Scene();
+const simQuad  = new THREE.Mesh(new THREE.PlaneGeometry(2,2));
+simQuad.frustumCulled = false;
+simScene.add(simQuad);
+
+const velMat = new THREE.ShaderMaterial({
+    uniforms: { texPos:{value:null}, texVel:{value:null}, time:{value:0}, amplitude:{value:1} },
+    vertexShader: VERT_PASSTHRU, fragmentShader: FRAG_VEL,
+    depthTest:false, depthWrite:false,
+});
+const posMat = new THREE.ShaderMaterial({
+    uniforms: { texPos:{value:null}, texVel:{value:null}, time:{value:0} },
+    vertexShader: VERT_PASSTHRU, fragmentShader: FRAG_POS,
+    depthTest:false, depthWrite:false,
+});
+
+const trailScene = new THREE.Scene();
+const fadeMat    = new THREE.ShaderMaterial({
+    uniforms: { tPrev:{value:null}, fade:{value:TRAIL_FADE} },
+    vertexShader: VERT_UV, fragmentShader: FRAG_FADE,
+    depthTest:false, depthWrite:false,
+});
+const fadeMesh = new THREE.Mesh(new THREE.PlaneGeometry(2,2), fadeMat);
+fadeMesh.frustumCulled = false;
+trailScene.add(fadeMesh);
+
+const partScene = new THREE.Scene();
+const idxArr    = new Float32Array(N);
+for (let i = 0; i < N; i++) idxArr[i] = i;
+const partGeo   = new THREE.BufferGeometry();
+partGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N*3), 3));
+partGeo.setAttribute('aIndex',   new THREE.BufferAttribute(idxArr, 1));
+const partMat = new THREE.ShaderMaterial({
+    uniforms: {
+        texPos:      { value: null },
+        texVel:      { value: null },
+        colorDark:   { value: C_DARK },
+        colorMid:    { value: C_MID },
+        colorBright: { value: C_BRIGHT },
+    },
+    vertexShader: VERT_PARTICLE, fragmentShader: FRAG_PARTICLE,
+    transparent: true, blending: THREE.AdditiveBlending,
+    depthTest: false, depthWrite: false,
+});
+const particles = new THREE.Points(partGeo, partMat);
+particles.frustumCulled = false;
+partScene.add(particles);
+
+const displayScene = new THREE.Scene();
+const displayMat   = new THREE.ShaderMaterial({
+    uniforms: { tTrail:{value:null}, bgColor:{value:BG}, exposure:{value:EXPOSURE} },
+    vertexShader: VERT_UV, fragmentShader: FRAG_DISPLAY,
+    depthTest:false, depthWrite:false,
+});
+const displayMesh = new THREE.Mesh(new THREE.PlaneGeometry(2,2), displayMat);
+displayMesh.frustumCulled = false;
+displayScene.add(displayMesh);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(displayScene, quadCam));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W,H), 0.3, 0.4, 0.85));
+
+const stage = document.getElementById('stage');
+function fit(){
+    const s = Math.min(window.innerWidth/W, window.innerHeight/H)*.97;
+    stage.style.transform = `scale(${s})`;
+}
+fit();
+window.addEventListener('resize', fit);
+
+const btn = document.getElementById('btn'), elapsed = document.getElementById('elapsed');
+let encoder=null, muxer=null, muxTarget=null, MuxLib=null;
+let isRec=false, frameCount=0, lastCaptureMs=0, recStartMs=0;
+
+async function getMuxLib(){
+    if(!MuxLib) MuxLib = await import('https://esm.sh/mp4-muxer@5');
+    return MuxLib;
+}
+function recError(e){
+    console.error(e); isRec=false; encoder=null; muxer=null; muxTarget=null;
+    btn.disabled=false; btn.classList.remove('on'); elapsed.style.display='none';
+    btn.textContent='erro'; setTimeout(()=>{ btn.textContent='rec'; },2500);
+}
+async function startRec(){
+    if(!window.VideoEncoder) throw new Error('VideoEncoder não disponível — Chrome/Edge 94+');
+    const { Muxer, ArrayBufferTarget } = await getMuxLib();
+    muxTarget = new ArrayBufferTarget();
+    muxer = new Muxer({ target:muxTarget, video:{codec:'avc',width:W,height:H},
+                        firstTimestampBehavior:'offset', fastStart:'in-memory' });
+    encoder = new VideoEncoder({ output:(c,m)=>muxer.addVideoChunk(c,m), error:recError });
+    let codec='avc1.640028';
+    const chk = await VideoEncoder.isConfigSupported({codec,width:W,height:H,bitrate:8e6,framerate:FPS});
+    if(!chk.supported) codec='avc1.42001f';
+    encoder.configure({codec,width:W,height:H,bitrate:8_000_000,framerate:FPS});
+    frameCount=0; lastCaptureMs=recStartMs=performance.now(); isRec=true;
+    btn.textContent='stop'; btn.classList.add('on'); elapsed.style.display='inline';
+}
+async function stopRec(){
+    isRec=false; btn.disabled=true; btn.textContent='…';
+    await encoder.flush(); muxer.finalize(); encoder.close();
+    const blob=new Blob([muxTarget.buffer],{type:'video/mp4'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='memoria-fluida.mp4';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    encoder=null; muxer=null; muxTarget=null;
+    btn.disabled=false; btn.textContent='rec'; btn.classList.remove('on'); elapsed.style.display='none';
+}
+btn.addEventListener('click',()=>{
+    if(!isRec) startRec().catch(recError);
+    else       stopRec().catch(recError);
+});
+
+let simTime=0, orbitAngle=0;
+
+window.addEventListener('keydown', e => {
+    const u = displayMat.uniforms.exposure;
+    if (e.key === '+' || e.key === '=') { u.value *= 1.2; console.log('exposure', u.value.toFixed(4)); }
+    if (e.key === '-' || e.key === '_') { u.value /= 1.2; console.log('exposure', u.value.toFixed(4)); }
+});
+
+function tick(now){
+    requestAnimationFrame(tick);
+    simTime    += 0.0035;
+    orbitAngle += ORBIT_SPEED;
+
+    const temp     = dataset[Math.floor(simTime*11) % 365];
+    const amplitude = 0.5 + ((temp-18)/11) * 1.9;
+
+    orbitCam.position.x = CAM_DIST * Math.sin(orbitAngle);
+    orbitCam.position.z = CAM_DIST * Math.cos(orbitAngle);
+    orbitCam.position.y = 0.35 + 0.18 * Math.sin(orbitAngle * 0.28);
+    orbitCam.lookAt(0,0,0);
+
+    velMat.uniforms.texPos.value    = posRT[rp].texture;
+    velMat.uniforms.texVel.value    = velRT[rp].texture;
+    velMat.uniforms.time.value      = simTime;
+    velMat.uniforms.amplitude.value = amplitude;
+    simQuad.material = velMat;
+    renderer.setRenderTarget(velRT[1-rp]); renderer.render(simScene, simCam);
+
+    posMat.uniforms.texPos.value = posRT[rp].texture;
+    posMat.uniforms.texVel.value = velRT[1-rp].texture;
+    posMat.uniforms.time.value   = simTime;
+    simQuad.material = posMat;
+    renderer.setRenderTarget(posRT[1-rp]); renderer.render(simScene, simCam);
+    rp = 1-rp;
+
+    fadeMat.uniforms.tPrev.value = trailRT[tp].texture;
+    renderer.setRenderTarget(trailRT[1-tp]);
+    renderer.setClearColor(0x000000,1); renderer.clear();
+    renderer.render(trailScene, quadCam);
+
+    partMat.uniforms.texPos.value = posRT[rp].texture;
+    partMat.uniforms.texVel.value = velRT[rp].texture;
+    renderer.render(partScene, orbitCam);
+    renderer.setRenderTarget(null);
+    tp = 1-tp;
+
+    displayMat.uniforms.tTrail.value = trailRT[tp].texture;
+    renderer.setClearColor(BG,1);
+    composer.render();
+
+    if(isRec && now-lastCaptureMs >= 1000/FPS-1){
+        lastCaptureMs=now;
+        const frame=new VideoFrame(canvas,{timestamp:frameCount*FRAME_DUR_US,duration:FRAME_DUR_US});
+        encoder.encode(frame,{keyFrame:frameCount%FPS===0}); frame.close(); frameCount++;
+        const s=((now-recStartMs)/1e3)|0;
+        elapsed.textContent=`${String((s/60)|0).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+    }
+}
+tick(performance.now());
+</script>
+<a href="../obras.html#001-memoria-fluida" style="position:fixed;top:16px;left:20px;z-index:20;font:12px/1 system-ui,sans-serif;letter-spacing:.06em;color:#7d8794;text-decoration:none;border:1px solid #232a33;border-radius:8px;padding:7px 11px;background:rgba(10,12,16,.55)">Datart GenLab</a>
+</body>
+</html>
