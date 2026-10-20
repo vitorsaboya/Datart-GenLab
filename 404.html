@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Datart GenLab · novo endereço</title>
+<meta name="robots" content="noindex">
+<style>html,body{margin:0;background:#ecebe6;color:#1b1a17}body{font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:48px 16px}a{color:#1b1a17}</style>
+<script src="/Datart-GenLab/mudar.js"></script><!-- absoluto: o 404 aparece em QUALQUER caminho -->
+</head>
+<body>
+<p>Esta página mudou para <a id="destino" href="https://datart-genlab.pages.dev/">datart-genlab.pages.dev</a>. Levando você até lá…</p>
+<script>
+  // qualquer link antigo (/Datart-GenLab/<caminho>) cai aqui e segue para o MESMO caminho no endereco novo
+  document.getElementById('destino').href = MUDAR.NOVO + MUDAR.caminho();
+  MUDAR.ir(MUDAR.caminho());
+</script>
+</body>
+</html>

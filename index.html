@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Datart GenLab · novo endereço</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://datart-genlab.pages.dev/">
+<meta property="og:url" content="https://datart-genlab.pages.dev/">
+<style>
+  html,body{margin:0;background:#ecebe6;color:#1b1a17}
+  body{font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:grid;place-items:center;min-height:100vh;padding:0 16px}
+  main{max-width:34rem}
+  h1{font:600 clamp(28px,6vw,40px)/1.15 Georgia,"Times New Roman",serif;margin:0 0 12px}
+  a{color:#1b1a17}
+  .btn{display:inline-block;margin-top:16px;padding:12px 18px;background:#1b1a17;color:#ecebe6;border-radius:999px;text-decoration:none;font-weight:600}
+  .nota{color:#6b675e;font-size:14px;margin-top:20px}
+</style>
+<script src="/Datart-GenLab/mudar.js"></script>
+</head>
+<body>
+<main>
+  <h1>O Datart GenLab mudou de casa.</h1>
+  <p>As obras e os jogos agora moram em <a href="https://datart-genlab.pages.dev/">datart-genlab.pages.dev</a>. Você será levado para lá em instantes.</p>
+  <a class="btn" id="ir" href="https://datart-genlab.pages.dev/">Ir para o novo endereço →</a>
+  <p class="nota">Os links antigos continuam funcionando: levam à mesma página no endereço novo, e o progresso dos jogos vai junto.</p>
+</main>
+<script>
+  document.getElementById('ir').addEventListener('click', function (e) { e.preventDefault(); MUDAR.ir('/'); });
+  setTimeout(function () { MUDAR.ir('/'); }, 6000);
+</script>
+</body>
+</html>
