@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Datart GenLab · mudança</title>
+<meta name="robots" content="noindex">
+<style>html,body{margin:0;background:#ecebe6;color:#1b1a17}body{font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:48px 16px}</style>
+</head>
+<body>
+<p>Trazendo o seu progresso para o endereço novo…</p>
+<script>
+// MUDANCA (s.72) -- fonte: cozinha/produtos/galeria/mudanca.html; publicada como produtos/mudanca.html.
+// Recebe do endereco antigo (vitorsaboya.github.io, pela pagina de aviso) o progresso salvo dos jogos e o grava
+// AQUI, no endereco novo: so as chaves conhecidas, e nunca por cima de um progresso que ja exista aqui (o que foi
+// jogado na casa nova vale mais). O pacote vem no #fragmento, que nao sai do aparelho.
+(function () {
+  var CHAVES = ['joguinho-aprender-ler-v1', 'brigada-da-familia-v1', 'benjogos_v2_jogadores', 'benjogos_v2_sessao', 'matematica-benjamin-v1'];
+  var destino = '/';
+  try {
+    var pacote = JSON.parse(decodeURIComponent(location.hash.slice(1)));
+    // so caminho local: comeca com uma barra e nao com // ou /\ (que o navegador leria como outro site)
+    if (typeof pacote.d === 'string' && /^\/(?![\/\\])/.test(pacote.d)) destino = pacote.d;
+    var salvo = pacote.s || {};
+    CHAVES.forEach(function (k) {
+      if (typeof salvo[k] === 'string' && localStorage.getItem(k) === null) localStorage.setItem(k, salvo[k]);
+    });
+  } catch (e) { /* pacote torto ou sem armazenamento: segue para o destino sem trazer nada */ }
+  location.replace(destino);
+})();
+</script>
+</body>
+</html>
