@@ -209,7 +209,8 @@ const Brigada = (function () {
     desfiar: { nome: 'Desfiar com dois garfos', emoji: '🍗', passos: ['Um garfo segura o pedaço parado, com os dentes para baixo.', 'O outro garfo puxa as fibras para o lado contrário.', 'Puxe sempre no sentido dos fiozinhos da carne.'], dica: 'Frango ainda morno desfia muito mais fácil que gelado.' },
     'molho-pote': { nome: 'Molho no pote', emoji: '🫙', passos: ['A conta do molho: 3 colheres de azeite para 1 de limão.', 'Sal e tempero entram no pote antes de fechar.', 'Tampa bem fechada e chacoalhe 20 vezes, até o molho ficar turvo.'], dica: 'Azeite e limão não se misturam sozinhos: é a chacoalhada que junta.' },
     amassar: { nome: 'Amassar', emoji: '🥔', passos: ['Tigela firme na mesa; a outra mão segura a borda.', 'Garfo ou espremedor de pé, apertando de cima para baixo.', 'Amasse tudo antes de pôr o líquido, senão sobram pedaços.'], dica: 'Batata quente amassa melhor: espere só o suficiente para não queimar.' },
-    enrolar: { nome: 'Enrolar bolinhas', emoji: '🟤', passos: ['Mãos levemente úmidas, para a massa não grudar.', 'A mesma colherada de massa para cada bolinha: todas do mesmo tamanho.', 'Role entre as palmas, em círculos, sem apertar.'], dica: 'Se a massa gruda demais, 10 minutos de geladeira ajudam.' }
+    enrolar: { nome: 'Enrolar bolinhas', emoji: '🟤', passos: ['Mãos levemente úmidas, para a massa não grudar.', 'A mesma colherada de massa para cada bolinha: todas do mesmo tamanho.', 'Role entre as palmas, em círculos, sem apertar.'], dica: 'Se a massa gruda demais, 10 minutos de geladeira ajudam.' },
+    'ponto-do-macarrao': { nome: 'O ponto do macarrão', emoji: '🍝', passos: ['O tempo do pacote é um palpite: quem decide é a mordida.', 'O adulto pesca um fio com o garfo e deixa esfriar 1 minuto no prato.', 'Morda no meio: pontinho branco e duro pede mais 1 minuto; macio e firme, está pronto.'], dica: 'Macarrão mole demais não volta atrás: provem 1 minuto antes do pacote mandar.' }
   };
 
   const NIVEIS = [
@@ -508,7 +509,28 @@ const Brigada = (function () {
         { texto: 'Queijo por cima, depois tomates e azeitonas, e orégano de bem alto.', papel: 'mirim' },
         { texto: 'Micro-ondas por cerca de 1 minuto, até o queijo derreter.', papel: 'sous', alerta: 'calor', timer_s: 60 },
         { texto: 'Queijo derretido queima mais do que parece: esperem 2 minutos.', papel: 'guarda', alerta: 'calor', timer_s: 120 },
-        { texto: 'Prove. A borda ficou macia ou crocante? Que cobertura vocês trocariam?', papel: 'cronista' } ] }
+        { texto: 'Prove. A borda ficou macia ou crocante? Que cobertura vocês trocariam?', papel: 'cronista' } ] },
+
+    // ---- nível 3: o primeiro prato de fogão. Fogo e air fryer ficam com o Sous-chef; a criança lidera, conta, quebra, bate e prova o ponto
+    { id: 'macarrao-ovo-almondega', nome: 'Macarrão com ovo mexido e almôndegas', emoji: '🍝', nivel: 3, refeicao: 'almoco', tecnica: 'ponto-do-macarrao', carteirinhas: [], porcoes: 4, tempo_min: 30,
+      ingredientes: [
+        { item: 'macarrão (parafuso ou espaguete)', qtd: '300 g' }, { item: 'ovo', qtd: '4' }, { item: 'almôndega congelada', qtd: '4 por pessoa' },
+        { item: 'manteiga', qtd: '2 colheres de sopa' }, { item: 'sal', qtd: '1 colher de sopa + 1 pitada' },
+        { item: 'queijo ralado (opcional)', qtd: '4 colheres de sopa' }, { item: 'água', qtd: '3 litros' } ],
+      utensilios: ['panela grande com tampa', 'escorredor', 'frigideira antiaderente', 'espátula de silicone', 'tigela', 'potinho', 'garfo', 'air fryer', 'pegador', 'luva ou pano grosso', 'pratos, garfos e copos'],
+      passos: [
+        { texto: 'Panela com 3 litros de água no fogo alto, tampada, cabo virado para dentro. A partir de agora, fogão e air fryer são Zona Quente.', papel: 'sous', alerta: 'calor' },
+        { texto: 'Jogo do chute: olhem o relógio. Em quantos minutos a água vai ferver? Cada um chuta um número e o Cronista anota.', papel: 'cronista' },
+        { texto: 'Contem as almôndegas: 4 para cada pessoa. Quantas dá ao todo? Arrumem na cesta fria da air fryer, sem empilhar. Depois, mãos lavadas.', papel: 'mise' },
+        { texto: 'Quebre os 4 ovos no potinho, um de cada vez, e passe para a tigela. Uma pitada de sal e bata com o garfo até ficar tudo amarelo.', papel: 'chef' },
+        { texto: 'Cesta na air fryer: 200 °C por 12 minutos (ou o tempo da embalagem). Na metade, o adulto chacoalha a cesta. Ela apita sozinha no fim.', papel: 'sous', alerta: 'eletrico' },
+        { texto: 'Ferveu! Quem chutou mais perto? O adulto põe 1 colher de sal e o macarrão e mexe. Timer de 8 minutos (ou o tempo do pacote).', papel: 'sous', alerta: 'calor', timer_s: 480 },
+        { texto: 'Enquanto o macarrão cozinha, ponham a mesa: um prato, um garfo e um copo para cada pessoa da brigada.', papel: 'mirim' },
+        { texto: 'Ovo mexido: frigideira em fogo baixo, 1 colher de manteiga, os ovos e a espátula mexendo sem parar. Sai do fogo ainda molhadinho.', papel: 'sous', alerta: 'calor' },
+        { texto: 'Ponto do macarrão: o adulto pesca um fio e põe no prato. Esperem 1 minuto e mordam. Durinho no meio? Mais 1 minuto. Macio e firme? Pronto!', papel: 'chef', timer_s: 60 },
+        { texto: 'O adulto escorre o macarrão (o vapor queima), devolve à panela desligada, mistura o ovo e a outra colher de manteiga e serve com as almôndegas.', papel: 'sous', alerta: 'calor' },
+        { texto: 'Queijo por cima e paciência: almôndega guarda calor por dentro. Todo mundo espera 2 minutos antes da primeira mordida.', papel: 'guarda', alerta: 'calor', timer_s: 120 },
+        { texto: 'Prove. O ovo ficou molhadinho? O macarrão, no ponto? A almôndega ficou crocante por fora?', papel: 'cronista' } ] }
   ];
 
   const EM_BREVE = [
@@ -968,7 +990,7 @@ const Brigada = (function () {
       { k: 'cabelo', t: 'Cabelo preso e manga dobrada' },
       { k: 'bancada', t: 'Bancada limpa e pano úmido embaixo da tábua' }
     ];
-    if (quente || B.temCriancaPequena(E)) itens.push({ k: 'zona', t: 'Zona Quente combinada: só o Sous-chef chega perto do fogão e do micro-ondas' });
+    if (quente || B.temCriancaPequena(E)) itens.push({ k: 'zona', t: 'Zona Quente combinada: só o Sous-chef chega perto do fogão, do micro-ondas e da air fryer' });
     const tudo = itens.every(i => T.ritual[i.k]);
     return barraSessao('Ritual de abertura') + `
       <div class="pilha">

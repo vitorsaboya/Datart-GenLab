@@ -115,6 +115,14 @@
   teste('nível 2 pede a Carteira de Faca e usa a garra ou a ponte', () => {
     for (const r of B.RECEITAS.filter(r => r.nivel === 2)) { igual(r.carteirinhas, ['faca-pequena'], r.id); verdade(['garra', 'ponte'].includes(r.tecnica), r.id); }
   });
+  teste('nível 3, o primeiro prato de fogão: sem carteirinha, a criança lidera e o adulto é o Sous-chef', () => {
+    const r = B.receita('macarrao-ovo-almondega');
+    verdade(r && r.nivel === 3 && r.refeicao === 'almoco', 'receita');
+    const e = brigada([['Pai', 40], ['Ben', 8]]);
+    igual(B.statusReceita(e, r.id).aviso, '');
+    const p = nomes(e, B.distribuirPapeis(e, r.id));
+    igual([p.chef, p.sous], ['Ben', 'Pai']);
+  });
   teste('as 6 receitas da v0.1 continuam com o mesmo id (o Livro guarda o id)', () => {
     for (const rid of ['salada-de-frutas', 'vitamina-de-banana', 'sanduiche-natural', 'bolo-de-caneca', 'espetinho-de-frutas', 'salada-tomate-pepino']) verdade(B.receita(rid), rid);
   });
