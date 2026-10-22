@@ -103,10 +103,17 @@
   footer{margin:18px 28px 0;padding:26px 0 40px;border-top:1px solid #cfcdc6;color:var(--mute);font-size:14px}
   footer .frase{margin:0;font-size:22px;line-height:1.4;letter-spacing:-.01em;color:var(--ink);max-width:48ch}
   footer .desc{margin:14px 0 0;font-size:16px;line-height:1.5;max-width:62ch;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
-  footer .pe{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:30px}
-  footer .pe nav{display:flex;flex-wrap:wrap;gap:8px 20px}
+  /* s.80: os links alinham pela BASE do texto (a seta → vem de outra fonte, mais alta, e desalinhava "Quem somos") */
+  footer .links{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;margin-top:26px;font-size:15px}
+  footer .pe{margin-top:22px}
   footer a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
   footer a.casa{text-decoration:none;color:var(--mute)}
+  /* s.80: o Instagram em destaque, com o ícone dele em marca d'água (traço na cor da tinta, quase apagado) */
+  footer a.insta{position:relative;display:block;overflow:hidden;margin-top:24px;padding:20px 22px 22px;border:1px solid #cfcdc6;border-radius:6px;background:var(--card);text-decoration:none}
+  footer a.insta .r{position:relative;display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+  footer a.insta .h{position:relative;display:block;margin-top:4px;font-size:30px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  footer a.insta svg{position:absolute;right:-14px;top:50%;width:150px;height:150px;transform:translateY(-50%);color:var(--ink);opacity:.08;pointer-events:none}
+  footer a.insta:hover{border-color:var(--ink)} footer a.insta:hover .h{text-decoration:underline;text-underline-offset:5px}
 
   @media (max-width:760px){
     header{padding:18px 16px} .rot{margin:10px 16px 0}
@@ -120,6 +127,7 @@
     .texto{grid-template-columns:1fr;gap:6px;padding:16px 8px 0}
     .sobre{padding:0 16px 24px} .bloco{grid-template-columns:1fr;gap:8px} .bloco p{font-size:18px}
     footer{margin:14px 16px 0;padding:22px 0 32px} footer .frase{font-size:19px}
+    footer a.insta{padding:18px 16px 20px} footer a.insta .h{font-size:25px} footer a.insta svg{width:118px;height:118px;right:-12px}
   }
   @media (prefers-reduced-motion:reduce){ .porta img{transition:none} }
 </style>
@@ -158,8 +166,10 @@
 <footer>
   <p class="frase">O Datart GenLab é um laboratório onde dados públicos reais — climáticos, geográficos, ambientais, sociais — são transformados em arte.</p>
   <p class="desc"><span>Dado público vira obra navegável. E o mesmo jeito de fazer, levado para dentro de casa.</span><a class="casa" href="em-casa.html">Em casa</a></p>
-  <div class="pe"><nav><a href="sobre.html">Quem somos</a><a href="https://www.instagram.com/datartgenlab/">Instagram · @datartgenlab →</a><a href="https://andamento.datartgenlab.com.br/">Monitoramento da nuvem →</a></nav><span>Datart GenLab · 2026</span></div>
+  <nav class="links"><a href="sobre.html">Quem somos</a><a href="https://andamento.datartgenlab.com.br/">Monitoramento da nuvem →</a></nav>
+  <a class="insta" href="https://www.instagram.com/datartgenlab/" aria-label="Instagram @datartgenlab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.3"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg><span class="r">Instagram</span><span class="h">@datartgenlab →</span></a>
+  <div class="pe"><span>Datart GenLab · 2026</span></div>
 </footer>
-<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-22 00:33 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
+<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-22 00:39 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
 </body>
 </html>
