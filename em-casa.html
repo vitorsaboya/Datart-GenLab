@@ -13,7 +13,7 @@
 <meta property="og:title" content="Em casa · Datart GenLab" />
 <meta property="og:description" content="O mesmo jeito de fazer, levado para dentro de casa: jogos de estudo, um fliperama e uma cozinha da família, feitos sob medida e sem anúncio. O progresso fica salvo no aparelho de quem joga; só o placar do Arcade é compartilhado entre os jogadores." />
 <meta property="og:url" content="https://datart-genlab.pages.dev/em-casa.html" />
-<meta property="og:image" content="https://datart-genlab.pages.dev/capas/012-largo.jpg" />
+<meta property="og:image" content="https://datart-genlab.pages.dev/capas/012-heroi-1280.jpg" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -35,6 +35,11 @@
   header nav{display:flex;gap:20px;font-size:15px;color:var(--mute)}
   header nav a:hover,header nav a.on{color:var(--ink)}
   header p{margin:0;color:var(--mute);font-size:15px;max-width:52ch;text-align:right}
+  header nav{align-items:baseline}
+  header .direita{display:flex;align-items:baseline;gap:18px}
+  /* "Em casa" = botãozinho (s.80): a home é das obras; a casa vai ganhar login e tem outra linguagem */
+  a.casa{font-size:13.5px;color:var(--mute);border:1px solid #cfcdc6;border-radius:999px;padding:3px 11px;white-space:nowrap}
+  a.casa:hover,a.casa.on{color:var(--ink);border-color:var(--ink)}
 
   /* home: portas */
   .portas{display:grid;gap:14px;padding:0 14px 14px}
@@ -48,6 +53,8 @@
   .porta .n{position:absolute;top:18px;left:26px;z-index:1;font-size:14px;letter-spacing:.02em;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
   .dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .dois .porta{min-height:46vh}
+  .rot{display:inline-block;margin:12px 24px 0;font-size:15px;color:var(--mute)}
+  .rot:hover{color:var(--ink)}
   .lista{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:6px 14px 30px}
   .item{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:center;padding:10px;border-radius:6px;background:var(--card);transition:background .2s}
   .item:hover{background:#fff}
@@ -105,6 +112,7 @@
 
   @media (max-width:760px){
     header{flex-direction:column;padding:18px 16px;gap:10px} header p{text-align:left}
+    header .direita{flex-wrap:wrap;gap:10px 14px} .rot{margin:10px 16px 0}
     .portas{padding:0 8px 8px;gap:8px} .dois{grid-template-columns:1fr;gap:8px}
     .porta{min-height:52vh} .dois .porta{min-height:38vh}
     .porta .t{left:16px;right:16px;bottom:16px} .porta .n,.banner .num{left:16px}
@@ -120,7 +128,7 @@
 <body>
 <header>
   <div class="marca"><a class="logo" href="./">Datart GenLab</a><a class="quem" href="sobre.html">Quem somos</a></div>
-  <nav><a href="obras.html">Obras</a><a href="em-casa.html" class="on">Em casa</a><a href="raio-x/">Raio-X</a></nav>
+  <nav><a href="obras.html">Obras</a><a class="casa on" href="em-casa.html">Em casa</a></nav>
 </header>
 
 <main>
@@ -134,7 +142,7 @@
 </div>
 </main>
 
-<footer><span>Datart GenLab · 2026</span><span>Quer isto com o dado da sua empresa? Conversar</span></footer>
-<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-21 18:21 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
+<footer><span>Datart GenLab · 2026</span><span><a href="https://www.instagram.com/datartgenlab/">Instagram · @datartgenlab →</a></span></footer>
+<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-22 00:08 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
 </body>
 </html>

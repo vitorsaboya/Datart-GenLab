@@ -13,7 +13,7 @@
 <meta property="og:title" content="Datart GenLab" />
 <meta property="og:description" content="Dado público vira obra navegável. E o mesmo jeito de fazer, levado para dentro de casa." />
 <meta property="og:url" content="https://datart-genlab.pages.dev/" />
-<meta property="og:image" content="https://datart-genlab.pages.dev/capas/012-largo.jpg" />
+<meta property="og:image" content="https://datart-genlab.pages.dev/capas/012-heroi-1280.jpg" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -35,6 +35,11 @@
   header nav{display:flex;gap:20px;font-size:15px;color:var(--mute)}
   header nav a:hover,header nav a.on{color:var(--ink)}
   header p{margin:0;color:var(--mute);font-size:15px;max-width:52ch;text-align:right}
+  header nav{align-items:baseline}
+  header .direita{display:flex;align-items:baseline;gap:18px}
+  /* "Em casa" = botãozinho (s.80): a home é das obras; a casa vai ganhar login e tem outra linguagem */
+  a.casa{font-size:13.5px;color:var(--mute);border:1px solid #cfcdc6;border-radius:999px;padding:3px 11px;white-space:nowrap}
+  a.casa:hover,a.casa.on{color:var(--ink);border-color:var(--ink)}
 
   /* home: portas */
   .portas{display:grid;gap:14px;padding:0 14px 14px}
@@ -48,6 +53,8 @@
   .porta .n{position:absolute;top:18px;left:26px;z-index:1;font-size:14px;letter-spacing:.02em;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
   .dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .dois .porta{min-height:46vh}
+  .rot{display:inline-block;margin:12px 24px 0;font-size:15px;color:var(--mute)}
+  .rot:hover{color:var(--ink)}
   .lista{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:6px 14px 30px}
   .item{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:center;padding:10px;border-radius:6px;background:var(--card);transition:background .2s}
   .item:hover{background:#fff}
@@ -105,6 +112,7 @@
 
   @media (max-width:760px){
     header{flex-direction:column;padding:18px 16px;gap:10px} header p{text-align:left}
+    header .direita{flex-wrap:wrap;gap:10px 14px} .rot{margin:10px 16px 0}
     .portas{padding:0 8px 8px;gap:8px} .dois{grid-template-columns:1fr;gap:8px}
     .porta{min-height:52vh} .dois .porta{min-height:38vh}
     .porta .t{left:16px;right:16px;bottom:16px} .porta .n,.banner .num{left:16px}
@@ -120,38 +128,38 @@
 <body>
 <header>
   <div class="marca"><a class="logo" href="./">Datart GenLab</a><a class="quem" href="sobre.html">Quem somos</a></div>
-  <p>Dado público vira obra navegável. E o mesmo jeito de fazer, levado para dentro de casa.</p>
+  <div class="direita"><p>Dado público vira obra navegável. E o mesmo jeito de fazer, levado para dentro de casa.</p><a class="casa" href="em-casa.html">Em casa</a></div>
 </header>
 
 <main>
 <div class="portas">
-  <a class="porta" href="obras.html">
-    <img src="capas/012-largo.jpg" alt="Poeira do Saara cruzando o Atlântico em 15 de fevereiro de 2007, dado MERRA-2" />
-    <span class="n">obras de dado · 3</span>
-    <div class="t"><h2>Obras</h2><span class="k">Poeira do Saara, El Niño, a Terra sem água. Globos que você gira, guiados por dado real.</span></div>
+  <a class="porta" href="obras.html#012-sahara-amazonia">
+    <img src="capas/012-heroi.jpg" srcset="capas/012-heroi-1280.jpg 1280w, capas/012-heroi.jpg 2560w" sizes="100vw" alt="Poeira do Saara cruzando o Atlântico em 15 de fevereiro de 2007, dado MERRA-2" style="object-position:52% 50%" />
+    <span class="n">obra 012 · NASA MERRA-2</span>
+    <div class="t"><h2>A Ponte de Poeira</h2><span class="k">Todo ano um rio de poeira sai do Saara, cruza o Atlântico e fertiliza a Amazônia.</span></div>
   </a>
   <div class="dois">
-  <a class="porta" href="em-casa.html">
-    <img src="capas/app-ilha.jpg" alt="A Ilha do Pinguim, jogo feito em casa" />
-    <span class="n">feito em casa · 5</span>
-    <div class="t"><h2>Em casa</h2><span class="k">Jogos de estudo e uma cozinha da família. O mesmo método, para dentro de casa.</span></div>
+  <a class="porta" href="obras.html#011-el-nino">
+    <img src="capas/011-heroi.jpg" srcset="capas/011-heroi-1280.jpg 1280w, capas/011-heroi.jpg 2560w" sizes="(max-width: 760px) 100vw, 50vw" alt="O Pacífico em setembro de 2026, temperatura real do mar" style="object-position:50% 45%" />
+    <span class="n">obra 011 · NOAA OISST</span>
+    <div class="t"><h2>El Niño</h2><span class="k">O Pacífico mês a mês pela temperatura real do mar, até o maior pico da série, em setembro de 2026.</span></div>
   </a>
-  <a class="porta" href="raio-x/">
-    <img src="capas/raiox.jpg" alt="O mapa-grafo do laboratório" />
-    <span class="n">o laboratório</span>
-    <div class="t"><h2>Raio-X</h2><span class="k">Como isto é feito, por dentro.</span></div>
+  <a class="porta" href="obras.html#013-terra-nua">
+    <img src="capas/013-heroi.jpg" srcset="capas/013-heroi-1280.jpg 1280w, capas/013-heroi.jpg 2560w" sizes="(max-width: 760px) 100vw, 50vw" alt="O relevo do planeta sem água, pintado por altitude" style="object-position:55% 30%" />
+    <span class="n">obra 013 · relevo global + polos de Euler (NNR-MORVEL56)</span>
+    <div class="t"><h2>A Terra Nua</h2><span class="k">O relevo do planeta sem água, com as placas tectônicas andando 50 milhões de anos.</span></div>
   </a>
   </div>
 </div>
+<a class="rot" href="obras.html#arquivo">Arquivo · os primeiros estudos</a>
 <div class="lista">
-  <a class="item" href="obras.html#012-sahara-amazonia"><img src="capas/012-globo.jpg" alt="" loading="lazy" /><div><b>A Ponte de Poeira</b><span>012 · NASA MERRA-2 · dez 2006 – abr 2007</span><span>atualizada em 12 set 2026</span></div></a>
-  <a class="item" href="obras.html#011-el-nino"><img src="capas/011-globo.jpg" alt="" loading="lazy" /><div><b>El Niño</b><span>011 · NOAA OISST · jan 2020 – set 2026</span><span>atualizada em 19 out 2026</span></div></a>
-  <a class="item" href="obras.html#013-terra-nua"><img src="capas/013-globo.jpg" alt="" loading="lazy" /><div><b>A Terra Nua</b><span>013 · relevo global + polos de Euler (NNR-MORVEL56) · hoje → +50 milhões de anos (cenário)</span><span>atualizada em 12 set 2026</span></div></a>
-  <a class="item" href="obras.html#arquivo"><img src="capas/000-laminar.jpg" alt="" loading="lazy" /><div><b>Arquivo</b><span>os primeiros estudos · 3</span><span>a origem do lab</span></div></a>
+  <a class="item" href="obras.html#000-laminar"><img src="capas/000-laminar.jpg" alt="" loading="lazy" /><div><b>Laminar</b><span>000 · nenhum (matemática pura)</span><span>estudo de fundação, 2026</span></div></a>
+  <a class="item" href="obras.html#001-memoria-fluida"><img src="capas/001-memoria-fluida.jpg" alt="" loading="lazy" /><div><b>Memória Fluida</b><span>001 · temperatura simulada</span><span>estudo de maio de 2026</span></div></a>
+  <a class="item" href="obras.html#007-oceano-ferly"><img src="capas/007-oceano-ferly.jpg" alt="" loading="lazy" /><div><b>Oceano Ferly</b><span>007 · NOAA OISST (e boias TAO)</span><span>maio de 2026 · série 2020–2024</span></div></a>
 </div>
 </main>
 
-<footer><span>Datart GenLab · 2026</span><span>Quer isto com o dado da sua empresa? Conversar</span></footer>
-<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-19 21:35 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
+<footer><span>Datart GenLab · 2026</span><span><a href="https://www.instagram.com/datartgenlab/">Instagram · @datartgenlab →</a></span></footer>
+<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-22 00:08 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
 </body>
 </html>
