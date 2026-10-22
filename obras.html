@@ -26,20 +26,12 @@
   body{background:var(--paper);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
   a{color:inherit;text-decoration:none}
 
-  /* topo comum */
-  header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:22px 28px}
-  .marca{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+  /* topo comum: só a logo (s.80) */
+  header{padding:22px 28px}
   .logo{font-weight:800;font-size:22px;letter-spacing:-.02em}
-  .marca a.quem{font-size:15px;color:var(--mute);border-bottom:1px solid transparent}
-  .marca a.quem:hover,.marca a.quem.on{color:var(--ink);border-bottom-color:var(--ink)}
-  header nav{display:flex;gap:20px;font-size:15px;color:var(--mute)}
-  header nav a:hover,header nav a.on{color:var(--ink)}
-  header p{margin:0;color:var(--mute);font-size:15px;max-width:52ch;text-align:right}
-  header nav{align-items:baseline}
-  header .direita{display:flex;align-items:baseline;gap:18px}
-  /* "Em casa" = botãozinho (s.80): a home é das obras; a casa vai ganhar login e tem outra linguagem */
+  /* "Em casa" = botãozinho, no rodapé (s.80): a home é das obras; a casa vai ganhar login e tem outra linguagem */
   a.casa{font-size:13.5px;color:var(--mute);border:1px solid #cfcdc6;border-radius:999px;padding:3px 11px;white-space:nowrap}
-  a.casa:hover,a.casa.on{color:var(--ink);border-color:var(--ink)}
+  a.casa:hover{color:var(--ink);border-color:var(--ink)}
 
   /* home: portas */
   .portas{display:grid;gap:14px;padding:0 14px 14px}
@@ -107,42 +99,46 @@
   .bloco h2{margin:0;font-size:15px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
   .bloco p{margin:0 0 14px;font-size:20px;line-height:1.5;max-width:60ch}
 
-  footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 28px 40px;color:var(--mute);font-size:14px}
+  /* rodapé (s.80): o que é o lab, o texto e o botão de Em casa, Quem somos e o contato */
+  footer{margin:18px 28px 0;padding:26px 0 40px;border-top:1px solid #cfcdc6;color:var(--mute);font-size:14px}
+  footer .frase{margin:0;font-size:22px;line-height:1.4;letter-spacing:-.01em;color:var(--ink);max-width:48ch}
+  footer .desc{margin:14px 0 0;font-size:16px;line-height:1.5;max-width:62ch;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
+  footer .pe{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:30px}
+  footer .pe nav{display:flex;flex-wrap:wrap;gap:8px 20px}
   footer a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+  footer a.casa{text-decoration:none;color:var(--mute)}
 
   @media (max-width:760px){
-    header{flex-direction:column;padding:18px 16px;gap:10px} header p{text-align:left}
-    header .direita{flex-wrap:wrap;gap:10px 14px} .rot{margin:10px 16px 0}
+    header{padding:18px 16px} .rot{margin:10px 16px 0}
     .portas{padding:0 8px 8px;gap:8px} .dois{grid-template-columns:1fr;gap:8px}
-    .porta{min-height:52vh} .dois .porta{min-height:38vh}
+    /* no celular cada porta é um quadro 4:5 com o planeta inteiro (a capa "-celular" via <picture>) */
+    .porta,.dois .porta,.banner{min-height:calc((100vw - 16px) * 1.25)}
+    .porta picture img,.banner picture img{object-position:50% 40% !important}
     .porta .t{left:16px;right:16px;bottom:16px} .porta .n,.banner .num{left:16px}
     .lista,.apps{padding:6px 8px 24px;gap:8px}
-    .abre{padding:20px 16px} .obra{margin:0 8px 36px} .banner{min-height:46vh} .banner h2{left:16px;right:16px}
+    .abre{padding:20px 16px} .obra{margin:0 8px 36px} .banner h2{left:16px;right:16px}
     .texto{grid-template-columns:1fr;gap:6px;padding:16px 8px 0}
     .sobre{padding:0 16px 24px} .bloco{grid-template-columns:1fr;gap:8px} .bloco p{font-size:18px}
-    footer{padding:14px 16px 32px}
+    footer{margin:14px 16px 0;padding:22px 0 32px} footer .frase{font-size:19px}
   }
   @media (prefers-reduced-motion:reduce){ .porta img{transition:none} }
 </style>
 </head>
 <body>
-<header>
-  <div class="marca"><a class="logo" href="./">Datart GenLab</a><a class="quem" href="sobre.html">Quem somos</a></div>
-  <nav><a href="obras.html" class="on">Obras</a><a class="casa" href="em-casa.html">Em casa</a></nav>
-</header>
+<header><a class="logo" href="./">Datart GenLab</a></header>
 
 <main>
 <section class="abre"><h1>Obras</h1><p>Cada obra parte de uma base pública real e pode ser aberta de volta ao dado que a gerou: cor, altura e movimento querem dizer algo, e a legenda diz o quê. Clique no nome da obra para entrar nela.</p></section>
 <article class="obra" id="012-sahara-amazonia">
-  <div class="banner"><img src="capas/012-heroi.jpg" srcset="capas/012-heroi-1280.jpg 1280w, capas/012-heroi.jpg 2560w" sizes="100vw" alt="Poeira do Saara cruzando o Atlântico em 15 de fevereiro de 2007, dado MERRA-2" style="object-position:52% 50%" loading="lazy" /><span class="num">obra 012</span><h2><a href="012-sahara-amazonia/" title="abrir a obra">A Ponte de Poeira</a></h2></div>
+  <div class="banner"><picture><source media="(max-width: 760px)" srcset="capas/012-heroi-celular.jpg" /><img src="capas/012-heroi.jpg" srcset="capas/012-heroi-1280.jpg 1280w, capas/012-heroi.jpg 2560w" sizes="100vw" alt="Poeira do Saara cruzando o Atlântico em 15 de fevereiro de 2007, dado MERRA-2" style="object-position:52% 50%" loading="lazy" /></picture><span class="num">obra 012</span><h2><a href="012-sahara-amazonia/" title="abrir a obra">A Ponte de Poeira</a></h2></div>
   <div class="texto"><div><p>Todo ano, um rio de poeira mineral sai do Saara, atravessa mais de 5.000 km de Atlântico e pousa na Amazônia, levando o fósforo que fertiliza a floresta. A obra dá corpo a essa ponte invisível: a nuvem é um volume 3D calculado da reanálise MERRA-2 da NASA, o vento real empurra a poeira de uma semana para a outra, e no chão acende a poeira que chega.</p><p>A janela é a estação de dezembro de 2006 a abril de 2007, a de maior transporte para a Amazônia na série do satélite CALIPSO.</p></div><div><h3>Como ler</h3><ul><li>No ar, a cor é a concentração de poeira (com um máximo fixo para todas as datas) e a altura é a altitude real: a rota sul voa baixo, perto de 1 km.</li><li>No chão, a cor é a poeira acumulada e o brilho é a chegada.</li><li>Arraste a barra do tempo: a nuvem flui empurrada pelo vento medido.</li></ul><dl class="ficha"><dt>dado</dt><dd>NASA MERRA-2</dd><dt>período</dt><dd>dez 2006 – abr 2007</dd><dt>estado</dt><dd>atualizada em 12 set 2026</dd></dl><p class="aberto">Em aberto: A data na tela se sobrepõe à legenda; entre uma semana e outra o movimento é interpolado pelo vento, não medido; pesa em celulares mais simples.</p></div></div>
 </article>
 <article class="obra" id="011-el-nino">
-  <div class="banner"><img src="capas/011-heroi.jpg" srcset="capas/011-heroi-1280.jpg 1280w, capas/011-heroi.jpg 2560w" sizes="100vw" alt="O Pacífico em setembro de 2026, temperatura real do mar" style="object-position:50% 45%" loading="lazy" /><span class="num">obra 011</span><h2><a href="011-el-nino/cinematic.html" title="abrir a obra">El Niño</a></h2></div>
+  <div class="banner"><picture><source media="(max-width: 760px)" srcset="capas/011-heroi-celular.jpg" /><img src="capas/011-heroi.jpg" srcset="capas/011-heroi-1280.jpg 1280w, capas/011-heroi.jpg 2560w" sizes="100vw" alt="O Pacífico em setembro de 2026, temperatura real do mar" style="object-position:50% 45%" loading="lazy" /></picture><span class="num">obra 011</span><h2><a href="011-el-nino/cinematic.html" title="abrir a obra">El Niño</a></h2></div>
   <div class="texto"><div><p class="fio"><b>Na história do lab</b>Tem um avô no arquivo: a Oceano Ferly (007) já fazia, em maio de 2026, um globo do mar com o mesmo dado de satélite. A El Niño foi aberta sem partir dela, de propósito, e acabou reencontrando o mesmo caminho.</p><p>Um globo do Pacífico onde a temperatura real da superfície do mar, medida por satélite pela NOAA, governa a obra mês a mês. Abre com um filme narrado que mergulha no globo, e a série segue até o mês mais recente publicado.</p><p>Em setembro de 2026 a região Niño 3.4 marcou +2,53 °C acima do normal, o maior valor da série, acima do pico de dezembro de 2023 (+2,32 °C).</p></div><div><h3>Como ler</h3><ul><li>A cor é a temperatura real do mar, de 0 a 32 °C.</li><li>A agitação e o brilho da água são a anomalia: o mar se revolve onde está mais quente que o normal.</li><li>Na linha do tempo, os dois picos aparecem marcados com o valor.</li></ul><dl class="ficha"><dt>dado</dt><dd>NOAA OISST</dd><dt>período</dt><dd>jan 2020 – set 2026</dd><dt>estado</dt><dd>atualizada em 19 out 2026</dd></dl><p class="aberto">Em aberto: O filme de abertura ainda chama dezembro de 2023 de auge; o novo pico está só na linha do tempo, por escolha.</p></div></div>
 </article>
 <article class="obra" id="013-terra-nua">
-  <div class="banner"><img src="capas/013-heroi.jpg" srcset="capas/013-heroi-1280.jpg 1280w, capas/013-heroi.jpg 2560w" sizes="100vw" alt="O relevo do planeta sem água, pintado por altitude" style="object-position:55% 30%" loading="lazy" /><span class="num">obra 013</span><h2><a href="013-terra-nua/" title="abrir a obra">A Terra Nua</a></h2></div>
+  <div class="banner"><picture><source media="(max-width: 760px)" srcset="capas/013-heroi-celular.jpg" /><img src="capas/013-heroi.jpg" srcset="capas/013-heroi-1280.jpg 1280w, capas/013-heroi.jpg 2560w" sizes="100vw" alt="O relevo do planeta sem água, pintado por altitude" style="object-position:55% 30%" loading="lazy" /></picture><span class="num">obra 013</span><h2><a href="013-terra-nua/" title="abrir a obra">A Terra Nua</a></h2></div>
   <div class="texto"><div><p>O planeta sem água e sem nome: o relevo global, terra e fundo do oceano juntos, pintado por altitude e esculpido por sombra dura. Cada placa tectônica gira pelo seu polo de Euler real e leva o relevo junto, cinquenta milhões de anos à frente.</p><p>É um cenário, não uma previsão: a velocidade de hoje é estendida em linha reta.</p></div><div><h3>Como ler</h3><ul><li>A cor é a altitude, numa rampa única para o planeta inteiro; a sombra vem de um sol fixo.</li><li>Onde nenhuma placa cobre, fica um vazio declarado, não pintado. Onde duas se sobrepõem, a mais baixa afunda.</li></ul><dl class="ficha"><dt>dado</dt><dd>relevo global + polos de Euler (NNR-MORVEL56)</dd><dt>período</dt><dd>hoje → +50 milhões de anos (cenário)</dd><dt>estado</dt><dd>atualizada em 12 set 2026</dd></dl><p class="aberto">Em aberto: Em 50 milhões de anos sobra um vazio de cerca de 20% da superfície, e as bordas dos rasgos ficam serrilhadas.</p></div></div>
 </article>
 <section class="abre sub" id="arquivo"><h2>Arquivo</h2><p>Antes das obras acima vieram os estudos. O lab começou sem dado nenhum, só com matemática, para aprender como uma estrutura aparece pelo movimento (000). Depois deixou um dado comandar o movimento (001) e, dali, foi olhar a superfície do mar num globo (007), o caminho que acabou no El Niño. São de antes da regra de que toda obra parte de dado público real: estão aqui pelo que ensinaram, e o que cada um deixou em aberto vem dito. Vão entrando aos poucos, à medida que são resgatados.</p></section>
@@ -160,7 +156,11 @@
 </article>
 </main>
 
-<footer><span>Datart GenLab · 2026</span><span><a href="https://www.instagram.com/datartgenlab/">Instagram · @datartgenlab →</a></span></footer>
-<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-22 00:08 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
+<footer>
+  <p class="frase">O Datart GenLab é um laboratório onde dados públicos reais — climáticos, geográficos, ambientais, sociais — são transformados em arte.</p>
+  <p class="desc"><span>Dado público vira obra navegável. E o mesmo jeito de fazer, levado para dentro de casa.</span><a class="casa" href="em-casa.html">Em casa</a></p>
+  <div class="pe"><nav><a href="sobre.html">Quem somos</a><a href="https://www.instagram.com/datartgenlab/">Instagram · @datartgenlab →</a></nav><span>Datart GenLab · 2026</span></div>
+</footer>
+<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-22 00:22 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
 </body>
 </html>
