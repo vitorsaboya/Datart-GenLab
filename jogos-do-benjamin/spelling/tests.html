@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Testes — Spelling Bee</title>
+<style>
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: #f8fafc; color: #111827; margin: 0; padding: 16px; font-size: 16px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  #resumo { font-size: 20px; font-weight: 800; padding: 10px 14px; border-radius: 12px; margin: 10px 0 16px; }
+  #resumo.ok { background: #dcfce7; color: #14532d; } #resumo.falha { background: #fee2e2; color: #7f1d1d; }
+  h2 { font-size: 18px; margin: 18px 0 6px; }
+  .t { padding: 3px 0; font-family: Consolas, monospace; font-size: 14px; }
+  .t.ok::before { content: "✔ "; color: #15803d; } .t.falha { color: #b91c1c; } .t.falha::before { content: "✘ "; }
+  .t small { color: #6b7280; }
+</style>
+</head>
+<body>
+<h1>Testes da lógica pura — Spelling Bee</h1>
+<div>Carrega o bloco <code>&lt;script id="logica"&gt;</code> do <code>index.html</code> e testa. Abrir por http (ex.: 127.0.0.1).</div>
+<div id="resumo">rodando…</div>
+<div id="saida"></div>
+<script>
+(async function () {
+  const saida = document.getElementById('saida');
+  let total = 0, falhas = 0; const resultados = [];
+  const secao = t => { const h = document.createElement('h2'); h.textContent = t; saida.appendChild(h); };
+  const teste = async (nome, fn) => {
+    total++; const d = document.createElement('div'); d.className = 't';
+    try { await fn(); d.classList.add('ok'); d.textContent = nome; resultados.push({ nome, ok: true }); }
+    catch (e) { falhas++; d.classList.add('falha'); d.innerHTML = nome + ' <small>' + String(e && e.message || e) + '</small>'; resultados.push({ nome, ok: false, erro: String(e && e.message || e) }); }
+    saida.appendChild(d);
+  };
+  const igual = (a, b, msg) => { const A = JSON.stringify(a), B = JSON.stringify(b); if (A !== B) throw new Error((msg ? msg + ': ' : '') + A + ' ≠ ' + B); };
+  const verdade = (c, msg) => { if (!c) throw new Error(msg || 'falso'); };
+
+  let L;
+  try {
+    const html = await (await fetch('index.html', { cache: 'no-store' })).text();
+    const b = html.match(/<script id="logica">([\s\S]*?)<\/script>/);
+    L = new Function(b[1] + '\nreturn Logica;')();
+  } catch (e) { secao('carregar'); await teste('carregar a lógica do index.html', () => { throw e; }); }
+
+  if (L) {
+    // Gabarito curado À MÃO a partir do PDF da escola (oráculo independente — D-JC-2): contagens por nível e palavras-âncora.
+    const PDF = { 1: [32, 'book', 'doctor'], 2: [37, 'scissors', 'trunk'], 3: [31, 'paintbrush', 'scientist'] };
+    secao('As 100 palavras do PDF');
+    await teste('100 palavras, 32 fáceis + 37 médias + 31 difíceis', () => {
+      igual(L.PALAVRAS.length, 100);
+      for (const n of [1, 2, 3]) { const ws = L.NIVEIS[n - 1].palavras; igual(ws.length, PDF[n][0], 'nível ' + n); igual(ws[0], PDF[n][1]); igual(ws[ws.length - 1], PDF[n][2]); }
+    });
+    await teste('sem repetidas, só letras minúsculas a–z', () => {
+      igual(new Set(L.PALAVRAS.map(p => p.w)).size, 100);
+      L.PALAVRAS.forEach(p => verdade(/^[a-z]+$/.test(p.w), p.w));
+    });
+    await teste('as palavras difíceis da lista estão escritas certo (conferidas à mão)', () => {
+      const ws = new Set(L.PALAVRAS.map(p => p.w));
+      ['refrigerator', 'scissors', 'giraffe', 'kangaroo', 'crocodile', 'umbrella', 'microwave', 'surprised', 'excited', 'between', 'yawning', 'thirsty', 'colorful', 'scientist', 'shelves', 'penguin', 'elephant', 'listening', 'raincoat', 'sweater'].forEach(w => verdade(ws.has(w), w));
+    });
+    await teste('cada palavra tem a sua figura recortada do card (img/<palavra>.jpg)', async () => {
+      const faltam = [];
+      await Promise.all(L.PALAVRAS.map(async p => { const r = await fetch('img/' + p.w + '.jpg', { method: 'HEAD', cache: 'no-store' }); if (!r.ok) faltam.push(p.w); }));
+      igual(faltam, []);
+    });
+
+    secao('Letras');
+    await teste('26 letras, cada uma com a dica de pronúncia', () => {
+      igual(L.LETRAS.length, 26); L.LETRAS.forEach(l => verdade(L.DICA_PT[l], l));
+      igual(new Set(Object.values(L.DICA_PT)).size, 26);
+    });
+    await teste('dicas conferidas à mão nas primas que mais confundem', () => {
+      igual([L.DICA_PT.A, L.DICA_PT.E, L.DICA_PT.I, L.DICA_PT.G, L.DICA_PT.J, L.DICA_PT.H, L.DICA_PT.Y, L.DICA_PT.R], ['êi', 'í', 'ái', 'djí', 'djêi', 'êitch', 'uái', 'ár']);
+    });
+    await teste('opções de letra: 4 distintas, a certa está lá, e as primas aparecem (5000 sorteios)', () => {
+      const r = L.criarRng(1);
+      for (let i = 0; i < 5000; i++) {
+        const l = L.LETRAS[i % 26], o = L.opcoesLetra(r, l);
+        igual(o.length, 4); igual(new Set(o).size, 4); verdade(o.includes(l), l);
+        const pr = L.primas(l); if (pr.length) verdade(o.some(x => pr.includes(x)), 'sem prima para ' + l);
+      }
+      const oE = L.opcoesLetra(L.criarRng(5), 'E'); verdade(oE.includes('I') || oE.includes('A'), 'E sem I/A');
+    });
+
+    secao('Atividades');
+    await teste('peças de montar: mesmas letras da palavra, nunca já na ordem certa', () => {
+      const r = L.criarRng(2);
+      L.PALAVRAS.forEach(({ w }) => { for (let k = 0; k < 30; k++) { const p = L.pecasMonta(r, w); igual(p.slice().sort().join(''), w.split('').sort().join(''), w); verdade(p.join('') !== w, w + ' veio pronta'); } });
+    });
+    await teste('buracos: quantidade pela tamanho, distintos, nunca a 1ª letra (todas as 100 × 50)', () => {
+      const r = L.criarRng(3);
+      L.PALAVRAS.forEach(({ w }) => { for (let k = 0; k < 50; k++) { const b = L.buracos(r, w); igual(b.length, L.quantosBuracos(w), w); igual(new Set(b).size, b.length); b.forEach(i => verdade(i > 0 && i < w.length, w + ' ' + i)); } });
+    });
+    await teste('buracos caem nas pegadinhas: o F dobrado de giraffe, o E final mudo', () => {
+      const r = L.criarRng(4);
+      let ff = 0, eFinal = 0;
+      for (let k = 0; k < 200; k++) { const b = L.buracos(r, 'giraffe'); if (b.includes(4) || b.includes(5)) ff++; if (L.buracos(r, 'stove').includes(4)) eFinal++; }
+      verdade(ff > 180, 'ff ' + ff); verdade(eFinal > 150, 'e final ' + eFinal);
+    });
+    await teste('verificar e comparar', () => {
+      verdade(L.verificar('giraffe', ' Giraffe ')); verdade(!L.verificar('giraffe', 'girafe'));
+      const c = L.comparar('giraffe', 'girafe'); igual(c.length, 7); igual(c.filter(x => !x.ok).length, 2);
+    });
+
+    secao('Missões');
+    await teste('missão de nível: 10 itens distintos, do nível (+ até 2 revisões dos anteriores), 3000 sorteios', () => {
+      const r = L.criarRng(6), e = L.estadoInicial();
+      for (let i = 0; i < 3000; i++) {
+        const nv = 1 + (i % 3), m = L.criarMissao(r, e, 'nivel' + nv, 10);
+        igual(m.fila.length, 10); igual(new Set(m.fila.map(x => x.w)).size, 10);
+        const fora = m.fila.filter(x => L.NIVEL_DE[x.w] !== nv);
+        verdade(fora.length <= (nv > 1 ? 2 : 0), 'revisões ' + fora.length);
+        fora.forEach(x => verdade(L.NIVEL_DE[x.w] < nv));
+      }
+    });
+    await teste('atividade sobe com o domínio: 0 monta, 1 falta, 2+ digita', () => {
+      igual([0, 1, 2, 3].map(L.atividadePara), ['monta', 'falta', 'digita', 'digita']);
+      const e = L.estadoInicial(); e.palavras.book = { m: 2, ac: 2, er: 0 };
+      igual(L.criarItemPalavra(L.criarRng(1), e, 'book').atividade, 'digita');
+      const f = L.criarItemPalavra(L.criarRng(1), e, 'giraffe', 'falta');
+      igual(f.opcoes.length, f.buracos.length); f.buracos.forEach((b, k) => verdade(f.opcoes[k].includes('giraffe'[b].toUpperCase())));
+    });
+    await teste('missão de letras: 12 itens; sequência traz todas as letras da palavra', () => {
+      const r = L.criarRng(7);
+      for (let i = 0; i < 2000; i++) {
+        const m = L.criarMissaoABC(r, L.estadoInicial()); igual(m.fila.length, 12);
+        m.fila.forEach(it => {
+          if (it.tipo === 'sequencia') { it.w.toUpperCase().split('').forEach(l => verdade(it.opcoes.includes(l), it.w)); igual(new Set(it.opcoes).size, it.opcoes.length); verdade(it.opcoes.length <= 7); }
+          else { verdade(it.opcoes.includes(it.l)); igual(it.opcoes.length, 4); }
+        });
+      }
+    });
+    await teste('errou → volta 2 a 4 depois; só a 1ª tentativa mexe no domínio', () => {
+      const r = L.criarRng(8), e = L.estadoInicial(), m = L.criarMissao(r, e, 'nivel1', 10);
+      const w = m.fila[0].w;
+      L.concluirItem(r, e, m, false, '2026-10-27');
+      igual(e.palavras[w].er, 1); igual(e.palavras[w].m, 0);
+      const pos = m.fila.findIndex(x => x.w === w); verdade(pos >= 2 && pos <= 4, 'pos ' + pos);
+      while (m.fila[0].w !== w) L.concluirItem(r, e, m, true, '2026-10-27');
+      L.concluirItem(r, e, m, true, '2026-10-27');
+      igual(e.palavras[w].ac, 0, 'retentativa não conta'); igual(m.fila.some(x => x.w === w), false);
+    });
+    await teste('errou digitando → volta como "letra que falta" (degrau mais baixo)', () => {
+      const r = L.criarRng(9), e = L.estadoInicial(); e.palavras.giraffe = { m: 2, ac: 2, er: 0 };
+      const m = { fila: [L.criarItemPalavra(r, e, 'giraffe'), { tipo: 'palavra', w: 'book', atividade: 'monta', pecas: ['o', 'b', 'o', 'k'], tent: 0 }], feitos: 0, dePrimeira: 0 };
+      igual(m.fila[0].atividade, 'digita');
+      L.concluirItem(r, e, m, false, 'd');
+      const v = m.fila.find(x => x.w === 'giraffe'); igual(v.atividade, 'falta'); igual(v.tent, 1);
+    });
+    await teste('as perguntas são só dados (salvam e recarregam iguais)', () => {
+      const r = L.criarRng(10), e = L.estadoInicial();
+      for (const a of ['nivel1', 'nivel2', 'nivel3', 'erros', 'palco']) { const m = L.criarMissao(r, e, a); igual(JSON.parse(JSON.stringify(m)), m); }
+      const m = L.criarMissaoABC(r, e); igual(JSON.parse(JSON.stringify(m)), m);
+    });
+
+    secao('Plano dos 3 dias');
+    await teste('dia 1 fáceis · dia 2 médias + erros · dia 3 difíceis + palco · depois só ensaio', () => {
+      verdade(L.planoDoDia(1).passos.includes('nivel1')); verdade(L.planoDoDia(2).passos.includes('nivel2') && L.planoDoDia(2).passos.includes('erros'));
+      verdade(L.planoDoDia(3).passos.includes('nivel3') && L.planoDoDia(3).passos.includes('palco')); verdade(L.planoDoDia(4).passos.includes('palco'));
+    });
+    await teste('dia do plano conta dias DE TREINO (pular um dia não pula conteúdo)', () => {
+      const e = L.estadoInicial();
+      igual(L.diaDoPlano(e, '2026-10-27'), 1);
+      L.marcarDia(e, '2026-10-27'); L.marcarDia(e, '2026-10-27'); igual(L.diaDoPlano(e, '2026-10-27'), 1);
+      igual(L.diaDoPlano(e, '2026-10-29'), 2); L.marcarDia(e, '2026-10-29'); igual(L.diaDoPlano(e, '2026-10-29'), 2);
+    });
+    await teste('passos feitos contam repetidos (2× fáceis pede 2 missões)', () => {
+      const e = L.estadoInicial(); L.registrarFeito(e, 'd', 'nivel1');
+      igual(L.passosFeitos(e, 'd', ['abc', 'nivel1', 'nivel1']), [false, true, false]);
+      L.registrarFeito(e, 'd', 'nivel1'); L.registrarFeito(e, 'd', 'abc');
+      igual(L.passosFeitos(e, 'd', ['abc', 'nivel1', 'nivel1']), [true, true, true]);
+    });
+
+    secao('Save que nunca quebra (D-JC-3)');
+    await teste('save vazio/estranho/antigo é completado; idempotente', () => {
+      const a = L.completarEstado({ palavras: { book: { m: 2 } }, prefs: { voz: false } });
+      igual(a.palavras.book, { m: 2, ac: 0, er: 0 }); igual(a.prefs.voz, false); igual(a.prefs.tamMissao, 10); igual(a.dias, []);
+      igual(L.completarEstado(JSON.parse(JSON.stringify(a))), a);
+      verdade(L.validarImportacao('lixo') === null); verdade(L.validarImportacao('[1,2]') === null);
+      igual(L.completarEstado({ atual: { fila: 'quebrado' } }).atual, null);
+    });
+
+    secao('Simulação de 3 dias de criança (nada trava, tudo avança)');
+    for (const taxa of [0.95, 0.6]) {
+      await teste(`criança que acerta ${Math.round(taxa * 100)}%: 3 dias seguindo o plano`, () => {
+        const r = L.criarRng(11), e = L.estadoInicial();
+        const dias = ['2026-10-27', '2026-10-28', '2026-10-29'];
+        dias.forEach(d => {
+          const n = L.diaDoPlano(e, d); L.marcarDia(e, d);
+          for (const passo of L.planoDoDia(n).passos) {
+            const m = passo === 'abc' ? L.criarMissaoABC(r, e) : L.criarMissao(r, e, passo, passo === 'palco' ? 15 : 10);
+            let guarda = 0;
+            while (m.fila.length) { L.concluirItem(r, e, m, r() < taxa, d); if (++guarda > 500) throw new Error('missão não termina: ' + passo); }
+            verdade(m.feitos >= m.total, 'feitos ' + m.feitos); L.registrarFeito(e, d, passo);
+          }
+          verdade(L.passosFeitos(e, d, L.planoDoDia(n).passos).every(Boolean));
+        });
+        const vistas = Object.keys(e.palavras).length;
+        verdade(vistas >= 60, 'vistas ' + vistas);
+        if (taxa > 0.9) verdade([1, 2, 3].every(n => L.progressoNivel(e, n).vistas >= 10), 'todo nível visto');
+      });
+    }
+  }
+
+  const resumo = document.getElementById('resumo');
+  resumo.textContent = falhas ? `${falhas} de ${total} testes FALHARAM` : `Todos os ${total} testes passaram ✔`;
+  resumo.className = falhas ? 'falha' : 'ok';
+  document.title = (falhas ? 'FALHA ' : 'OK ') + (total - falhas) + '/' + total;
+  window.RESULTADO = { total, falhas, falhos: resultados.filter(r => !r.ok) };
+})();
+</script>
+</body>
+</html>

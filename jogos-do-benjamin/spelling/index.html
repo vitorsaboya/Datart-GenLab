@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1c1917">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Spelling Bee">
+<meta name="robots" content="noindex">
+<title>Spelling Bee do Benjamin</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐝</text></svg>">
+<style>
+  :root { --mel: #facc15; --mel2: #f59e0b; --tinta: #1c1917; --papel: #fffbeb; --verde: #16a34a; --vermelho: #dc2626; --cinza: #78716c; --borda: #e7e5e4; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  html, body { background: var(--papel); color: var(--tinta); font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; font-size: 17px; min-height: 100%; }
+  body { padding: env(safe-area-inset-top) 0 calc(24px + env(safe-area-inset-bottom)); }
+  button { font-family: inherit; font-size: inherit; color: inherit; border: none; background: none; cursor: pointer; display: block; }
+  #topo { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--tinta); color: #fff; }
+  #logo { font-size: 30px; line-height: 1; user-select: none; -webkit-user-select: none; touch-action: none; }
+  #topo h1 { font-size: 18px; flex: 1; line-height: 1.15; }
+  #topo h1 small { display: block; font-size: 12px; font-weight: 500; color: var(--mel); }
+  .chip { background: rgba(255,255,255,.14); color: #fff; border-radius: 999px; padding: 7px 12px; font-size: 15px; font-weight: 700; }
+  #palco { max-width: 560px; margin: 0 auto; padding: 14px 16px; }
+  .cartao { background: #fff; border: 2px solid var(--borda); border-radius: 18px; padding: 14px; margin-bottom: 12px; }
+  .plano { background: var(--tinta); color: #fff; border: none; }
+  .plano h2 { font-size: 15px; color: var(--mel); letter-spacing: .04em; text-transform: uppercase; }
+  .plano p { margin-top: 4px; font-size: 16px; line-height: 1.4; }
+  .passos { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .passo { background: rgba(255,255,255,.1); border-radius: 12px; padding: 8px 10px; font-size: 14px; font-weight: 700; }
+  .passo.feito { background: var(--verde); }
+  .grande { width: 100%; text-align: left; display: flex; align-items: center; gap: 12px; background: #fff; border: 2px solid var(--borda); border-radius: 18px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 3px 0 var(--borda); }
+  .grande:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--borda); }
+  .grande .ic { font-size: 34px; width: 44px; text-align: center; flex: none; }
+  .grande b { display: block; font-size: 18px; }
+  .grande span { display: block; font-size: 14px; color: var(--cinza); margin-top: 2px; }
+  .grande.hoje { border-color: var(--mel2); box-shadow: 0 3px 0 var(--mel2); background: #fef9c3; }
+  .grande .barra { height: 8px; background: #f5f5f4; border-radius: 9px; margin-top: 6px; overflow: hidden; }
+  .grande .barra i { display: block; height: 100%; background: var(--mel2); border-radius: 9px; }
+  .grande .txt { flex: 1; min-width: 0; }
+  .favo-link { font-size: 14px; font-weight: 700; color: var(--mel2); padding: 8px; }
+  .linha { display: flex; gap: 8px; align-items: stretch; }
+  .linha .grande { flex: 1; }
+  /* missão */
+  #progresso { height: 10px; background: #f5f5f4; border-radius: 9px; overflow: hidden; margin-bottom: 12px; }
+  #progresso i { display: block; height: 100%; background: var(--mel2); transition: width .3s; }
+  .figura { display: block; margin: 0 auto; width: 170px; height: 150px; object-fit: contain; background: #fff; border-radius: 16px; }
+  .enunciado { text-align: center; font-size: 16px; color: var(--cinza); margin: 8px 0 6px; font-weight: 600; }
+  .ouvir { margin: 6px auto 4px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .ouvir button { background: var(--tinta); color: #fff; border-radius: 999px; padding: 10px 16px; font-weight: 700; font-size: 16px; }
+  .ouvir button.claro { background: #f5f5f4; color: var(--tinta); }
+  .palavra { display: flex; justify-content: center; gap: 5px; margin: 14px 0; min-height: 52px; }
+  .palavra.longa { gap: 3px; } .palavra.longa .casa { font-size: 23px; }
+  .casa { flex: 0 1 38px; min-width: 0; height: 50px; border-bottom: 4px solid var(--tinta); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; text-transform: lowercase; }
+  .casa.vazia { border-color: var(--mel2); background: #fef9c3; border-radius: 8px 8px 0 0; }
+  .casa.ok { color: var(--verde); } .casa.erro { color: var(--vermelho); }
+  .casa.mini { flex-basis: 26px; height: 38px; font-size: 22px; }
+  .pecas { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .peca { width: 52px; height: 56px; border-radius: 14px; background: var(--mel); box-shadow: 0 4px 0 var(--mel2); font-size: 30px; font-weight: 800; text-transform: lowercase; }
+  .peca:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--mel2); }
+  .peca.usada { visibility: hidden; }
+  .peca.nao { animation: treme .35s; background: #e7e5e4; box-shadow: 0 4px 0 #d6d3d1; color: #a8a29e; }
+  .opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .opcao { background: #fff; border: 3px solid var(--borda); border-radius: 16px; padding: 14px 6px; font-size: 30px; font-weight: 800; box-shadow: 0 4px 0 var(--borda); }
+  .opcao small { display: block; font-size: 14px; color: var(--cinza); font-weight: 600; margin-top: 2px; }
+  .opcao.nao { animation: treme .35s; opacity: .35; }
+  .opcao.sim { border-color: var(--verde); background: #dcfce7; }
+  .opcao.texto { font-size: 24px; }
+  @keyframes treme { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  #teclado { margin-top: 10px; user-select: none; -webkit-user-select: none; }
+  #teclado .fila { display: flex; justify-content: center; gap: 5px; margin-bottom: 6px; }
+  #teclado button { flex: 1; max-width: 44px; height: 50px; border-radius: 10px; background: #fff; border: 2px solid var(--borda); box-shadow: 0 3px 0 var(--borda); font-size: 21px; font-weight: 800; }
+  #teclado button:active { background: var(--mel); }
+  #teclado button.larga { max-width: 76px; flex: 1.7; font-size: 18px; }
+  .acao { width: 100%; margin-top: 12px; background: var(--tinta); color: #fff; border-radius: 16px; padding: 15px; font-size: 19px; font-weight: 800; box-shadow: 0 4px 0 #000; }
+  .acao.mel { background: var(--mel); color: var(--tinta); box-shadow: 0 4px 0 var(--mel2); }
+  .acao.verde { background: var(--verde); box-shadow: 0 4px 0 #14532d; }
+  .acao.vermelho { background: #fff; color: var(--vermelho); border: 3px solid var(--vermelho); box-shadow: none; }
+  .acao:disabled { opacity: .4; }
+  .duas { display: flex; gap: 10px; } .duas .acao { flex: 1; }
+  .feedback { text-align: center; font-size: 20px; font-weight: 800; margin-top: 10px; min-height: 28px; }
+  .feedback.ok { color: var(--verde); } .feedback.erro { color: var(--vermelho); }
+  .letrona { text-align: center; font-size: 96px; font-weight: 900; line-height: 1; margin: 10px 0 2px; }
+  .dica-pt { text-align: center; color: var(--cinza); font-size: 15px; }
+  /* favo */
+  .favo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .alveolo { background: #fff; border: 2px solid var(--borda); border-radius: 14px; padding: 6px 4px 8px; text-align: center; }
+  .alveolo img { width: 100%; height: 72px; object-fit: contain; }
+  .alveolo b { display: block; font-size: 16px; margin-top: 2px; }
+  .alveolo .est { font-size: 13px; letter-spacing: 1px; }
+  .alveolo.m3 { border-color: var(--mel2); background: #fef9c3; }
+  .abc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .abc button { background: #fff; border: 2px solid var(--borda); border-radius: 14px; padding: 8px 2px; font-size: 26px; font-weight: 900; }
+  .abc button small { display: block; font-size: 13px; font-weight: 600; color: var(--cinza); }
+  .abc button.firme { border-color: var(--mel2); background: #fef9c3; }
+  /* fim */
+  .fim { text-align: center; padding: 16px 0; }
+  .fim .grandao { font-size: 74px; }
+  .fim h2 { font-size: 26px; margin: 6px 0; }
+  .fim p { color: var(--cinza); font-size: 17px; }
+  /* painel */
+  .painel h2 { font-size: 18px; margin: 4px 0 8px; }
+  .painel table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .painel td, .painel th { text-align: left; padding: 5px 4px; border-bottom: 1px solid var(--borda); }
+  .painel textarea { width: 100%; height: 90px; font-size: 12px; font-family: Consolas, monospace; border: 1px solid var(--borda); border-radius: 8px; padding: 6px; }
+  .painel label { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--borda); }
+  .painel select, .painel input[type=checkbox] { font-size: 16px; transform: scale(1.2); }
+  .pequeno { font-size: 13px; color: var(--cinza); line-height: 1.4; }
+  #aviso { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 120px); background: var(--tinta); color: #fff; padding: 12px 18px; border-radius: 14px; font-weight: 700; transition: transform .25s; z-index: 9; max-width: 90vw; text-align: center; }
+  #aviso.ver { transform: translate(-50%, 0); }
+  #abertura { text-align: center; padding-top: 30px; }
+  #abertura .bee { font-size: 110px; }
+  #abertura h2 { font-size: 28px; margin: 10px 0 6px; }
+  #abertura p { color: var(--cinza); line-height: 1.5; }
+  @media (max-width: 370px) { .casa { font-size: 25px; } .peca { width: 44px; } #teclado button { height: 46px; font-size: 18px; } }
+</style>
+</head>
+<body>
+<header id="topo">
+  <div id="logo" title="segure 3 segundos: painel do papai">🐝</div>
+  <h1>Spelling Bee<small>do Benjamin · final do 3º ano</small></h1>
+  <button class="chip" id="chave-voz" aria-pressed="true">🔊</button>
+  <button class="chip" id="botao-casa">🏠</button>
+</header>
+<main id="palco"></main>
+<div id="aviso"></div>
+
+<script id="logica">
+// Lógica pura do Spelling Bee — só funções que devolvem dados (testadas pelo tests.html, D-JC-1).
+const Logica = (() => {
+  // As 100 palavras da lista da escola (PDF "100 PALAVRAS (SPELLING BEE 3º ANO)"), na ordem do PDF e dos cards.
+  const NIVEIS = [
+    { id: 1, nome: 'Fáceis', icone: '🌼', palavras: 'book glue pencil marker hot cold rainy windy sunny cloudy hat coat pants boots ball bike girl boy tired hungry angry reading writing talking laughing lion hippo panda tiger zebra cook doctor'.split(' ') },
+    { id: 2, nome: 'Médias', icone: '🌻', palavras: 'scissors crayons snowy jacket sweater gloves shorts jeans raincoat soccer listening erasing coloring gluing counting smiling crying yawning thirsty scared silly bored between behind above stairs shower stove sink parent camel monkey parrot penguin elephant teeth trunk'.split(' ') },
+    { id: 3, nome: 'Difíceis', icone: '🌺', palavras: 'paintbrush umbrella bathing fireplace armchair bookcase microwave refrigerator staircase frowning surprised shelves worried excited student child person playground skateboard throw catch bounce front under next crocodile giraffe kangaroo climb colorful scientist'.split(' ') },
+  ];
+  const PALAVRAS = NIVEIS.flatMap(n => n.palavras.map(w => ({ w, nivel: n.id })));
+  const NIVEL_DE = Object.fromEntries(PALAVRAS.map(p => [p.w, p.nivel]));
+  const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  // Como se fala o NOME da letra em inglês, escrito pro ouvido de quem fala português.
+  const DICA_PT = { A: 'êi', B: 'bí', C: 'sí', D: 'dí', E: 'í', F: 'éf', G: 'djí', H: 'êitch', I: 'ái', J: 'djêi', K: 'kêi', L: 'él', M: 'ém', N: 'én', O: 'ôu', P: 'pí', Q: 'kiú', R: 'ár', S: 'és', T: 'tí', U: 'iú', V: 'ví', W: 'dâbliu', X: 'éks', Y: 'uái', Z: 'zí' };
+  // Letras que quem fala português confunde no ouvido (o nome em inglês soa como OUTRA letra em português).
+  const PRIMAS = [['A', 'E', 'I'], ['E', 'I', 'Y'], ['G', 'J'], ['B', 'V', 'D', 'P'], ['K', 'Q', 'C'], ['Y', 'W', 'U'], ['M', 'N'], ['S', 'C', 'Z', 'X'], ['O', 'U'], ['H', 'A', 'K'], ['R', 'A'], ['T', 'D'], ['F', 'S']];
+  const VOGAIS = new Set('aeiou'.split(''));
+  const PARES_DIFICEIS = ['ph', 'ck', 'gh', 'wr', 'kn', 'sh', 'ch', 'th', 'wh', 'ea', 'ee', 'oo', 'ou', 'ow', 'ai', 'ay', 'ie', 'ey', 'oa', 'aw', 'ir', 'er', 'ur', 'or', 'ar', 'le', 'ss', 'tt', 'pp', 'rr', 'll', 'ff', 'cc'];
+
+  function criarRng(seed) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function embaralhar(rng, arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function diaDe(d) { const z = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); }
+
+  function primas(letra) { const s = new Set(); PRIMAS.forEach(g => { if (g.includes(letra)) g.forEach(x => x !== letra && s.add(x)); }); return [...s]; }
+  // 4 opções: a certa + primas (as que confundem) primeiro + sorteadas; todas distintas.
+  function opcoesLetra(rng, letra, n = 4) {
+    letra = letra.toUpperCase();
+    const out = [letra];
+    for (const p of embaralhar(rng, primas(letra))) if (out.length < n && !out.includes(p)) out.push(p);
+    for (const p of embaralhar(rng, LETRAS)) if (out.length < n && !out.includes(p)) out.push(p);
+    return embaralhar(rng, out);
+  }
+
+  // Onde mora a pegadinha: letra dobrada, dupla difícil (ph, ck, ea…), vogal, e final mudo.
+  function pesoPosicao(w, i) {
+    const c = w[i]; let p = 0;
+    if (VOGAIS.has(c)) p += 2;
+    if (w[i - 1] === c || w[i + 1] === c) p += 3;
+    if (PARES_DIFICEIS.includes(w.slice(i, i + 2)) || PARES_DIFICEIS.includes(w.slice(i - 1, i + 1))) p += 2;
+    if (i === w.length - 1 && c === 'e') p += 3;
+    if (c === 'y') p += 2;
+    if (i === 0) p -= 3; // a primeira letra fica: é a âncora pra lembrar a palavra
+    return p;
+  }
+  function quantosBuracos(w) { return w.length <= 4 ? 1 : w.length <= 7 ? 2 : 3; }
+  function buracos(rng, w) {
+    const pos = w.split('').map((_, i) => ({ i, p: pesoPosicao(w, i) + rng() * 0.9 }));
+    pos.sort((a, b) => b.p - a.p);
+    return pos.slice(0, quantosBuracos(w)).map(x => x.i).sort((a, b) => a - b);
+  }
+  function pecasMonta(rng, w) {
+    const letras = w.split('');
+    let p = embaralhar(rng, letras), tent = 0;
+    while (w.length > 1 && p.join('') === w && tent++ < 20) p = embaralhar(rng, letras);
+    return p;
+  }
+  function verificar(w, resposta) { return String(resposta || '').trim().toLowerCase() === w; }
+  // Compara letra a letra o que ele digitou com a palavra (pra mostrar onde escorregou).
+  function comparar(w, resposta) {
+    const r = String(resposta || '').toLowerCase(), n = Math.max(w.length, r.length), out = [];
+    for (let i = 0; i < n; i++) out.push({ certa: w[i] || '', dele: r[i] || '', ok: w[i] === r[i] });
+    return out;
+  }
+
+  // ---------- estado salvo (chave fixa, completamento — D-JC-3) ----------
+  function estadoInicial() { return completarEstado({}); }
+  function completarEstado(e) {
+    e = (e && typeof e === 'object') ? e : {};
+    e.v = 1;
+    e.palavras = (e.palavras && typeof e.palavras === 'object') ? e.palavras : {};
+    e.letras = (e.letras && typeof e.letras === 'object') ? e.letras : {};
+    e.dias = Array.isArray(e.dias) ? e.dias.filter(d => typeof d === 'string') : [];
+    e.feitosDia = (e.feitosDia && typeof e.feitosDia === 'object') ? e.feitosDia : {};
+    e.prefs = Object.assign({ voz: true, falarTeclas: true, tamMissao: 10, velocidade: 0.8 }, (e.prefs && typeof e.prefs === 'object') ? e.prefs : {});
+    e.boasVindas = !!e.boasVindas;
+    if (e.atual && (typeof e.atual !== 'object' || !Array.isArray(e.atual.fila))) e.atual = null;
+    e.atual = e.atual || null;
+    for (const w of Object.keys(e.palavras)) e.palavras[w] = Object.assign({ m: 0, ac: 0, er: 0 }, e.palavras[w]);
+    for (const l of Object.keys(e.letras)) e.letras[l] = Object.assign({ m: 0, ac: 0, er: 0 }, e.letras[l]);
+    return e;
+  }
+  function validarImportacao(txt) { try { const o = JSON.parse(txt); return (o && typeof o === 'object' && !Array.isArray(o)) ? completarEstado(o) : null; } catch (err) { return null; } }
+  function dominio(e, w) { return e.palavras[w] || { m: 0, ac: 0, er: 0 }; }
+  // m = domínio 0..3 (3 = firme). Só a 1ª tentativa de cada pergunta conta; acertou +1, errou −1.
+  function registrar(mapa, chave, certo, dia) {
+    const d = Object.assign({ m: 0, ac: 0, er: 0 }, mapa[chave] || {});
+    if (certo) { d.ac++; d.m = Math.min(3, d.m + 1); } else { d.er++; d.m = Math.max(0, d.m - 1); d.ultimoErro = dia || null; }
+    mapa[chave] = d; return d;
+  }
+  function registrarPalavra(e, w, certo, dia) { return registrar(e.palavras, w, certo, dia); }
+  function registrarLetra(e, l, certo, dia) { return registrar(e.letras, l, certo, dia); }
+  function marcarDia(e, dia) { if (!e.dias.includes(dia)) e.dias.push(dia); e.dias.sort(); return e; }
+  function diaDoPlano(e, dia) { const i = e.dias.indexOf(dia); return i < 0 ? e.dias.length + 1 : i + 1; }
+  // O plano dos 3 dias: dia 1 fáceis, dia 2 médias + erros, dia 3 difíceis + simulação. Depois: só palco.
+  function planoDoDia(n) {
+    if (n <= 1) return { titulo: 'Dia 1 de 3', texto: 'Hoje: as letras e as 32 palavras fáceis.', passos: ['abc', 'nivel1', 'nivel1'] };
+    if (n === 2) return { titulo: 'Dia 2 de 3', texto: 'Hoje: as 37 palavras médias e as que escaparam ontem.', passos: ['abc', 'nivel2', 'nivel2', 'erros'] };
+    if (n === 3) return { titulo: 'Dia 3 de 3', texto: 'Hoje: as 31 difíceis e um ensaio da final.', passos: ['nivel3', 'nivel3', 'erros', 'palco'] };
+    return { titulo: 'Dia da final!', texto: 'Ensaio no palco com as 100 palavras. Você consegue!', passos: ['abc', 'erros', 'palco'] };
+  }
+  function progressoNivel(e, nivel) {
+    const ws = NIVEIS[nivel - 1].palavras;
+    const ms = ws.map(w => dominio(e, w).m);
+    return { total: ws.length, firmes: ms.filter(m => m >= 3).length, vistas: ws.filter(w => e.palavras[w]).length, pontos: ms.reduce((a, b) => a + b, 0), max: ws.length * 3 };
+  }
+  function erradas(e) {
+    return Object.entries(e.palavras).filter(([w, d]) => d.er > 0 && d.m < 3 && NIVEL_DE[w]).sort((a, b) => (a[1].m - b[1].m) || (b[1].er - a[1].er)).map(([w]) => w);
+  }
+
+  // Escolhe as palavras: as menos dominadas primeiro (erradas na frente), com sorteio entre iguais.
+  function priorizar(rng, e, ws) {
+    return ws.map(w => { const d = dominio(e, w); return { w, k: d.m * 10 - Math.min(d.er, 5) * 2 - (e.palavras[w] ? 0 : 1) + rng() * 3 }; }).sort((a, b) => a.k - b.k).map(x => x.w);
+  }
+  function atividadePara(m) { return m <= 0 ? 'monta' : m === 1 ? 'falta' : 'digita'; }
+  function criarItemPalavra(rng, e, w, forcar) {
+    const atividade = forcar || atividadePara(dominio(e, w).m);
+    const it = { tipo: 'palavra', w, atividade, tent: 0 };
+    if (atividade === 'monta') it.pecas = pecasMonta(rng, w);
+    if (atividade === 'falta') { it.buracos = buracos(rng, w); it.opcoes = it.buracos.map(i => opcoesLetra(rng, w[i])); }
+    return it;
+  }
+  function criarMissao(rng, e, alvo, n) {
+    n = n || e.prefs.tamMissao || 10;
+    let ws, rotulo, tipo = 'palavras';
+    if (alvo === 'erros') { ws = erradas(e).slice(0, n); rotulo = 'Revisar as que escaparam'; if (!ws.length) ws = priorizar(rng, e, PALAVRAS.map(p => p.w)).slice(0, n); }
+    else if (alvo === 'palco') {
+      tipo = 'palco'; rotulo = 'Palco — ensaio da final';
+      ws = embaralhar(rng, priorizar(rng, e, PALAVRAS.map(p => p.w)).slice(0, n));
+    } else {
+      const nivel = Number(String(alvo).replace('nivel', ''));
+      const pool = NIVEIS[nivel - 1].palavras;
+      const rev = nivel > 1 ? priorizar(rng, e, PALAVRAS.filter(p => p.nivel < nivel).map(p => p.w)).filter(w => dominio(e, w).m < 3).slice(0, 2) : [];
+      ws = embaralhar(rng, priorizar(rng, e, pool).slice(0, n - rev.length).concat(rev));
+      rotulo = NIVEIS[nivel - 1].icone + ' Palavras ' + NIVEIS[nivel - 1].nome.toLowerCase();
+    }
+    const fila = ws.map(w => tipo === 'palco' ? { tipo: 'palco', w, tent: 0 } : criarItemPalavra(rng, e, w));
+    return { alvo, tipo, rotulo, fila, total: fila.length, feitos: 0, dePrimeira: 0, semente: Math.floor(rng() * 1e9) };
+  }
+  const CURTAS = PALAVRAS.map(p => p.w).filter(w => w.length >= 3 && w.length <= 5);
+  function criarMissaoABC(rng, e, n = 12) {
+    const fracas = LETRAS.map(l => ({ l, k: (e.letras[l] ? e.letras[l].m : 0) * 10 - (e.letras[l] ? Math.min(e.letras[l].er, 5) : 0) * 2 + rng() * 6 })).sort((a, b) => a.k - b.k).map(x => x.l);
+    const fila = [];
+    for (let i = 0; i < n; i++) {
+      const tipo = i % 3 === 2 ? 'sequencia' : i % 3 === 0 ? 'ouvir' : 'nome';
+      if (tipo === 'sequencia') {
+        // todas as letras da palavra + primas delas como isca, até 6 peças
+        const w = CURTAS[Math.floor(rng() * CURTAS.length)], need = [...new Set(w.toUpperCase().split(''))];
+        const iscas = [...new Set(need.flatMap(l => primas(l)))].filter(x => !need.includes(x));
+        fila.push({ tipo, w, opcoes: embaralhar(rng, need.concat(embaralhar(rng, iscas).slice(0, Math.max(1, 6 - need.length)))), tent: 0 });
+      }
+      else { const l = fracas[i % fracas.length]; fila.push({ tipo, l, opcoes: opcoesLetra(rng, l), tent: 0 }); }
+    }
+    return { alvo: 'abc', tipo: 'abc', rotulo: '🔤 As letras em inglês', fila, total: fila.length, feitos: 0, dePrimeira: 0, semente: Math.floor(rng() * 1e9) };
+  }
+  // Errou → a pergunta volta 2 a 4 perguntas depois (ou no fim, se a fila é curta). Sem punição.
+  function reinserir(rng, fila, item) {
+    const pos = Math.min(fila.length, 2 + Math.floor(rng() * 3));
+    fila.splice(pos, 0, item); return fila;
+  }
+  // Fecha a pergunta da frente da fila: registra (só 1ª tentativa), e decide se volta.
+  function concluirItem(rng, e, missao, certo, dia) {
+    const it = missao.fila.shift();
+    const primeira = it.tent === 0;
+    if (primeira) {
+      if (it.tipo === 'palavra' || it.tipo === 'palco') registrarPalavra(e, it.w, certo, dia);
+      else if (it.tipo === 'sequencia') it.w.toUpperCase().split('').forEach(l => certo && registrarLetra(e, l, true, dia));
+      else registrarLetra(e, it.l, certo, dia);
+    }
+    if (certo) { missao.feitos++; if (primeira) missao.dePrimeira++; }
+    else { it.tent++; if (it.tipo === 'palavra' && it.atividade === 'digita') { const novo = criarItemPalavra(rng, e, it.w, 'falta'); novo.tent = it.tent; reinserir(rng, missao.fila, novo); } else reinserir(rng, missao.fila, it); }
+    return { terminou: missao.fila.length === 0, primeira };
+  }
+  function nomeTarefa(id) { return { abc: '🔤 Letras', nivel1: '🌼 Fáceis', nivel2: '🌻 Médias', nivel3: '🌺 Difíceis', erros: '🔁 Revisão', palco: '🎤 Palco' }[id] || id; }
+  function registrarFeito(e, dia, alvo) { (e.feitosDia[dia] = e.feitosDia[dia] || []).push(String(alvo)); return e; }
+  // Quais passos do plano de hoje já foram feitos (conta repetidos: 2× nivel1 pede 2 missões).
+  function passosFeitos(e, dia, passos) { const feitos = (e.feitosDia[dia] || []).slice(); return passos.map(p => { const i = feitos.indexOf(p); if (i >= 0) { feitos.splice(i, 1); return true; } return false; }); }
+
+  return { NIVEIS, PALAVRAS, NIVEL_DE, LETRAS, DICA_PT, PRIMAS, CURTAS, criarRng, embaralhar, diaDe, primas, opcoesLetra, pesoPosicao, quantosBuracos, buracos, pecasMonta, verificar, comparar, estadoInicial, completarEstado, validarImportacao, dominio, registrarPalavra, registrarLetra, marcarDia, diaDoPlano, planoDoDia, progressoNivel, erradas, priorizar, atividadePara, criarItemPalavra, criarMissao, criarMissaoABC, reinserir, concluirItem, nomeTarefa, registrarFeito, passosFeitos };
+})();
+</script>
+
+<script>
+(function () {
+  'use strict';
+  const L = Logica;
+  const $ = s => document.querySelector(s);
+  const palco = $('#palco');
+  const CHAVE = 'spelling-benjamin-v1'; // NUNCA mudar (D-JC-3)
+  const hoje = () => L.diaDe(new Date());
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const img = w => 'img/' + w + '.jpg';
+  let rng = L.criarRng(Date.now() % 1e9);
+
+  function carregar() { try { const t = localStorage.getItem(CHAVE); return t ? L.validarImportacao(t) : null; } catch (e) { return null; } }
+  function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) { /* sem armazenamento: segue */ } }
+  let estado = carregar() || L.estadoInicial();
+  salvar();
+
+  // ---------- voz em inglês ----------
+  const temVoz = 'speechSynthesis' in window;
+  let vozEN = null;
+  function acharVoz() {
+    if (!temVoz) return;
+    const vs = speechSynthesis.getVoices().filter(v => /^en[-_]US/i.test(v.lang));
+    vozEN = vs.find(v => /Google|Samantha|Aria|Jenny|Ava|Allison/i.test(v.name)) || vs[0] || speechSynthesis.getVoices().find(v => /^en/i.test(v.lang)) || null;
+  }
+  if (temVoz) { acharVoz(); speechSynthesis.onvoiceschanged = acharVoz; }
+  let falaId = 0;
+  function falar(texto, aoTerminar, rate) {
+    const id = ++falaId;
+    const fim0 = () => { if (id === falaId && aoTerminar) aoTerminar(); };
+    if (!temVoz || !texto || !estado.prefs.voz) { fim0(); return; }
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(texto);
+      u.lang = 'en-US'; u.rate = rate || estado.prefs.velocidade || 0.8; if (vozEN) u.voice = vozEN;
+      let feito = false; const fim = () => { if (!feito) { feito = true; fim0(); } };
+      u.onend = fim; u.onerror = fim; setTimeout(fim, 2500 + texto.length * 160);
+      speechSynthesis.speak(u);
+    } catch (e) { fim0(); }
+  }
+  function calar() { falaId++; if (temVoz) try { speechSynthesis.cancel(); } catch (e) {} }
+  // Letra falada sozinha: maiúscula + ponto ("A.") faz a voz dizer o NOME da letra.
+  const falaLetras = w => w.toUpperCase().split('').join('. ') + '.';
+  const falarPalavra = w => falar(w + '.');
+  const falarSoletrado = (w, fim) => falar(w + '. ' + falaLetras(w) + ' ' + w + '.', fim);
+  const falarLetra = l => falar(l.toUpperCase() + '.', null, 0.85);
+  let audio = null;
+  function plim() {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      [523.25, 659.25, 783.99].forEach((f, i) => {
+        const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + i * 0.08;
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.14, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+        o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.33);
+      });
+    } catch (e) {}
+  }
+  const chaveVoz = $('#chave-voz');
+  const pintarChave = () => { chaveVoz.textContent = estado.prefs.voz ? '🔊' : '🔇'; chaveVoz.setAttribute('aria-pressed', String(!!estado.prefs.voz)); };
+  chaveVoz.onclick = () => { estado.prefs.voz = !estado.prefs.voz; if (!estado.prefs.voz) calar(); salvar(); pintarChave(); avisar(estado.prefs.voz ? '🔊 Voz ligada' : '🔇 Voz desligada'); };
+  chaveVoz.hidden = !temVoz;
+  pintarChave();
+  let tAviso = null;
+  function avisar(txt) { const a = $('#aviso'); a.textContent = txt; a.classList.add('ver'); clearTimeout(tAviso); tAviso = setTimeout(() => a.classList.remove('ver'), 2000); }
+
+  // ---------- painel do papai: segurar o 🐝 por 3 s ----------
+  let tLogo = null;
+  const logo = $('#logo');
+  logo.addEventListener('pointerdown', () => { tLogo = setTimeout(() => { painelLiberado = true; ir('painel'); }, 3000); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => logo.addEventListener(ev, () => clearTimeout(tLogo)));
+  $('#botao-casa').onclick = () => { calar(); ir('inicio'); };
+
+  // ---------- navegação por hash (o voltar do celular funciona) ----------
+  const ROTAS = ['inicio', 'missao', 'favo1', 'favo2', 'favo3', 'abc', 'painel', 'fim'];
+  let painelLiberado = false;
+  function ir(r) { if (location.hash !== '#/' + r) location.hash = '#/' + r; else render(); }
+  function rotaAtual() { const r = (location.hash || '').replace(/^#\/?/, ''); return ROTAS.includes(r) ? r : 'inicio'; }
+  window.addEventListener('hashchange', render);
+
+  function render() {
+    calar();
+    teclas = null;
+    const r = rotaAtual();
+    window.scrollTo(0, 0);
+    if (!estado.boasVindas) return telaAbertura();
+    if (r === 'missao') return estado.atual ? telaMissao() : ir('inicio');
+    if (r === 'favo1' || r === 'favo2' || r === 'favo3') return telaFavo(Number(r[4]));
+    if (r === 'abc') return telaABC();
+    if (r === 'painel') return painelLiberado ? telaPainel() : ir('inicio');
+    if (r === 'fim') return telaFim();
+    return telaInicio();
+  }
+
+  function telaAbertura() {
+    palco.innerHTML = `<div id="abertura"><div class="bee">🐝</div><h2>Spelling Bee!</h2>
+      <p>Benjamin, você está na <b>final</b>!<br>Em 3 dias a gente treina as 100 palavras<br>e os nomes das letras em inglês.</p>
+      <button class="acao mel" id="comecar">COMEÇAR</button>
+      <p class="pequeno" style="margin-top:14px">Ligue o som do celular: o jogo fala em inglês.</p></div>`;
+    $('#comecar').onclick = () => { estado.boasVindas = true; salvar(); falar("Hello Benjamin! Let's spell!"); render(); };
+  }
+
+  function telaInicio() {
+    const d = hoje();
+    const n = L.diaDoPlano(estado, d);
+    const plano = L.planoDoDia(n);
+    const feitos = L.passosFeitos(estado, d, plano.passos);
+    const proximo = plano.passos[feitos.indexOf(false)];
+    const errs = L.erradas(estado).length;
+    const letrasFirmes = L.LETRAS.filter(l => estado.letras[l] && estado.letras[l].m >= 3).length;
+    const botaoNivel = nv => {
+      const N = L.NIVEIS[nv - 1], p = L.progressoNivel(estado, nv);
+      return `<div class="linha"><button class="grande ${proximo === 'nivel' + nv ? 'hoje' : ''}" data-ir="nivel${nv}"><div class="ic">${N.icone}</div><div class="txt"><b>Palavras ${N.nome.toLowerCase()}</b><span>${p.firmes} de ${p.total} firmes ⭐</span><div class="barra"><i style="width:${Math.round(100 * p.pontos / p.max)}%"></i></div></div></button>
+        <button class="grande" style="width:auto;flex:none;padding:8px" data-favo="${nv}" aria-label="ver o favo"><div class="ic" style="width:auto">🍯</div></button></div>`;
+    };
+    palco.innerHTML = `
+      ${estado.atual ? `<button class="grande hoje" id="continuar"><div class="ic">▶️</div><div class="txt"><b>Continuar a missão</b><span>${esc(estado.atual.rotulo)} · faltam ${estado.atual.fila.length}</span></div></button>` : ''}
+      <div class="cartao plano"><h2>${plano.titulo}</h2><p>${plano.texto}</p>
+        <div class="passos">${plano.passos.map((p, i) => `<span class="passo ${feitos[i] ? 'feito' : ''}">${feitos[i] ? '✔ ' : ''}${L.nomeTarefa(p)}</span>`).join('')}</div></div>
+      <div class="linha"><button class="grande ${proximo === 'abc' ? 'hoje' : ''}" data-ir="abc"><div class="ic">🔤</div><div class="txt"><b>As letras em inglês</b><span>${letrasFirmes} de 26 letras firmes</span></div></button>
+        <button class="grande" style="width:auto;flex:none;padding:8px" data-rota="abc" aria-label="ver o alfabeto"><div class="ic" style="width:auto">📖</div></button></div>
+      ${botaoNivel(1)}${botaoNivel(2)}${botaoNivel(3)}
+      <button class="grande ${proximo === 'erros' ? 'hoje' : ''}" data-ir="erros"><div class="ic">🔁</div><div class="txt"><b>Revisar as que escaparam</b><span>${errs ? errs + ' palavra' + (errs > 1 ? 's' : '') + ' pra treinar' : 'nenhuma por enquanto 🎉'}</span></div></button>
+      <button class="grande ${proximo === 'palco' ? 'hoje' : ''}" data-ir="palco"><div class="ic">🎤</div><div class="txt"><b>Palco — ensaio da final</b><span>só a figura e a voz, ele soletra em voz alta</span></div></button>`;
+    const c = $('#continuar'); if (c) c.onclick = () => ir('missao');
+    palco.querySelectorAll('[data-ir]').forEach(b => b.onclick = () => iniciar(b.dataset.ir));
+    palco.querySelectorAll('[data-favo]').forEach(b => b.onclick = () => ir('favo' + b.dataset.favo));
+    palco.querySelectorAll('[data-rota]').forEach(b => b.onclick = () => ir(b.dataset.rota));
+  }
+
+  function iniciar(alvo) {
+    rng = L.criarRng(Date.now() % 1e9);
+    if (alvo === 'erros' && !L.erradas(estado).length) avisar('Nenhuma errada ainda — treino com as mais novas!');
+    estado.atual = alvo === 'abc' ? L.criarMissaoABC(rng, estado) : L.criarMissao(rng, estado, alvo, alvo === 'palco' ? Math.max(15, estado.prefs.tamMissao) : estado.prefs.tamMissao);
+    salvar();
+    ir('missao');
+  }
+
+  // ---------- missão ----------
+  let teclas = null;
+  function cabecalho(m) {
+    const pct = Math.round(100 * m.feitos / (m.feitos + m.fila.length));
+    return `<div class="enunciado" style="margin-top:0;text-align:left">${esc(m.rotulo)} · ${m.feitos}/${m.feitos + m.fila.length}</div><div id="progresso"><i style="width:${pct}%"></i></div>`;
+  }
+  function telaMissao() {
+    const m = estado.atual, it = m.fila[0];
+    if (!it) return terminar();
+    ({ palavra: telaPalavra, palco: telaPalco, ouvir: telaOuvir, nome: telaNome, sequencia: telaSequencia })[it.tipo](m, it);
+  }
+  function concluir(certo, depois) {
+    const m = estado.atual;
+    const d = hoje();
+    L.marcarDia(estado, d);
+    const r = L.concluirItem(rng, estado, m, certo, d);
+    salvar();
+    if (r.terminou) return terminar();
+    if (depois) depois(); else telaMissao();
+  }
+  function terminar() {
+    const m = estado.atual;
+    if (!m) return ir('inicio');
+    L.registrarFeito(estado, hoje(), m.alvo);
+    estado.ultimaMissao = { rotulo: m.rotulo, total: m.total, dePrimeira: m.dePrimeira, tipo: m.tipo };
+    estado.atual = null;
+    salvar();
+    ir('fim');
+  }
+  function telaFim() {
+    const u = estado.ultimaMissao;
+    if (!u) return ir('inicio');
+    const pct = u.total ? u.dePrimeira / u.total : 0;
+    const est = pct >= 0.9 ? '⭐⭐⭐' : pct >= 0.6 ? '⭐⭐' : '⭐';
+    palco.innerHTML = `<div class="fim"><div class="grandao">🏆</div><h2>Missão completa!</h2><div style="font-size:40px">${est}</div>
+      <p>${u.dePrimeira} de ${u.total} de primeira.<br>As outras você já treinou de novo até acertar.</p>
+      <button class="acao mel" id="voltar">Voltar</button></div>`;
+    plim(); falar(pct >= 0.9 ? 'Amazing, Benjamin!' : 'Great job, Benjamin!');
+    $('#voltar').onclick = () => ir('inicio');
+  }
+  const figuraHTML = w => `<img class="figura" src="${img(w)}" alt="">`;
+  const botoesOuvir = w => `<div class="ouvir"><button id="b-ouvir">🔊 Ouvir</button><button class="claro" id="b-devagar">🐢 Devagar</button></div>`;
+  function ligarOuvir(w) {
+    $('#b-ouvir').onclick = () => falarPalavra(w);
+    $('#b-devagar').onclick = () => falar(w + '.', null, 0.5);
+  }
+  // Depois do acerto: mostra a palavra inteira e a voz soletra (palavra · letras · palavra).
+  function celebrar(w, certoDePrimeira, msg) {
+    const fb = $('#feedback');
+    if (fb) { fb.className = 'feedback ok'; fb.textContent = msg || (certoDePrimeira ? 'Isso! 🎉' : 'Agora sim! 👍'); }
+    if (certoDePrimeira) plim();
+    const area = $('#acoes');
+    area.innerHTML = `<button class="acao mel" id="proxima">Próxima ➜</button>`;
+    let foi = false;
+    const seguir = () => { if (foi) return; foi = true; calar(); concluir(true); };
+    $('#proxima').onclick = seguir;
+    falarSoletrado(w);
+  }
+  const classePalavra = n => 'palavra' + (n > 9 ? ' longa' : '');
+  function palavraCasas(w, mostrar, cls) { return `<div class="${classePalavra(w.length)}">${w.split('').map((c, i) => `<div class="casa ${cls ? cls(i) : ''}">${mostrar(i) ? esc(c) : ''}</div>`).join('')}</div>`; }
+
+  function telaPalavra(m, it) {
+    const w = it.w;
+    if (it.atividade === 'monta') {
+      let pos = 0, errou = false;
+      const usadas = new Set();
+      const desenhar = () => {
+        palco.innerHTML = `${cabecalho(m)}${figuraHTML(w)}${botoesOuvir(w)}<div class="enunciado">Monte a palavra</div>
+          ${palavraCasas(w, i => i < pos, i => i === pos ? 'vazia' : '')}
+          <div class="pecas">${it.pecas.map((c, i) => `<button class="peca ${usadas.has(i) ? 'usada' : ''}" data-i="${i}">${esc(c)}</button>`).join('')}</div>
+          <div class="feedback" id="feedback"></div><div id="acoes"></div>`;
+        ligarOuvir(w);
+        palco.querySelectorAll('.peca').forEach(b => b.onclick = () => tocar(Number(b.dataset.i), b));
+      };
+      const tocar = (i, b) => {
+        if (pos >= w.length || usadas.has(i)) return;
+        if (it.pecas[i] === w[pos]) {
+          usadas.add(i); pos++;
+          if (estado.prefs.falarTeclas) falarLetra(it.pecas[i]);
+          desenhar();
+          if (pos === w.length) finalizar();
+        } else {
+          errou = true; b.classList.remove('nao'); void b.offsetWidth; b.classList.add('nao');
+          if (estado.prefs.falarTeclas) falarLetra(it.pecas[i]);
+        }
+      };
+      const finalizar = () => {
+        palco.querySelectorAll('.peca').forEach(b => b.disabled = true);
+        if (!errou) return celebrar(w, it.tent === 0);
+        // montou com tropeço: conta como "volta depois" pra fixar (sem punição)
+        $('#feedback').className = 'feedback ok'; $('#feedback').textContent = 'Montou! Ela volta já já pra fixar 😉';
+        $('#acoes').innerHTML = `<button class="acao mel" id="proxima">Próxima ➜</button>`;
+        $('#proxima').onclick = () => { calar(); concluir(false); };
+        falarSoletrado(w);
+      };
+      desenhar();
+      falarPalavra(w);
+      return;
+    }
+    if (it.atividade === 'falta') {
+      let k = 0, errou = false; // k = qual buraco estamos preenchendo
+      const desenhar = () => {
+        const buracoAtual = it.buracos[k];
+        palco.innerHTML = `${cabecalho(m)}${figuraHTML(w)}${botoesOuvir(w)}<div class="enunciado">Qual letra falta?</div>
+          ${palavraCasas(w, i => !it.buracos.includes(i) || it.buracos.indexOf(i) < k, i => i === buracoAtual ? 'vazia' : '')}
+          <div class="opcoes">${k < it.buracos.length ? it.opcoes[k].map(o => `<button class="opcao" data-o="${o}">${o.toLowerCase()}<small>${L.DICA_PT[o]}</small></button>`).join('') : ''}</div>
+          <div class="feedback" id="feedback"></div><div id="acoes"></div>`;
+        ligarOuvir(w);
+        palco.querySelectorAll('.opcao').forEach(b => b.onclick = () => escolher(b.dataset.o, b));
+      };
+      const escolher = (o, b) => {
+        if (estado.prefs.falarTeclas) falarLetra(o);
+        if (o.toLowerCase() === w[it.buracos[k]]) {
+          k++;
+          desenhar();
+          if (k === it.buracos.length) {
+            if (!errou) return celebrar(w, it.tent === 0);
+            $('#feedback').className = 'feedback ok'; $('#feedback').textContent = 'Completou! Ela volta já já 😉';
+            $('#acoes').innerHTML = `<button class="acao mel" id="proxima">Próxima ➜</button>`;
+            $('#proxima').onclick = () => { calar(); concluir(false); };
+            falarSoletrado(w);
+          }
+        } else { errou = true; b.classList.add('nao'); b.disabled = true; }
+      };
+      desenhar();
+      falarPalavra(w);
+      return;
+    }
+    // digita: sem dica nenhuma, teclado na tela
+    let txt = '';
+    palco.innerHTML = `${cabecalho(m)}${figuraHTML(w)}${botoesOuvir(w)}<div class="enunciado">Escreva a palavra</div>
+      <div class="palavra" id="digitado"></div>${tecladoHTML()}
+      <div class="feedback" id="feedback"></div><div id="acoes"><button class="acao" id="pronto" disabled>Pronto ✔</button></div>`;
+    ligarOuvir(w);
+    const pintar = () => {
+      $('#digitado').className = classePalavra(txt.length + 1);
+      $('#digitado').innerHTML = txt.split('').map(c => `<div class="casa">${esc(c)}</div>`).join('') + (txt.length < 16 ? '<div class="casa vazia"></div>' : '');
+      const p = $('#pronto'); if (p) p.disabled = !txt.length;
+    };
+    teclas = {
+      letra: c => { if (txt.length >= 16) return; txt += c.toLowerCase(); if (estado.prefs.falarTeclas) falarLetra(c); pintar(); },
+      apagar: () => { txt = txt.slice(0, -1); pintar(); },
+      ok: () => { if (txt) conferir(); },
+    };
+    ligarTeclado();
+    const conferir = () => {
+      teclas = null;
+      if (L.verificar(w, txt)) { $('#digitado').innerHTML = w.split('').map(c => `<div class="casa ok">${esc(c)}</div>`).join(''); $('#teclado').remove(); return celebrar(w, it.tent === 0); }
+      const cmp = L.comparar(w, txt);
+      $('#teclado').remove();
+      $('#digitado').outerHTML = `<div class="enunciado">Você escreveu:</div><div class="${classePalavra(cmp.length)}">${cmp.map(x => `<div class="casa mini ${x.ok ? 'ok' : 'erro'}">${esc(x.dele)}</div>`).join('')}</div>
+        <div class="enunciado">O certo é:</div><div class="${classePalavra(cmp.length)}">${cmp.map(x => `<div class="casa mini ${x.ok ? '' : 'ok'}">${esc(x.certa)}</div>`).join('')}</div>`;
+      $('#feedback').className = 'feedback erro'; $('#feedback').textContent = 'Quase! Ela volta daqui a pouco.';
+      $('#acoes').innerHTML = `<button class="acao mel" id="proxima">Entendi ➜</button>`;
+      $('#proxima').onclick = () => { calar(); concluir(false); };
+      falarSoletrado(w);
+    };
+    pintar();
+    falarPalavra(w);
+  }
+  function tecladoHTML() {
+    const filas = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+    return `<div id="teclado">${filas.map((f, i) => `<div class="fila">${f.split('').map(c => `<button data-k="${c}">${c}</button>`).join('')}${i === 2 ? '<button class="larga" data-k="⌫">⌫</button>' : ''}</div>`).join('')}</div>`;
+  }
+  function ligarTeclado() {
+    const t = $('#teclado'); if (!t) return;
+    t.querySelectorAll('button').forEach(b => b.onclick = () => { if (!teclas) return; b.dataset.k === '⌫' ? teclas.apagar() : teclas.letra(b.dataset.k); });
+    const p = $('#pronto'); if (p) p.onclick = () => teclas && teclas.ok();
+  }
+  document.addEventListener('keydown', ev => {
+    if (!teclas) return;
+    if (/^[a-z]$/i.test(ev.key) && teclas.letra) { teclas.letra(ev.key.toUpperCase()); ev.preventDefault(); }
+    else if (ev.key === 'Backspace' && teclas.apagar) { teclas.apagar(); ev.preventDefault(); }
+    else if (ev.key === 'Enter' && teclas.ok) { teclas.ok(); ev.preventDefault(); }
+  });
+
+  // Palco: como na final — ouve a palavra, soletra EM VOZ ALTA, depois confere letra por letra.
+  function telaPalco(m, it) {
+    const w = it.w;
+    palco.innerHTML = `${cabecalho(m)}${figuraHTML(w)}<div class="ouvir"><button id="b-ouvir">🔊 Ouvir</button><button class="claro" id="b-devagar">🐢 Devagar</button></div>
+      <div class="enunciado">Diga a palavra, soletre em voz alta,<br>e diga a palavra de novo.</div>
+      <div class="palavra" id="revela"></div>
+      <div class="feedback" id="feedback"></div>
+      <div id="acoes"><button class="acao mel" id="ver">Conferir 👀</button></div>`;
+    $('#b-ouvir').onclick = () => falar('Your word is: ' + w + '. ' + w + '.');
+    $('#b-devagar').onclick = () => falar(w + '.', null, 0.5);
+    $('#ver').onclick = () => {
+      $('#acoes').innerHTML = '';
+      const casas = w.split('');
+      let i = 0;
+      $('#revela').className = classePalavra(casas.length);
+      $('#revela').innerHTML = casas.map(() => '<div class="casa"></div>').join('');
+      const passo = () => {
+        if (rotaAtual() !== 'missao' || estado.atual !== m) return;
+        if (i < casas.length) {
+          $('#revela').children[i].textContent = casas[i];
+          falar(casas[i].toUpperCase() + '.', () => { i++; setTimeout(passo, 120); }, 0.9);
+          return;
+        }
+        falar(w + '.');
+        $('#feedback').className = 'feedback'; $('#feedback').textContent = 'Você acertou todas as letras?';
+        $('#acoes').innerHTML = `<div class="duas"><button class="acao verde" id="sim">✅ Acertei</button><button class="acao vermelho" id="nao">Errei</button></div>`;
+        $('#sim').onclick = () => { calar(); plim(); concluir(true); };
+        $('#nao').onclick = () => { calar(); concluir(false); };
+      };
+      if (estado.prefs.voz && temVoz) passo();
+      else { casas.forEach((c, j) => $('#revela').children[j].textContent = c); i = casas.length; passo(); }
+    };
+    falar('Your word is: ' + w + '. ' + w + '.');
+  }
+
+  // ---------- letras ----------
+  function telaOuvir(m, it) {
+    let errou = false;
+    palco.innerHTML = `${cabecalho(m)}<div class="enunciado">Ouça o nome da letra e toque nela</div>
+      <div class="ouvir"><button id="b-ouvir" style="font-size:22px;padding:16px 26px">🔊 Ouvir a letra</button></div>
+      <div class="opcoes">${it.opcoes.map(o => `<button class="opcao" data-o="${o}">${o}${o.toLowerCase()}</button>`).join('')}</div>
+      <div class="feedback" id="feedback"></div><div id="acoes"></div>`;
+    $('#b-ouvir').onclick = () => falarLetra(it.l);
+    palco.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
+      if (b.dataset.o === it.l) {
+        b.classList.add('sim'); palco.querySelectorAll('.opcao').forEach(x => x.disabled = true);
+        $('#feedback').className = 'feedback ok'; $('#feedback').textContent = (errou ? 'Isso: ' : 'Isso! ') + it.l + ' se fala “' + L.DICA_PT[it.l] + '”';
+        if (!errou) plim();
+        $('#acoes').innerHTML = `<button class="acao mel" id="proxima">Próxima ➜</button>`;
+        $('#proxima').onclick = () => { calar(); concluir(!errou); };
+        falarLetra(it.l);
+      } else { errou = true; b.classList.add('nao'); b.disabled = true; falarLetra(it.l); }
+    });
+    falarLetra(it.l);
+  }
+  function telaNome(m, it) {
+    let errou = false;
+    const ops = it.opcoes;
+    palco.innerHTML = `${cabecalho(m)}<div class="enunciado">Como se fala esta letra em inglês?</div>
+      <div class="letrona">${it.l}${it.l.toLowerCase()}</div>
+      <div class="opcoes">${ops.map(o => `<button class="opcao texto" data-o="${o}">“${L.DICA_PT[o]}”</button>`).join('')}</div>
+      <div class="feedback" id="feedback"></div><div id="acoes"></div>`;
+    palco.querySelectorAll('.opcao').forEach(b => b.onclick = () => {
+      falarLetra(b.dataset.o);
+      if (b.dataset.o === it.l) {
+        b.classList.add('sim'); palco.querySelectorAll('.opcao').forEach(x => x.disabled = true);
+        $('#feedback').className = 'feedback ok'; $('#feedback').textContent = errou ? 'Isso! Agora você lembra 👍' : 'Isso! 🎉';
+        if (!errou) plim();
+        $('#acoes').innerHTML = `<button class="acao mel" id="proxima">Próxima ➜</button>`;
+        $('#proxima').onclick = () => { calar(); concluir(!errou); };
+      } else { errou = true; b.classList.add('nao'); b.disabled = true; }
+    });
+  }
+  function telaSequencia(m, it) {
+    const alvo = it.w.toUpperCase().split('');
+    let pos = 0, errou = false;
+    const desenhar = () => {
+      palco.innerHTML = `${cabecalho(m)}<div class="enunciado">Ouça as letras e toque na ordem</div>
+        <div class="ouvir"><button id="b-ouvir">🔊 Ouvir as letras</button><button class="claro" id="b-devagar">🐢 Devagar</button></div>
+        ${palavraCasas(it.w, i => i < pos, i => i === pos ? 'vazia' : '')}
+        <div class="pecas">${it.opcoes.map(o => `<button class="peca" data-o="${o}">${o.toLowerCase()}</button>`).join('')}</div>
+        <div class="feedback" id="feedback"></div><div id="acoes"></div>`;
+      $('#b-ouvir').onclick = () => falar(falaLetras(it.w));
+      $('#b-devagar').onclick = () => falar(falaLetras(it.w), null, 0.5);
+      palco.querySelectorAll('.peca').forEach(b => b.onclick = () => {
+        if (pos >= alvo.length) return;
+        if (b.dataset.o === alvo[pos]) {
+          pos++; falarLetra(b.dataset.o); desenhar();
+          if (pos === alvo.length) {
+            palco.querySelectorAll('.peca').forEach(x => x.disabled = true);
+            const f = document.createElement('div'); f.innerHTML = figuraHTML(it.w); palco.insertBefore(f.firstChild, $('#feedback'));
+            $('#feedback').className = 'feedback ok'; $('#feedback').textContent = 'É “' + it.w + '”! ' + (errou ? '👍' : '🎉');
+            if (!errou) plim();
+            $('#acoes').innerHTML = `<button class="acao mel" id="proxima">Próxima ➜</button>`;
+            $('#proxima').onclick = () => { calar(); concluir(!errou); };
+            falar(it.w + '!');
+          }
+        } else { errou = true; b.classList.remove('nao'); void b.offsetWidth; b.classList.add('nao'); falarLetra(b.dataset.o); }
+      });
+    };
+    desenhar();
+    falar(falaLetras(it.w));
+  }
+
+  // ---------- estudar: o favo (todas as palavras do nível) e o alfabeto ----------
+  function telaFavo(nv) {
+    const N = L.NIVEIS[nv - 1];
+    palco.innerHTML = `<div class="enunciado" style="text-align:left">${N.icone} Palavras ${N.nome.toLowerCase()} — toque para ouvir soletrada</div>
+      <div class="favo">${N.palavras.map(w => { const d = L.dominio(estado, w); return `<button class="alveolo m${d.m}" data-w="${w}"><img src="${img(w)}" alt="" loading="lazy"><b>${w}</b><div class="est">${'★'.repeat(d.m)}${'☆'.repeat(3 - d.m)}</div></button>`; }).join('')}</div>
+      <button class="acao mel" id="treinar">Treinar estas ➜</button>`;
+    palco.querySelectorAll('.alveolo').forEach(b => b.onclick = () => falarSoletrado(b.dataset.w));
+    $('#treinar').onclick = () => iniciar('nivel' + nv);
+  }
+  function telaABC() {
+    palco.innerHTML = `<div class="enunciado" style="text-align:left">O alfabeto em inglês — toque para ouvir</div>
+      <div class="abc">${L.LETRAS.map(l => `<button class="${estado.letras[l] && estado.letras[l].m >= 3 ? 'firme' : ''}" data-l="${l}">${l}${l.toLowerCase()}<small>${L.DICA_PT[l]}</small></button>`).join('')}</div>
+      <p class="pequeno" style="margin-top:10px">Cuidado com as primas: <b>A</b> “êi” · <b>E</b> “í” · <b>I</b> “ái” · <b>G</b> “djí” · <b>J</b> “djêi” · <b>H</b> “êitch” · <b>R</b> “ár” · <b>W</b> “dâbliu” · <b>Y</b> “uái”.</p>
+      <button class="acao mel" id="treinar">Treinar as letras ➜</button>`;
+    palco.querySelectorAll('.abc button').forEach(b => b.onclick = () => falarLetra(b.dataset.l));
+    $('#treinar').onclick = () => iniciar('abc');
+  }
+
+  // ---------- painel do papai ----------
+  function telaPainel() {
+    const errs = Object.entries(estado.palavras).filter(([, d]) => d.er > 0).sort((a, b) => b[1].er - a[1].er || a[1].m - b[1].m);
+    const lets = Object.entries(estado.letras).filter(([, d]) => d.er > 0).sort((a, b) => b[1].er - a[1].er);
+    palco.innerHTML = `<div class="painel">
+      <div class="cartao"><h2>👨 Painel do papai</h2>
+        <p class="pequeno">Dias de treino: ${estado.dias.length ? estado.dias.join(', ') : 'nenhum ainda'}</p>
+        ${L.NIVEIS.map(N => { const p = L.progressoNivel(estado, N.id); return `<p style="margin-top:6px">${N.icone} ${N.nome}: <b>${p.firmes}/${p.total}</b> firmes · ${p.vistas} vistas</p>`; }).join('')}
+      </div>
+      <div class="cartao"><h2>Palavras que ele mais erra</h2>
+        ${errs.length ? `<table><tr><th>palavra</th><th>erros</th><th>acertos</th><th>domínio</th></tr>${errs.slice(0, 40).map(([w, d]) => `<tr><td><b>${w}</b></td><td>${d.er}</td><td>${d.ac}</td><td>${'★'.repeat(d.m)}${'☆'.repeat(3 - d.m)}</td></tr>`).join('')}</table>` : '<p class="pequeno">Nenhum erro registrado ainda.</p>'}
+      </div>
+      <div class="cartao"><h2>Letras que ele confunde</h2>
+        ${lets.length ? lets.map(([l, d]) => `<b>${l}</b> (${d.er}×)`).join(' · ') : '<p class="pequeno">Nenhuma ainda.</p>'}
+      </div>
+      <div class="cartao"><h2>Ajustes</h2>
+        <label>Palavras por missão <select id="tam">${[6, 8, 10, 12, 15].map(n => `<option ${n === estado.prefs.tamMissao ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+        <label>Velocidade da voz <select id="vel">${[[0.6, 'devagar'], [0.8, 'normal'], [1, 'rápida']].map(([v, t]) => `<option value="${v}" ${v === estado.prefs.velocidade ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+        <label>Falar cada letra tocada <input type="checkbox" id="fteclas" ${estado.prefs.falarTeclas ? 'checked' : ''}></label>
+        <button class="acao" id="teste-voz" style="margin-top:10px">🔊 Testar a voz (A, E, I, G, J)</button>
+        <p class="pequeno" style="margin-top:6px">Voz em uso: ${vozEN ? esc(vozEN.name) : 'padrão do celular'}</p>
+      </div>
+      <div class="cartao"><h2>Guardar / levar o progresso</h2>
+        <textarea id="json">${esc(JSON.stringify(estado))}</textarea>
+        <div class="duas"><button class="acao" id="importar">Carregar este texto</button><button class="acao vermelho" id="zerar">Zerar tudo</button></div>
+      </div>
+      <button class="acao mel" id="sair">Sair do painel</button></div>`;
+    $('#tam').onchange = e => { estado.prefs.tamMissao = Number(e.target.value); salvar(); };
+    $('#vel').onchange = e => { estado.prefs.velocidade = Number(e.target.value); salvar(); };
+    $('#fteclas').onchange = e => { estado.prefs.falarTeclas = e.target.checked; salvar(); };
+    $('#teste-voz').onclick = () => falar('A. E. I. G. J. giraffe. G. I. R. A. F. F. E. giraffe.');
+    $('#importar').onclick = () => { const n = L.validarImportacao($('#json').value); if (!n) return avisar('Texto inválido'); estado = n; salvar(); avisar('Progresso carregado'); render(); };
+    $('#zerar').onclick = () => { if (!confirm('Zerar todo o progresso do Benjamin?')) return; estado = L.estadoInicial(); estado.boasVindas = true; salvar(); avisar('Zerado'); render(); };
+    $('#sair').onclick = () => { painelLiberado = false; ir('inicio'); };
+  }
+
+  window.__jogo = { get estado() { return estado; } }; // pro robô de teste (D-JC-5)
+  render();
+})();
+</script>
+</body>
+</html>
