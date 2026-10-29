@@ -50,17 +50,27 @@
   .lede .aviso{display:inline-block;margin-top:14px;font-size:14px;background:var(--ink);color:var(--paper);padding:5px 10px;border-radius:3px}
   .abre.sub{border-top:1px solid var(--linha);padding-top:var(--ritmo)}
 
-  /* a home (s.90, era obras.html): um banner por obra; só o NOME abre a obra */
+  /* a home (s.90, era obras.html): um banner por obra. s.91 (o público não entendia o ↗; voto do Vitor, jornada 2 "vidro"): o banner
+     INTEIRO abre a obra (.cobre); o nome segue herói; ao lado, a pílula de VIDRO "entrar na obra" e o "ler sobre ↓" que só indica o texto */
   .obra{margin-bottom:var(--ritmo)}
   .banner{position:relative;border-radius:6px;overflow:hidden;min-height:clamp(340px,60vh,780px);background:#111;color:#fff}
   .banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.62));pointer-events:none}
-  .banner .num{position:absolute;top:var(--dentro);left:var(--dentro);z-index:1;font-size:14px;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
-  .banner h2{position:absolute;left:var(--dentro);right:var(--dentro);bottom:calc(var(--dentro) - 4px);z-index:1;margin:0;font-weight:700;font-size:clamp(44px,8vw,116px);line-height:.92;letter-spacing:-.035em;font-variation-settings:"opsz" 96;text-shadow:0 1px 18px rgba(0,0,0,.35)}
+  .banner .cobre{position:absolute;inset:0;z-index:1}
+  .banner .num{position:absolute;top:var(--dentro);left:var(--dentro);z-index:2;font-size:14px;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px;pointer-events:none}
+  .banner .base{position:absolute;left:var(--dentro);right:var(--dentro);bottom:var(--dentro);z-index:2;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px;pointer-events:none}
+  .banner .base a{pointer-events:auto}
+  .banner h2{margin:0 0 -4px;min-width:0;font-weight:700;font-size:clamp(44px,8vw,116px);line-height:.92;letter-spacing:-.035em;font-variation-settings:"opsz" 96;text-shadow:0 1px 18px rgba(0,0,0,.35)}
   .banner h2 a{border-bottom:3px solid rgba(255,255,255,.55);transition:border-color .2s}
-  .banner h2 a:hover{border-bottom-color:#fff}
+  .banner:hover h2 a{border-bottom-color:#fff}
   .banner h2 a:focus-visible{outline-color:#fff}
-  .banner h2 a::after{content:" ↗";font-size:.42em;vertical-align:.9em;font-weight:500}
+  .acoes{flex:none;display:flex;align-items:center;gap:20px}
+  .vidro{display:inline-flex;align-items:center;min-height:42px;padding:0 18px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);
+         -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;font-size:15px;font-weight:500;transition:background .2s,border-color .2s}
+  .banner:hover .vidro{background:rgba(255,255,255,.18);border-color:#fff}
+  .vidro:focus-visible{outline-color:#fff}
+  .indica{font-size:15px;color:rgba(255,255,255,.82);text-shadow:0 1px 10px rgba(0,0,0,.5)}
+  .texto{scroll-margin-top:72px}
   .texto{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);max-width:1240px;padding-top:24px}
   .texto > div{min-width:0}
   .texto p{margin:0 0 14px;font-size:18px;line-height:1.5}
@@ -132,25 +142,32 @@
   /* a cabeça da Galeria (seção, não mais o título gigante) */
   .galeria-cab{display:grid;grid-template-columns:auto minmax(0,46ch);justify-content:space-between;align-items:end;gap:14px 56px;padding-block:clamp(26px,3.4vw,44px) clamp(18px,2vw,26px)}
   .galeria-cab h2{margin:0;font-weight:700;font-size:clamp(36px,4.6vw,64px);line-height:.9;letter-spacing:-.035em}
-  /* o menu: um cartão por obra — o cartão rola até a obra, o ↗ abre a obra direto */
+  /* o menu: um cartão por obra — imagem e nome rolam até a obra, "ler sobre ↓" desce ao texto, o "entrar →" de vidro abre a obra (s.91) */
   .indice{padding-bottom:clamp(36px,5vw,64px)}
   .indice ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-  .indice li{position:relative;min-width:0}
-  .cartao{display:grid;gap:10px}
+  .indice li{position:relative;min-width:0;display:grid;gap:10px;align-content:start}
   .cartao picture{display:block;border-radius:6px;overflow:hidden;background:#111;aspect-ratio:16/10}
   .cartao img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s ease}
   .cartao:hover img{transform:scale(1.04)}
-  .cartao .rot{display:flex;align-items:baseline;gap:10px}
-  .cartao .n{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
-  .cartao b{font-size:19px;font-weight:700;letter-spacing:-.015em}
-  .abrir{position:absolute;top:8px;right:8px;z-index:2;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;
-         background:var(--paper);color:var(--ink);font-size:16px;box-shadow:0 1px 6px rgba(0,0,0,.18);transition:transform .2s}
-  .abrir:hover{transform:scale(1.08)}
-  .arq{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;margin:16px 0 0;font-size:15px}
+  .indice .rot{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:0}
+  .rot > a:first-child{display:flex;align-items:baseline;gap:10px}
+  .rot .n{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+  .rot b{font-size:19px;font-weight:700;letter-spacing:-.015em}
+  .rot .ler{font-size:14px;color:var(--mute);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--linha);white-space:nowrap}
+  .rot .ler:hover{color:var(--ink);text-decoration-color:var(--ink)}
+  .abrir{position:absolute;top:8px;right:8px;z-index:2;display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;
+         border:1px solid rgba(255,255,255,.55);background:rgba(20,20,20,.22);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+         color:#fff;font-size:13.5px;font-weight:500;transition:background .2s}
+  .abrir:hover{background:rgba(20,20,20,.4)}
+  /* s.91 (Vitor): mais respiro entre os cartões e as linhas de Arquivo e Em casa */
+  .arq{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;margin:clamp(28px,3vw,40px) 0 0;font-size:15px}
   .arq + .arq{margin-top:10px}
   .arq span{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
   .arq a{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--linha)}
   .arq a:hover{text-decoration-color:var(--ink)}
+  /* s.91 (Vitor): na linha Em casa o link é o próprio rótulo; o texto só descreve */
+  .arq a.rot-link{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);text-decoration-color:var(--mute)}
+  .arq .txt{font-size:15px;letter-spacing:0;text-transform:none;font-weight:400;color:var(--mute)}
   /* o trilho: desce quando o menu sai da tela; a obra da vez fica marcada; ↑ volta ao início; no celular rola de lado */
   .trilho{position:fixed;z-index:20;left:0;right:0;top:0;display:flex;align-items:center;gap:16px;
           padding:calc(10px + env(safe-area-inset-top,0px)) max(var(--g),env(safe-area-inset-right,0px)) 10px max(var(--g),env(safe-area-inset-left,0px));
@@ -192,7 +209,7 @@
     footer{padding-block:22px 32px} footer .frase{font-size:19px}
     footer a.insta{padding:18px 16px 20px} footer a.insta .h{font-size:25px} footer a.insta svg{width:118px;height:118px;right:-12px}
   }
-  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} .banner h2 a,.app,.capa-fotos picture,.trilho,.cartao img{transition:none} }
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} .banner h2 a,.vidro,.abrir,.app,.capa-fotos picture,.trilho,.cartao img{transition:none} }
 </style>
 </head>
 <body>
@@ -235,11 +252,11 @@
 <footer>
   
   <p class="desc"><span>O dado público vira obra navegável.<br />Mas o mesmo jeito de fazer, levado para dentro de casa, vira jogo, material de estudo, atividade em família. Me chama no Instagram que eu te passo o código para conhecer:</span><a class="casa" href="em-casa.html">Em casa</a></p>
-  <nav class="links"><a href="https://andamento.datartgenlab.com.br/">Monitoramento da nuvem →</a></nav>
+  <nav class="links"></nav>
   <a class="insta" href="https://www.instagram.com/datartgenlab/" aria-label="Instagram @datartgenlab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.3"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg><span class="r">Instagram</span><span class="h">@datartgenlab →</span></a>
   <div class="pe"><span>Datart GenLab · 2026</span></div>
 </footer>
 
-<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-29 07:14 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
+<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-29 12:22 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
 </body>
 </html>
