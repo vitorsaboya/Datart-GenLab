@@ -114,7 +114,72 @@
   footer a.insta svg{position:absolute;right:-14px;top:50%;width:150px;height:150px;transform:translateY(-50%);color:var(--ink);opacity:.08;pointer-events:none}
   footer a.insta:hover{border-color:var(--ink)} footer a.insta:hover .h{text-decoration:underline;text-underline-offset:5px}
 
+  /* ===== s.90 · a home votada pelo Vitor (teste captura-s90): capa 2 + menu + trilho + movimento 3 ===== */
+  html{scroll-behavior:smooth}
+  .obra,.abre.sub{scroll-margin-top:64px}
+  /* a capa: a tela inteira é uma obra (o fundo se reveza devagar), o nome em papel por cima, a legenda diz qual obra está ali */
+  .capa{position:relative;height:min(90svh,980px);min-height:520px;overflow:hidden;background:#111;color:var(--paper);
+        margin-left:calc(-1 * max(var(--g),env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(var(--g),env(safe-area-inset-right,0px)))}
+  .capa-fotos picture{position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease}
+  .capa-fotos picture.on{opacity:1}
+  .capa-fotos img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .capa::after{content:"";position:absolute;inset:0;background:linear-gradient(200deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.66));pointer-events:none}
+  .capa-txt{position:absolute;z-index:1;left:max(var(--g),env(safe-area-inset-left,0px));right:var(--g);bottom:clamp(24px,4vw,56px);display:grid;gap:clamp(12px,1.6vw,20px)}
+  .capa .nome{margin:0;font-weight:800;font-size:clamp(64px,11vw,200px);letter-spacing:-.055em;line-height:.84;font-variation-settings:"opsz" 96}
+  .capa .nome span{display:block}
+  .frase-capa{margin:0;font-size:clamp(20px,2.3vw,32px);line-height:1.25;letter-spacing:-.015em;font-weight:500;max-width:28ch;color:var(--paper)}
+  .capa-leg{position:absolute;z-index:1;top:calc(clamp(16px,2vw,28px) + env(safe-area-inset-top,0px));right:max(var(--g),env(safe-area-inset-right,0px));font-size:14px;background:rgba(0,0,0,.45);padding:5px 10px;border-radius:3px}
+  /* a cabeça da Galeria (seção, não mais o título gigante) */
+  .galeria-cab{display:grid;grid-template-columns:auto minmax(0,46ch);justify-content:space-between;align-items:end;gap:14px 56px;padding-block:clamp(26px,3.4vw,44px) clamp(18px,2vw,26px)}
+  .galeria-cab h2{margin:0;font-weight:700;font-size:clamp(36px,4.6vw,64px);line-height:.9;letter-spacing:-.035em}
+  /* o menu: um cartão por obra — o cartão rola até a obra, o ↗ abre a obra direto */
+  .indice{padding-bottom:clamp(36px,5vw,64px)}
+  .indice ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .indice li{position:relative;min-width:0}
+  .cartao{display:grid;gap:10px}
+  .cartao picture{display:block;border-radius:6px;overflow:hidden;background:#111;aspect-ratio:16/10}
+  .cartao img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s ease}
+  .cartao:hover img{transform:scale(1.04)}
+  .cartao .rot{display:flex;align-items:baseline;gap:10px}
+  .cartao .n{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+  .cartao b{font-size:19px;font-weight:700;letter-spacing:-.015em}
+  .abrir{position:absolute;top:8px;right:8px;z-index:2;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;
+         background:var(--paper);color:var(--ink);font-size:16px;box-shadow:0 1px 6px rgba(0,0,0,.18);transition:transform .2s}
+  .abrir:hover{transform:scale(1.08)}
+  .arq{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;margin:16px 0 0;font-size:15px}
+  .arq + .arq{margin-top:10px}
+  .arq span{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+  .arq a{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--linha)}
+  .arq a:hover{text-decoration-color:var(--ink)}
+  /* o trilho: desce quando o menu sai da tela; a obra da vez fica marcada; ↑ volta ao início; no celular rola de lado */
+  .trilho{position:fixed;z-index:20;left:0;right:0;top:0;display:flex;align-items:center;gap:16px;
+          padding:calc(10px + env(safe-area-inset-top,0px)) max(var(--g),env(safe-area-inset-right,0px)) 10px max(var(--g),env(safe-area-inset-left,0px));
+          background:rgba(236,235,230,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--linha);
+          transform:translateY(-110%);transition:transform .35s ease}
+  .trilho.vis{transform:none}
+  .t-inicio{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;border:1px solid var(--linha);font-size:15px}
+  .t-inicio:hover{border-color:var(--ink)}
+  .t-logo{font-weight:800;font-size:16px;letter-spacing:-.02em;white-space:nowrap}
+  .t-lista{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .t-lista::-webkit-scrollbar{display:none}
+  .t-lista a{flex:none;font-size:14px;padding:5px 12px;border-radius:999px;color:var(--mute);border:1px solid transparent;transition:background .2s,color .2s}
+  .t-lista a:hover{color:var(--ink);border-color:var(--linha)}
+  .t-lista a.ativo{background:var(--ink);color:var(--paper)}
+  /* o movimento: as camadas reais de cada obra dentro do banner */
+  .quadros{position:absolute;inset:0}
+  .quadros picture{position:absolute;inset:0}
+  .quadros picture:not(:first-child) img{opacity:0}
+  .banner .quadros,.banner > picture img,.banner > img{will-change:transform}
+
   @media (max-width:760px){
+    .capa{height:86svh}
+    .galeria-cab{grid-template-columns:minmax(0,1fr)}
+    .indice ol{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+               margin-right:calc(-1 * max(var(--g),env(safe-area-inset-right,0px)));padding-right:var(--g)}
+    .indice ol::-webkit-scrollbar{display:none}
+    .indice li{flex:0 0 42vw;scroll-snap-align:start}
+    .cartao picture{aspect-ratio:4/5}
+    .t-logo{display:none}
     header{padding-top:18px}
     .abre{grid-template-columns:minmax(0,1fr);gap:14px}
     .lede p{font-size:17px}
@@ -127,7 +192,7 @@
     footer{padding-block:22px 32px} footer .frase{font-size:19px}
     footer a.insta{padding:18px 16px 20px} footer a.insta .h{font-size:25px} footer a.insta svg{width:118px;height:118px;right:-12px}
   }
-  @media (prefers-reduced-motion:reduce){ .banner h2 a,.app{transition:none} }
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} .banner h2 a,.app,.capa-fotos picture,.trilho,.cartao img{transition:none} }
 </style>
 </head>
 <body>
@@ -174,6 +239,7 @@
   <a class="insta" href="https://www.instagram.com/datartgenlab/" aria-label="Instagram @datartgenlab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.3"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg><span class="r">Instagram</span><span class="h">@datartgenlab →</span></a>
   <div class="pe"><span>Datart GenLab · 2026</span></div>
 </footer>
-<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-28 23:41 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
+
+<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-29 07:14 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
 </body>
 </html>
