@@ -2,16 +2,16 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
 <title>Datart GenLab</title>
-<meta name="description" content="Dado público vira obra navegável. E o mesmo jeito de fazer, levado para dentro de casa." />
+<meta name="description" content="Minha curiosidade transformada em trabalhos interativos." />
 
 <link rel="icon" href="marca/favicon.ico" />
 <link rel="icon" type="image/png" sizes="32x32" href="marca/favicon-32.png" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Datart GenLab" />
-<meta property="og:description" content="Dado público vira obra navegável. E o mesmo jeito de fazer, levado para dentro de casa." />
+<meta property="og:description" content="Minha curiosidade transformada em trabalhos interativos." />
 <meta property="og:url" content="https://datart-genlab.pages.dev/" />
 <meta property="og:image" content="https://datart-genlab.pages.dev/capas/012-heroi-1280.jpg" />
 <meta name="twitter:card" content="summary_large_image" />
@@ -20,63 +20,53 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&display=swap" rel="stylesheet" />
 <script data-goatcounter="https://datartgenlab.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script><script>(function(h){if(h==="localhost"||h==="127.0.0.1")return;var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-0CSBP8ZCHQ";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-0CSBP8ZCHQ")})(location.hostname)</script>
 <style>
-  :root{ --paper:#ecebe6; --card:#f6f5f1; --ink:#161513; --mute:#55534d; }
+  /* diagramação (s.90): UMA margem pra tudo (--g) — logo, títulos, banners, textos e rodapé começam na mesma
+     linha; topo compacto, pra o nome da 1ª obra caber na 1ª tela do notebook; um ritmo só entre os blocos (--ritmo) */
+  :root{ --paper:#ecebe6; --card:#f6f5f1; --ink:#161513; --mute:#55534d; --linha:#cfcdc6; --erro:#9a2b1c;
+         --g:clamp(16px,3vw,44px); --ritmo:clamp(44px,6vw,88px); --dentro:clamp(16px,2vw,28px); }
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{background:var(--paper);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{background:var(--paper);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+       padding-left:max(var(--g),env(safe-area-inset-left,0px));padding-right:max(var(--g),env(safe-area-inset-right,0px))}
   a{color:inherit;text-decoration:none}
+  [hidden]{display:none !important}
+  h1,h2{text-wrap:balance} p{text-wrap:pretty}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
-  /* topo comum: só a logo (s.81) */
-  header{padding:22px 28px}
+  /* topo: a marca e, ao lado, o subtítulo (palavras do Vitor, s.90); no celular o subtítulo desce */
+  header{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 16px;padding-block:22px 0}
   .logo{font-weight:800;font-size:22px;letter-spacing:-.02em}
-  /* "Em casa" = botãozinho, no rodapé (s.81): a home é das obras; a casa vai ganhar login e tem outra linguagem */
-  a.casa{font-size:13.5px;color:var(--mute);border:1px solid #cfcdc6;border-radius:999px;padding:3px 11px;white-space:nowrap}
+  header .sub{margin:0;font-size:16px;line-height:1.4;color:var(--mute)}
+  /* "Em casa" = botãozinho, no rodapé (s.81) */
+  a.casa{font-size:13.5px;color:var(--mute);border:1px solid var(--linha);border-radius:999px;padding:3px 11px;white-space:nowrap}
   a.casa:hover{color:var(--ink);border-color:var(--ink)}
 
-  /* home: portas */
-  .portas{display:grid;gap:14px;padding:0 14px 14px}
-  .porta{position:relative;display:block;border-radius:6px;overflow:hidden;min-height:62vh;color:#fff;background:#111}
-  .porta img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s ease}
-  a.porta:hover img{transform:scale(1.03)}
-  .porta::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.6));pointer-events:none}
-  .porta .t{position:absolute;left:26px;right:26px;bottom:22px;z-index:1;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;text-shadow:0 1px 18px rgba(0,0,0,.35)}
-  .porta h2{margin:0;font-weight:700;font-size:clamp(44px,8vw,120px);line-height:.9;letter-spacing:-.035em;font-variation-settings:"opsz" 96}
-  .porta .k{font-size:15px;max-width:36ch}
-  .porta .n{position:absolute;top:18px;left:26px;z-index:1;font-size:14px;letter-spacing:.02em;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
-  .dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .dois .porta{min-height:46vh}
-  .rot{display:inline-block;margin:12px 24px 0;font-size:15px;color:var(--mute)}
-  .rot:hover{color:var(--ink)}
-  .lista{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:6px 14px 30px}
-  .item{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:center;padding:10px;border-radius:6px;background:var(--card);transition:background .2s}
-  .item:hover{background:#fff}
-  .item img{width:104px;height:78px;object-fit:cover;border-radius:3px;background:#111}
-  .item b{display:block;font-size:17px;font-weight:600;letter-spacing:-.01em}
-  .item span{display:block;color:var(--mute);font-size:13.5px;line-height:1.4}
+  /* abertura: o título e, ao lado, o texto, alinhados pela base (no celular, um embaixo do outro) */
+  .abre{display:grid;grid-template-columns:auto minmax(0,46ch);justify-content:space-between;align-items:end;gap:16px 56px;
+        padding-block:clamp(26px,4vw,56px) clamp(22px,2.6vw,36px)}
+  .abre h1{margin:0;font-weight:700;font-size:clamp(52px,8.5vw,128px);line-height:.88;letter-spacing:-.04em;font-variation-settings:"opsz" 96}
+  .abre h2{margin:0;font-weight:700;font-size:clamp(40px,6vw,84px);line-height:.92;letter-spacing:-.035em;font-variation-settings:"opsz" 96}
+  .lede p{margin:0;font-size:18px;line-height:1.5;color:var(--mute)}
+  .lede .aviso{display:inline-block;margin-top:14px;font-size:14px;background:var(--ink);color:var(--paper);padding:5px 10px;border-radius:3px}
+  .abre.sub{border-top:1px solid var(--linha);padding-top:var(--ritmo)}
 
-  /* páginas internas */
-  .abre{padding:30px 28px 26px;max-width:1100px}
-  .abre h1{margin:0;font-weight:700;font-size:clamp(48px,9vw,128px);line-height:.9;letter-spacing:-.04em;font-variation-settings:"opsz" 96}
-  .abre p{margin:20px 0 0;font-size:19px;line-height:1.45;max-width:58ch;color:var(--mute)}
-  .abre.sub{padding-top:40px;border-top:1px solid #cfcdc6;margin:0 14px;padding-left:14px}
-  .abre.sub h2{margin:0;font-weight:700;font-size:clamp(40px,6vw,84px);line-height:.95;letter-spacing:-.035em;font-variation-settings:"opsz" 96}
-  .abre .aviso{display:inline-block;margin-top:16px;font-size:14px;background:var(--ink);color:var(--paper);padding:5px 10px;border-radius:3px}
-
-  /* obras.html: um banner por obra; só o NOME abre a obra */
-  .obra{margin:0 14px 46px}
-  .banner{position:relative;border-radius:6px;overflow:hidden;min-height:58vh;background:#111;color:#fff}
+  /* a home (s.90, era obras.html): um banner por obra; só o NOME abre a obra */
+  .obra{margin-bottom:var(--ritmo)}
+  .banner{position:relative;border-radius:6px;overflow:hidden;min-height:clamp(340px,60vh,780px);background:#111;color:#fff}
   .banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.62));pointer-events:none}
-  .banner .num{position:absolute;top:18px;left:26px;z-index:1;font-size:14px;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
-  .banner h2{position:absolute;left:26px;right:26px;bottom:20px;z-index:1;margin:0;font-weight:700;font-size:clamp(44px,8vw,116px);line-height:.92;letter-spacing:-.035em;font-variation-settings:"opsz" 96;text-shadow:0 1px 18px rgba(0,0,0,.35)}
+  .banner .num{position:absolute;top:var(--dentro);left:var(--dentro);z-index:1;font-size:14px;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
+  .banner h2{position:absolute;left:var(--dentro);right:var(--dentro);bottom:calc(var(--dentro) - 4px);z-index:1;margin:0;font-weight:700;font-size:clamp(44px,8vw,116px);line-height:.92;letter-spacing:-.035em;font-variation-settings:"opsz" 96;text-shadow:0 1px 18px rgba(0,0,0,.35)}
   .banner h2 a{border-bottom:3px solid rgba(255,255,255,.55);transition:border-color .2s}
   .banner h2 a:hover{border-bottom-color:#fff}
+  .banner h2 a:focus-visible{outline-color:#fff}
   .banner h2 a::after{content:" ↗";font-size:.42em;vertical-align:.9em;font-weight:500}
-  .texto{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:34px;padding:22px 12px 0}
+  .texto{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);max-width:1240px;padding-top:24px}
+  .texto > div{min-width:0}
   .texto p{margin:0 0 14px;font-size:18px;line-height:1.5}
-  .texto .fio{font-size:16px;line-height:1.5;color:var(--mute);padding-bottom:14px;border-bottom:1px solid #cfcdc6}
+  .texto .fio{font-size:16px;line-height:1.5;color:var(--mute);padding-bottom:14px;border-bottom:1px solid var(--linha)}
   .texto .fio b{display:block;margin-bottom:4px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
-  .texto h3{margin:0 0 10px;font-size:14px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+  .texto h3{margin:0 0 10px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
   .texto ul{margin:0 0 18px;padding-left:18px;font-size:15.5px;line-height:1.5}
   .texto ul li{margin-bottom:6px}
   .ficha{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14.5px;margin:0 0 18px}
@@ -84,8 +74,16 @@
   .ficha dd{margin:0}
   .texto .aberto{font-size:14.5px;color:var(--mute);border-left:2px solid var(--ink);padding-left:12px}
 
-  /* em-casa.html */
-  .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;padding:0 14px 30px}
+  /* em-casa.html: o passe (s.90, pedido do Vitor: um código simples, só pra não ficar totalmente aberto) e os apps */
+  .passe{display:grid;gap:10px;max-width:440px;padding-bottom:var(--ritmo)}
+  .passe label{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+  .passe .campo{display:flex;gap:8px}
+  .passe input{flex:1;min-width:0;font:inherit;font-size:20px;padding:11px 14px;border:1px solid var(--linha);border-radius:6px;background:var(--card);color:var(--ink)}
+  .passe input:focus{border-color:var(--ink)}
+  .passe button{font:inherit;font-size:16px;font-weight:600;padding:11px 20px;border:0;border-radius:6px;background:var(--ink);color:var(--paper);cursor:pointer}
+  .passe p{margin:0;font-size:15px;line-height:1.45;color:var(--mute)}
+  .passe p.erro{color:var(--erro)}
+  .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px;padding-bottom:var(--ritmo)}
   .app{display:block;border-radius:6px;overflow:hidden;background:var(--card);transition:background .2s}
   .app:hover{background:#fff}
   .app img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#ddd}
@@ -93,88 +91,88 @@
   .app b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
   .app span{color:var(--mute);font-size:15px;line-height:1.45}
 
-  /* sobre.html */
-  .sobre{padding:0 28px 30px;max-width:1100px}
-  .bloco{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:22px 0;border-top:1px solid #cfcdc6}
+  /* sobre.html (fora do ar desde a s.90; volta com paginas.sobre.no_ar) */
+  .sobre{max-width:1100px;padding-bottom:var(--ritmo)}
+  .bloco{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:22px 0;border-top:1px solid var(--linha)}
   .bloco h2{margin:0;font-size:15px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
   .bloco p{margin:0 0 14px;font-size:20px;line-height:1.5;max-width:60ch}
 
-  /* rodapé (s.81): o que é o lab, o texto e o botão de Em casa, Quem somos e o contato */
-  footer{margin:18px 28px 0;padding:26px 0 40px;border-top:1px solid #cfcdc6;color:var(--mute);font-size:14px}
-  footer .frase{margin:0;font-size:22px;line-height:1.4;letter-spacing:-.01em;color:var(--ink);max-width:48ch}
-  footer .desc{margin:14px 0 0;font-size:16px;line-height:1.5;max-width:62ch;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
-  /* s.82: os links alinham pela BASE do texto (a seta → vem de outra fonte, mais alta, e desalinhava "Quem somos") */
+  /* rodapé: o texto e o botão de Em casa, os links e o contato */
+  footer{padding-block:26px 40px;border-top:1px solid var(--linha);color:var(--mute);font-size:14px}
+  footer .frase{margin:0 0 14px;font-size:22px;line-height:1.4;letter-spacing:-.01em;color:var(--ink);max-width:48ch}
+  footer .desc{margin:0;font-size:16px;line-height:1.5;max-width:62ch;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
+  /* s.82: os links alinham pela BASE do texto (a seta → vem de outra fonte, mais alta) */
   footer .links{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;margin-top:26px;font-size:15px}
+  footer .links:empty{display:none}
   footer .pe{margin-top:22px}
   footer a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
   footer a.casa{text-decoration:none;color:var(--mute)}
   /* s.82: o Instagram em destaque, com o ícone dele em marca d'água (traço na cor da tinta, quase apagado) */
-  footer a.insta{position:relative;display:block;overflow:hidden;margin-top:24px;padding:20px 22px 22px;border:1px solid #cfcdc6;border-radius:6px;background:var(--card);text-decoration:none}
+  footer a.insta{position:relative;display:block;overflow:hidden;margin-top:24px;padding:20px 22px 22px;border:1px solid var(--linha);border-radius:6px;background:var(--card);text-decoration:none}
   footer a.insta .r{position:relative;display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
   footer a.insta .h{position:relative;display:block;margin-top:4px;font-size:30px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
   footer a.insta svg{position:absolute;right:-14px;top:50%;width:150px;height:150px;transform:translateY(-50%);color:var(--ink);opacity:.08;pointer-events:none}
   footer a.insta:hover{border-color:var(--ink)} footer a.insta:hover .h{text-decoration:underline;text-underline-offset:5px}
 
   @media (max-width:760px){
-    header{padding:18px 16px} .rot{margin:10px 16px 0}
-    .portas{padding:0 8px 8px;gap:8px} .dois{grid-template-columns:1fr;gap:8px}
-    /* no celular cada porta é um quadro 4:5 com o planeta inteiro (a capa "-celular" via <picture>) */
-    .porta,.dois .porta,.banner{min-height:calc((100vw - 16px) * 1.25)}
-    .porta picture img,.banner picture img{object-position:50% 40% !important}
-    .porta .t{left:16px;right:16px;bottom:16px} .porta .n,.banner .num{left:16px}
-    .lista,.apps{padding:6px 8px 24px;gap:8px}
-    .abre{padding:20px 16px} .obra{margin:0 8px 36px} .banner h2{left:16px;right:16px}
-    .texto{grid-template-columns:1fr;gap:6px;padding:16px 8px 0}
-    .sobre{padding:0 16px 24px} .bloco{grid-template-columns:1fr;gap:8px} .bloco p{font-size:18px}
-    footer{margin:14px 16px 0;padding:22px 0 32px} footer .frase{font-size:19px}
+    header{padding-top:18px}
+    .abre{grid-template-columns:minmax(0,1fr);gap:14px}
+    .lede p{font-size:17px}
+    /* no celular cada banner é um quadro 4:5 com o planeta inteiro (a capa "-celular" via <picture>) */
+    .banner{min-height:0;aspect-ratio:4/5}
+    .banner picture img{object-position:50% 40% !important}
+    .texto{grid-template-columns:minmax(0,1fr);gap:6px;padding-top:18px}
+    .texto p{font-size:17px}
+    .bloco{grid-template-columns:1fr;gap:8px} .bloco p{font-size:18px}
+    footer{padding-block:22px 32px} footer .frase{font-size:19px}
     footer a.insta{padding:18px 16px 20px} footer a.insta .h{font-size:25px} footer a.insta svg{width:118px;height:118px;right:-12px}
   }
-  @media (prefers-reduced-motion:reduce){ .porta img{transition:none} }
+  @media (prefers-reduced-motion:reduce){ .banner h2 a,.app{transition:none} }
 </style>
 </head>
 <body>
-<header><a class="logo" href="./">Datart GenLab</a></header>
+<header><a class="logo" href="./">Datart GenLab</a><p class="sub">Minha curiosidade transformada em trabalhos interativos.</p></header>
 
 <main>
-<div class="portas">
-  <a class="porta" href="obras.html#002-brasa">
-    <picture><source media="(max-width: 760px)" srcset="capas/002-heroi-celular.jpg" /><img src="capas/002-heroi.jpg" srcset="capas/002-heroi-1280.jpg 1280w, capas/002-heroi.jpg 2560w" sizes="100vw" alt="O Brasil no globo em 2025: em claro a vegetação nativa derrubada desde 1987, em brasa o fogo do ano, dado MapBiomas" style="object-position:50% 45%" /></picture>
-    <span class="n">obra 002 · MapBiomas, INPE e Sentinel-2</span>
-    <div class="t"><h2>Brasa</h2><span class="k">Em 39 anos o Brasil derrubou 1,37 milhão de km² de vegetação nativa. O fogo veio junto.</span></div>
-  </a>
-  <div class="dois">
-  <a class="porta" href="obras.html#012-sahara-amazonia">
-    <picture><source media="(max-width: 760px)" srcset="capas/012-heroi-celular.jpg" /><img src="capas/012-heroi.jpg" srcset="capas/012-heroi-1280.jpg 1280w, capas/012-heroi.jpg 2560w" sizes="(max-width: 760px) 100vw, 50vw" alt="Poeira do Saara cruzando o Atlântico em 15 de fevereiro de 2007, dado MERRA-2" style="object-position:52% 50%" /></picture>
-    <span class="n">obra 012 · NASA MERRA-2</span>
-    <div class="t"><h2>A Ponte de Poeira</h2><span class="k">Todo ano um rio de poeira sai do Saara, cruza o Atlântico e fertiliza a Amazônia.</span></div>
-  </a>
-  <a class="porta" href="obras.html#011-el-nino">
-    <picture><source media="(max-width: 760px)" srcset="capas/011-heroi-celular.jpg" /><img src="capas/011-heroi.jpg" srcset="capas/011-heroi-1280.jpg 1280w, capas/011-heroi.jpg 2560w" sizes="(max-width: 760px) 100vw, 50vw" alt="O Pacífico em setembro de 2026, temperatura real do mar" style="object-position:50% 45%" /></picture>
-    <span class="n">obra 011 · NOAA OISST</span>
-    <div class="t"><h2>El Niño</h2><span class="k">O Pacífico mês a mês pela temperatura real do mar, até o maior pico da série, em setembro de 2026.</span></div>
-  </a>
-  </div>
-  <a class="porta" href="obras.html#013-terra-nua">
-    <picture><source media="(max-width: 760px)" srcset="capas/013-heroi-celular.jpg" /><img src="capas/013-heroi.jpg" srcset="capas/013-heroi-1280.jpg 1280w, capas/013-heroi.jpg 2560w" sizes="100vw" alt="O relevo do planeta sem água, pintado por altitude" style="object-position:55% 30%" /></picture>
-    <span class="n">obra 013 · relevo global + polos de Euler (NNR-MORVEL56)</span>
-    <div class="t"><h2>A Terra Nua</h2><span class="k">O relevo do planeta sem água, com as placas tectônicas andando 50 milhões de anos.</span></div>
-  </a>
-</div>
-<a class="rot" href="obras.html#arquivo">Arquivo · os primeiros estudos</a>
-<div class="lista">
-  <a class="item" href="obras.html#000-laminar"><img src="capas/000-laminar.jpg" alt="" loading="lazy" /><div><b>Laminar</b><span>000 · nenhum (matemática pura)</span><span>estudo de fundação, 2026</span></div></a>
-  <a class="item" href="obras.html#001-memoria-fluida"><img src="capas/001-memoria-fluida.jpg" alt="" loading="lazy" /><div><b>Memória Fluida</b><span>001 · temperatura simulada</span><span>estudo de maio de 2026</span></div></a>
-  <a class="item" href="obras.html#007-oceano-ferly"><img src="capas/007-oceano-ferly.jpg" alt="" loading="lazy" /><div><b>Oceano Ferly</b><span>007 · NOAA OISST (e boias TAO)</span><span>maio de 2026 · série 2020–2024</span></div></a>
-</div>
+<section class="abre"><h1>Galeria</h1><div class="lede"><p>Cada obra parte de uma base de dados públicos — climáticos, geográficos, ambientais, sociais — e vira uma experiência em que o tempo, o movimento, as cores, as imagens, tudo trabalha em função do dado, para que ele conte uma história.</p></div></section>
+<article class="obra" id="002-brasa">
+  <div class="banner"><picture><source media="(max-width: 760px)" srcset="capas/002-heroi-celular.jpg" /><img src="capas/002-heroi.jpg" srcset="capas/002-heroi-1280.jpg 1280w, capas/002-heroi.jpg 2560w" sizes="100vw" alt="O Brasil no globo em 2025: em claro a vegetação nativa derrubada desde 1987, em brasa o fogo do ano, dado MapBiomas" style="object-position:50% 45%" fetchpriority="high" /></picture><span class="num">obra 002</span><h2><a href="002-brasa/" title="abrir a obra">Brasa</a></h2></div>
+  <div class="texto"><div><p>Fogo e desmatamento no Brasil, de 1985 a 2025, num globo que vai do país inteiro até a foto de satélite. Um resumo em 9 passos conta a história enquanto você rola; o globo deixa explorar qualquer ano e tocar o dado de cada lugar.</p><p>A foto de 2017 a 2025 é um mosaico próprio, montado na nuvem a partir do Sentinel-2 do Copernicus, a 10 m. Em 5 regiões, a foto de cada ano desde 1985 (Landsat) e o dado do MapBiomas a 30 m, pixel a pixel.</p></div><div><h3>Como ler</h3><ul><li>O claro é tudo o que foi derrubado desde 1987; a brasa, o que caiu no ano; a luz, o fogo que veio junto.</li><li>De perto, a foto é a do ano escolhido. Antes de 2017, fora das regiões e janelas, a base é a foto de 2017 em preto e branco, e a tela diz isso.</li><li>Tudo é descritivo: associação, não causa.</li></ul><dl class="ficha"><dt>dado</dt><dd>MapBiomas, INPE e Sentinel-2</dd><dt>período</dt><dd>1985–2025</dd><dt>estado</dt><dd>atualizada em 24 out 2026</dd></dl><p class="aberto">Em aberto: Onde abril a junho não teve céu limpo, a foto foi tapada com julho a setembro e janeiro a março do mesmo ano (declarado); antes de 2017 só há foto do ano nas regiões e janelas; a legenda por quadrado e as emendas no oeste da Amazônia ainda estão abertas.</p></div></div>
+</article>
+<article class="obra" id="012-sahara-amazonia">
+  <div class="banner"><picture><source media="(max-width: 760px)" srcset="capas/012-heroi-celular.jpg" /><img src="capas/012-heroi.jpg" srcset="capas/012-heroi-1280.jpg 1280w, capas/012-heroi.jpg 2560w" sizes="100vw" alt="Poeira do Saara cruzando o Atlântico em 15 de fevereiro de 2007, dado MERRA-2" style="object-position:52% 50%" loading="lazy" /></picture><span class="num">obra 012</span><h2><a href="012-sahara-amazonia/" title="abrir a obra">A Ponte de Poeira</a></h2></div>
+  <div class="texto"><div><p>Todo ano, um rio de poeira mineral sai do Saara, atravessa mais de 5.000 km de Atlântico e pousa na Amazônia, levando o fósforo que fertiliza a floresta. A obra dá corpo a essa ponte invisível: a nuvem é um volume 3D calculado da reanálise MERRA-2 da NASA, o vento real empurra a poeira de uma semana para a outra, e no chão acende a poeira que chega.</p><p>A janela é a estação de dezembro de 2006 a abril de 2007, a de maior transporte para a Amazônia na série do satélite CALIPSO.</p></div><div><h3>Como ler</h3><ul><li>No ar, a cor é a concentração de poeira (com um máximo fixo para todas as datas) e a altura é a altitude real: a rota sul voa baixo, perto de 1 km.</li><li>No chão, a cor é a poeira acumulada e o brilho é a chegada.</li><li>Arraste a barra do tempo: a nuvem flui empurrada pelo vento medido.</li></ul><dl class="ficha"><dt>dado</dt><dd>NASA MERRA-2</dd><dt>período</dt><dd>dez 2006 – abr 2007</dd><dt>estado</dt><dd>atualizada em 22 out 2026</dd></dl><p class="aberto">Em aberto: A data na tela se sobrepõe à legenda; entre uma semana e outra o movimento é interpolado pelo vento, não medido; pesa em celulares mais simples.</p></div></div>
+</article>
+<article class="obra" id="011-el-nino">
+  <div class="banner"><picture><source media="(max-width: 760px)" srcset="capas/011-heroi-celular.jpg" /><img src="capas/011-heroi.jpg" srcset="capas/011-heroi-1280.jpg 1280w, capas/011-heroi.jpg 2560w" sizes="100vw" alt="O Pacífico em setembro de 2026, temperatura real do mar" style="object-position:50% 45%" loading="lazy" /></picture><span class="num">obra 011</span><h2><a href="011-el-nino/cinematic.html" title="abrir a obra">El Niño</a></h2></div>
+  <div class="texto"><div><p class="fio"><b>Na história do lab</b>Tem um avô no arquivo: a Oceano Ferly (007) já fazia, em maio de 2026, um globo do mar com o mesmo dado de satélite. A El Niño foi aberta sem partir dela, de propósito, e acabou reencontrando o mesmo caminho.</p><p>Um globo do Pacífico onde a temperatura real da superfície do mar, medida por satélite pela NOAA, governa a obra mês a mês. Abre com um filme narrado que mergulha no globo, e a série segue até o mês mais recente publicado.</p><p>Em setembro de 2026 a região Niño 3.4 marcou +2,53 °C acima do normal, o maior valor da série, acima do pico de dezembro de 2023 (+2,32 °C).</p></div><div><h3>Como ler</h3><ul><li>A cor é a temperatura real do mar, de 0 a 32 °C.</li><li>A agitação e o brilho da água são a anomalia: o mar se revolve onde está mais quente que o normal.</li><li>Na linha do tempo, os dois picos aparecem marcados com o valor.</li></ul><dl class="ficha"><dt>dado</dt><dd>NOAA OISST</dd><dt>período</dt><dd>jan 2020 – set 2026</dd><dt>estado</dt><dd>atualizada em 22 out 2026</dd></dl><p class="aberto">Em aberto: O filme de abertura ainda chama dezembro de 2023 de auge; o novo pico está só na linha do tempo, por escolha.</p></div></div>
+</article>
+<article class="obra" id="013-terra-nua">
+  <div class="banner"><picture><source media="(max-width: 760px)" srcset="capas/013-heroi-celular.jpg" /><img src="capas/013-heroi.jpg" srcset="capas/013-heroi-1280.jpg 1280w, capas/013-heroi.jpg 2560w" sizes="100vw" alt="O relevo do planeta sem água, pintado por altitude" style="object-position:55% 30%" loading="lazy" /></picture><span class="num">obra 013</span><h2><a href="013-terra-nua/" title="abrir a obra">A Terra Nua</a></h2></div>
+  <div class="texto"><div><p>O planeta sem água e sem nome: o relevo global, terra e fundo do oceano juntos, pintado por altitude e esculpido por sombra dura. Cada placa tectônica gira pelo seu polo de Euler real e leva o relevo junto, cinquenta milhões de anos à frente.</p><p>É um cenário, não uma previsão: a velocidade de hoje é estendida em linha reta.</p></div><div><h3>Como ler</h3><ul><li>A cor é a altitude, numa rampa única para o planeta inteiro; a sombra vem de um sol fixo.</li><li>Onde nenhuma placa cobre, fica um vazio declarado, não pintado. Onde duas se sobrepõem, a mais baixa afunda.</li></ul><dl class="ficha"><dt>dado</dt><dd>relevo global + polos de Euler (NNR-MORVEL56)</dd><dt>período</dt><dd>hoje → +50 milhões de anos (cenário)</dd><dt>estado</dt><dd>atualizada em 22 out 2026</dd></dl><p class="aberto">Em aberto: Em 50 milhões de anos sobra um vazio de cerca de 20% da superfície, e as bordas dos rasgos ficam serrilhadas.</p></div></div>
+</article>
+<section class="abre sub" id="arquivo"><h2>Arquivo</h2><div class="lede"><p>Antes das obras acima vieram os estudos. O lab começou sem dado nenhum, só com matemática, para aprender como uma estrutura aparece pelo movimento (000). Depois deixou um dado comandar o movimento (001) e, dali, foi olhar a superfície do mar num globo (007), o caminho que acabou no El Niño. São de antes da regra de que toda obra parte de dado público real: estão aqui pelo que ensinaram, e o que cada um deixou em aberto vem dito. Vão entrando aos poucos, à medida que são resgatados.</p></div></section>
+<article class="obra" id="000-laminar">
+  <div class="banner"><img src="capas/000-laminar.jpg" alt="Milhares de pontos brancos sobre preto, alinhados por um fluxo invisível" loading="lazy" /><span class="num">obra 000</span><h2><a href="000-laminar/" title="abrir a obra">Laminar</a></h2></div>
+  <div class="texto"><div><p class="fio"><b>Na história do lab</b>A primeira obra do lab. Tudo o que veio depois herdou daqui o quadro, o rastro que se apaga devagar e a gravação de vídeo direto do navegador.</p><p>Catorze mil partículas brancas sobre fundo preto, empurradas por um campo de movimento que ninguém vê. Cada uma deixa um rastro que some devagar, e é o acúmulo desses rastros que desenha o campo.</p><p>Não há dado aqui, de propósito: antes de mapear um fenômeno real, o lab quis entender como uma estrutura aparece pelo movimento. Antes do dado, a gramática.</p></div><div><h3>Como ler</h3><ul><li>O branco é só rastro: onde as linhas se adensam e se alinham, o campo empurra na mesma direção.</li><li>O campo é matemático, três ondas sobrepostas formando um fluxo que não se comprime, e muda devagar com o tempo.</li><li>Nada aqui é medição: é a obra sem dado, declarada.</li></ul><dl class="ficha"><dt>dado</dt><dd>nenhum (matemática pura)</dd><dt>período</dt><dd>estudo de fundação, 2026</dd><dt>estado</dt><dd>atualizada em 22 out 2026</dd></dl><p class="aberto">Em aberto: O vídeo nunca foi exportado, e a data exata do estudo não ficou registrada.</p></div></div>
+</article>
+<article class="obra" id="001-memoria-fluida">
+  <div class="banner"><img src="capas/001-memoria-fluida.jpg" alt="Uma massa âmbar de partículas em movimento sobre fundo azul quase preto" loading="lazy" /><span class="num">obra 001</span><h2><a href="001-memoria-fluida/" title="abrir a obra">Memória Fluida</a></h2></div>
+  <div class="texto"><div><p class="fio"><b>Na história do lab</b>Pegou a base da Laminar e pôs um dado no comando. Foi aqui que apareceu a vontade de olhar a superfície do mar em vez do volume, o que levou, no dia seguinte, ao primeiro globo do oceano (007).</p><p>O oceano tem memória: correntes abaixo da superfície carregam o calor de estações passadas. O estudo imita essa propriedade. 262 mil partículas giram num campo turbulento e cada uma deixa um rastro que demora a apagar, então o que se vê é o presente por cima do passado recente.</p><p>Foi o primeiro estudo do lab com um dado comandando o movimento, e o primeiro vídeo que o lab exportou.</p></div><div><h3>Como ler</h3><ul><li>A cor é a velocidade de cada partícula: azul quase preto, cobre e, no mais rápido, âmbar.</li><li>A agitação do campo segue uma temperatura do mar ao longo de um ano: dia mais quente, campo mais turbulento.</li><li>A câmera gira devagar em volta; as teclas + e − mudam a exposição.</li></ul><dl class="ficha"><dt>dado</dt><dd>temperatura simulada</dd><dt>período</dt><dd>estudo de maio de 2026</dd><dt>estado</dt><dd>atualizada em 22 out 2026</dd></dl><p class="aberto">Em aberto: O dado não é real: é uma temperatura simulada (uma curva de 18 a 29 °C com ruído) sorteada de novo cada vez que a página abre, então a imagem não volta a uma medição. E o centro do volume estoura de brilho, o problema que pausou o estudo.</p></div></div>
+</article>
+<article class="obra" id="007-oceano-ferly">
+  <div class="banner"><img src="capas/007-oceano-ferly.jpg" alt="O globo visto sobre o Pacífico em setembro de 2023, o mar em azul-gelo e fogo pela anomalia de temperatura" loading="lazy" /><span class="num">obra 007</span><h2><a href="007-oceano-ferly/" title="abrir a obra">Oceano Ferly</a></h2></div>
+  <div class="texto"><div><p class="fio"><b>Na história do lab</b>Nasceu um dia depois da Memória Fluida pedir superfície em vez de volume. Foi a primeira obra que o lab fechou de propósito, e o primeiro globo do mar, o tema que voltaria na El Niño.</p><p>Um globo do Pacífico onde a temperatura real do mar, medida por satélite, mexe nas ondas. Em dois dias a obra mudou de rumo quatro vezes: fluido de partículas no navegador, boias do Atlântico, o Pacífico do El Niño e, por fim, o globo 3D renderizado na nuvem, em sete versões.</p><p>Entra no arquivo como história: o filme final, as sete versões lado a lado e o porquê de cada guinada, com os materiais da época.</p></div><div><h3>Como ler</h3><ul><li>A cor é a anomalia: azul-gelo mais frio, fogo mais quente, contra a média da mesma latitude no mês (±5 °C).</li><li>A altura da onda é a temperatura medida.</li><li>São vídeos: o globo não gira na mão.</li></ul><dl class="ficha"><dt>dado</dt><dd>NOAA OISST (e boias TAO)</dd><dt>período</dt><dd>maio de 2026 · série 2020–2024</dd><dt>estado</dt><dd>atualizada em 22 out 2026</dd></dl><p class="aberto">Em aberto: A anomalia é medida contra a média da latitude, não contra o normal histórico de cada lugar, então o El Niño de 2023 aparece menos do que deveria; a primeira versão ainda usava temperatura de teste.</p></div></div>
+</article>
 </main>
 
 <footer>
-  <p class="frase">O Datart GenLab é um laboratório onde dados públicos reais — climáticos, geográficos, ambientais, sociais — são transformados em arte.</p>
-  <p class="desc"><span>Dado público vira obra navegável. E o mesmo jeito de fazer, levado para dentro de casa.</span><a class="casa" href="em-casa.html">Em casa</a></p>
-  <nav class="links"><a href="sobre.html">Quem somos</a><a href="https://andamento.datartgenlab.com.br/">Monitoramento da nuvem →</a></nav>
+  
+  <p class="desc"><span>O dado público vira obra navegável.<br />Mas o mesmo jeito de fazer, levado para dentro de casa, vira jogo, material de estudo, atividade em família. Me chama no Instagram que eu te passo o código para conhecer:</span><a class="casa" href="em-casa.html">Em casa</a></p>
+  <nav class="links"><a href="https://andamento.datartgenlab.com.br/">Monitoramento da nuvem →</a></nav>
   <a class="insta" href="https://www.instagram.com/datartgenlab/" aria-label="Instagram @datartgenlab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.3"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg><span class="r">Instagram</span><span class="h">@datartgenlab →</span></a>
   <div class="pe"><span>Datart GenLab · 2026</span></div>
 </footer>
-<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-24 13:16 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
+<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-28 23:41 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
 </body>
 </html>

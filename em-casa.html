@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
 <title>Em casa · Datart GenLab</title>
 <meta name="description" content="O mesmo jeito de fazer, levado para dentro de casa: jogos de estudo, um fliperama e uma cozinha da família, feitos sob medida e sem anúncio. O progresso fica salvo no aparelho de quem joga; só o placar do Arcade é compartilhado entre os jogadores." />
@@ -20,63 +20,53 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&display=swap" rel="stylesheet" />
 <script data-goatcounter="https://datartgenlab.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script><script>(function(h){if(h==="localhost"||h==="127.0.0.1")return;var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-0CSBP8ZCHQ";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-0CSBP8ZCHQ")})(location.hostname)</script>
 <style>
-  :root{ --paper:#ecebe6; --card:#f6f5f1; --ink:#161513; --mute:#55534d; }
+  /* diagramação (s.90): UMA margem pra tudo (--g) — logo, títulos, banners, textos e rodapé começam na mesma
+     linha; topo compacto, pra o nome da 1ª obra caber na 1ª tela do notebook; um ritmo só entre os blocos (--ritmo) */
+  :root{ --paper:#ecebe6; --card:#f6f5f1; --ink:#161513; --mute:#55534d; --linha:#cfcdc6; --erro:#9a2b1c;
+         --g:clamp(16px,3vw,44px); --ritmo:clamp(44px,6vw,88px); --dentro:clamp(16px,2vw,28px); }
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{background:var(--paper);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{background:var(--paper);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+       padding-left:max(var(--g),env(safe-area-inset-left,0px));padding-right:max(var(--g),env(safe-area-inset-right,0px))}
   a{color:inherit;text-decoration:none}
+  [hidden]{display:none !important}
+  h1,h2{text-wrap:balance} p{text-wrap:pretty}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
-  /* topo comum: só a logo (s.81) */
-  header{padding:22px 28px}
+  /* topo: a marca e, ao lado, o subtítulo (palavras do Vitor, s.90); no celular o subtítulo desce */
+  header{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 16px;padding-block:22px 0}
   .logo{font-weight:800;font-size:22px;letter-spacing:-.02em}
-  /* "Em casa" = botãozinho, no rodapé (s.81): a home é das obras; a casa vai ganhar login e tem outra linguagem */
-  a.casa{font-size:13.5px;color:var(--mute);border:1px solid #cfcdc6;border-radius:999px;padding:3px 11px;white-space:nowrap}
+  header .sub{margin:0;font-size:16px;line-height:1.4;color:var(--mute)}
+  /* "Em casa" = botãozinho, no rodapé (s.81) */
+  a.casa{font-size:13.5px;color:var(--mute);border:1px solid var(--linha);border-radius:999px;padding:3px 11px;white-space:nowrap}
   a.casa:hover{color:var(--ink);border-color:var(--ink)}
 
-  /* home: portas */
-  .portas{display:grid;gap:14px;padding:0 14px 14px}
-  .porta{position:relative;display:block;border-radius:6px;overflow:hidden;min-height:62vh;color:#fff;background:#111}
-  .porta img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s ease}
-  a.porta:hover img{transform:scale(1.03)}
-  .porta::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.6));pointer-events:none}
-  .porta .t{position:absolute;left:26px;right:26px;bottom:22px;z-index:1;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;text-shadow:0 1px 18px rgba(0,0,0,.35)}
-  .porta h2{margin:0;font-weight:700;font-size:clamp(44px,8vw,120px);line-height:.9;letter-spacing:-.035em;font-variation-settings:"opsz" 96}
-  .porta .k{font-size:15px;max-width:36ch}
-  .porta .n{position:absolute;top:18px;left:26px;z-index:1;font-size:14px;letter-spacing:.02em;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
-  .dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .dois .porta{min-height:46vh}
-  .rot{display:inline-block;margin:12px 24px 0;font-size:15px;color:var(--mute)}
-  .rot:hover{color:var(--ink)}
-  .lista{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:6px 14px 30px}
-  .item{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:center;padding:10px;border-radius:6px;background:var(--card);transition:background .2s}
-  .item:hover{background:#fff}
-  .item img{width:104px;height:78px;object-fit:cover;border-radius:3px;background:#111}
-  .item b{display:block;font-size:17px;font-weight:600;letter-spacing:-.01em}
-  .item span{display:block;color:var(--mute);font-size:13.5px;line-height:1.4}
+  /* abertura: o título e, ao lado, o texto, alinhados pela base (no celular, um embaixo do outro) */
+  .abre{display:grid;grid-template-columns:auto minmax(0,46ch);justify-content:space-between;align-items:end;gap:16px 56px;
+        padding-block:clamp(26px,4vw,56px) clamp(22px,2.6vw,36px)}
+  .abre h1{margin:0;font-weight:700;font-size:clamp(52px,8.5vw,128px);line-height:.88;letter-spacing:-.04em;font-variation-settings:"opsz" 96}
+  .abre h2{margin:0;font-weight:700;font-size:clamp(40px,6vw,84px);line-height:.92;letter-spacing:-.035em;font-variation-settings:"opsz" 96}
+  .lede p{margin:0;font-size:18px;line-height:1.5;color:var(--mute)}
+  .lede .aviso{display:inline-block;margin-top:14px;font-size:14px;background:var(--ink);color:var(--paper);padding:5px 10px;border-radius:3px}
+  .abre.sub{border-top:1px solid var(--linha);padding-top:var(--ritmo)}
 
-  /* páginas internas */
-  .abre{padding:30px 28px 26px;max-width:1100px}
-  .abre h1{margin:0;font-weight:700;font-size:clamp(48px,9vw,128px);line-height:.9;letter-spacing:-.04em;font-variation-settings:"opsz" 96}
-  .abre p{margin:20px 0 0;font-size:19px;line-height:1.45;max-width:58ch;color:var(--mute)}
-  .abre.sub{padding-top:40px;border-top:1px solid #cfcdc6;margin:0 14px;padding-left:14px}
-  .abre.sub h2{margin:0;font-weight:700;font-size:clamp(40px,6vw,84px);line-height:.95;letter-spacing:-.035em;font-variation-settings:"opsz" 96}
-  .abre .aviso{display:inline-block;margin-top:16px;font-size:14px;background:var(--ink);color:var(--paper);padding:5px 10px;border-radius:3px}
-
-  /* obras.html: um banner por obra; só o NOME abre a obra */
-  .obra{margin:0 14px 46px}
-  .banner{position:relative;border-radius:6px;overflow:hidden;min-height:58vh;background:#111;color:#fff}
+  /* a home (s.90, era obras.html): um banner por obra; só o NOME abre a obra */
+  .obra{margin-bottom:var(--ritmo)}
+  .banner{position:relative;border-radius:6px;overflow:hidden;min-height:clamp(340px,60vh,780px);background:#111;color:#fff}
   .banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.62));pointer-events:none}
-  .banner .num{position:absolute;top:18px;left:26px;z-index:1;font-size:14px;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
-  .banner h2{position:absolute;left:26px;right:26px;bottom:20px;z-index:1;margin:0;font-weight:700;font-size:clamp(44px,8vw,116px);line-height:.92;letter-spacing:-.035em;font-variation-settings:"opsz" 96;text-shadow:0 1px 18px rgba(0,0,0,.35)}
+  .banner .num{position:absolute;top:var(--dentro);left:var(--dentro);z-index:1;font-size:14px;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:3px}
+  .banner h2{position:absolute;left:var(--dentro);right:var(--dentro);bottom:calc(var(--dentro) - 4px);z-index:1;margin:0;font-weight:700;font-size:clamp(44px,8vw,116px);line-height:.92;letter-spacing:-.035em;font-variation-settings:"opsz" 96;text-shadow:0 1px 18px rgba(0,0,0,.35)}
   .banner h2 a{border-bottom:3px solid rgba(255,255,255,.55);transition:border-color .2s}
   .banner h2 a:hover{border-bottom-color:#fff}
+  .banner h2 a:focus-visible{outline-color:#fff}
   .banner h2 a::after{content:" ↗";font-size:.42em;vertical-align:.9em;font-weight:500}
-  .texto{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:34px;padding:22px 12px 0}
+  .texto{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);max-width:1240px;padding-top:24px}
+  .texto > div{min-width:0}
   .texto p{margin:0 0 14px;font-size:18px;line-height:1.5}
-  .texto .fio{font-size:16px;line-height:1.5;color:var(--mute);padding-bottom:14px;border-bottom:1px solid #cfcdc6}
+  .texto .fio{font-size:16px;line-height:1.5;color:var(--mute);padding-bottom:14px;border-bottom:1px solid var(--linha)}
   .texto .fio b{display:block;margin-bottom:4px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
-  .texto h3{margin:0 0 10px;font-size:14px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+  .texto h3{margin:0 0 10px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
   .texto ul{margin:0 0 18px;padding-left:18px;font-size:15.5px;line-height:1.5}
   .texto ul li{margin-bottom:6px}
   .ficha{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14.5px;margin:0 0 18px}
@@ -84,8 +74,16 @@
   .ficha dd{margin:0}
   .texto .aberto{font-size:14.5px;color:var(--mute);border-left:2px solid var(--ink);padding-left:12px}
 
-  /* em-casa.html */
-  .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;padding:0 14px 30px}
+  /* em-casa.html: o passe (s.90, pedido do Vitor: um código simples, só pra não ficar totalmente aberto) e os apps */
+  .passe{display:grid;gap:10px;max-width:440px;padding-bottom:var(--ritmo)}
+  .passe label{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+  .passe .campo{display:flex;gap:8px}
+  .passe input{flex:1;min-width:0;font:inherit;font-size:20px;padding:11px 14px;border:1px solid var(--linha);border-radius:6px;background:var(--card);color:var(--ink)}
+  .passe input:focus{border-color:var(--ink)}
+  .passe button{font:inherit;font-size:16px;font-weight:600;padding:11px 20px;border:0;border-radius:6px;background:var(--ink);color:var(--paper);cursor:pointer}
+  .passe p{margin:0;font-size:15px;line-height:1.45;color:var(--mute)}
+  .passe p.erro{color:var(--erro)}
+  .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px;padding-bottom:var(--ritmo)}
   .app{display:block;border-radius:6px;overflow:hidden;background:var(--card);transition:background .2s}
   .app:hover{background:#fff}
   .app img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#ddd}
@@ -93,51 +91,56 @@
   .app b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
   .app span{color:var(--mute);font-size:15px;line-height:1.45}
 
-  /* sobre.html */
-  .sobre{padding:0 28px 30px;max-width:1100px}
-  .bloco{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:22px 0;border-top:1px solid #cfcdc6}
+  /* sobre.html (fora do ar desde a s.90; volta com paginas.sobre.no_ar) */
+  .sobre{max-width:1100px;padding-bottom:var(--ritmo)}
+  .bloco{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:22px 0;border-top:1px solid var(--linha)}
   .bloco h2{margin:0;font-size:15px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
   .bloco p{margin:0 0 14px;font-size:20px;line-height:1.5;max-width:60ch}
 
-  /* rodapé (s.81): o que é o lab, o texto e o botão de Em casa, Quem somos e o contato */
-  footer{margin:18px 28px 0;padding:26px 0 40px;border-top:1px solid #cfcdc6;color:var(--mute);font-size:14px}
-  footer .frase{margin:0;font-size:22px;line-height:1.4;letter-spacing:-.01em;color:var(--ink);max-width:48ch}
-  footer .desc{margin:14px 0 0;font-size:16px;line-height:1.5;max-width:62ch;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
-  /* s.82: os links alinham pela BASE do texto (a seta → vem de outra fonte, mais alta, e desalinhava "Quem somos") */
+  /* rodapé: o texto e o botão de Em casa, os links e o contato */
+  footer{padding-block:26px 40px;border-top:1px solid var(--linha);color:var(--mute);font-size:14px}
+  footer .frase{margin:0 0 14px;font-size:22px;line-height:1.4;letter-spacing:-.01em;color:var(--ink);max-width:48ch}
+  footer .desc{margin:0;font-size:16px;line-height:1.5;max-width:62ch;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
+  /* s.82: os links alinham pela BASE do texto (a seta → vem de outra fonte, mais alta) */
   footer .links{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;margin-top:26px;font-size:15px}
+  footer .links:empty{display:none}
   footer .pe{margin-top:22px}
   footer a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
   footer a.casa{text-decoration:none;color:var(--mute)}
   /* s.82: o Instagram em destaque, com o ícone dele em marca d'água (traço na cor da tinta, quase apagado) */
-  footer a.insta{position:relative;display:block;overflow:hidden;margin-top:24px;padding:20px 22px 22px;border:1px solid #cfcdc6;border-radius:6px;background:var(--card);text-decoration:none}
+  footer a.insta{position:relative;display:block;overflow:hidden;margin-top:24px;padding:20px 22px 22px;border:1px solid var(--linha);border-radius:6px;background:var(--card);text-decoration:none}
   footer a.insta .r{position:relative;display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
   footer a.insta .h{position:relative;display:block;margin-top:4px;font-size:30px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
   footer a.insta svg{position:absolute;right:-14px;top:50%;width:150px;height:150px;transform:translateY(-50%);color:var(--ink);opacity:.08;pointer-events:none}
   footer a.insta:hover{border-color:var(--ink)} footer a.insta:hover .h{text-decoration:underline;text-underline-offset:5px}
 
   @media (max-width:760px){
-    header{padding:18px 16px} .rot{margin:10px 16px 0}
-    .portas{padding:0 8px 8px;gap:8px} .dois{grid-template-columns:1fr;gap:8px}
-    /* no celular cada porta é um quadro 4:5 com o planeta inteiro (a capa "-celular" via <picture>) */
-    .porta,.dois .porta,.banner{min-height:calc((100vw - 16px) * 1.25)}
-    .porta picture img,.banner picture img{object-position:50% 40% !important}
-    .porta .t{left:16px;right:16px;bottom:16px} .porta .n,.banner .num{left:16px}
-    .lista,.apps{padding:6px 8px 24px;gap:8px}
-    .abre{padding:20px 16px} .obra{margin:0 8px 36px} .banner h2{left:16px;right:16px}
-    .texto{grid-template-columns:1fr;gap:6px;padding:16px 8px 0}
-    .sobre{padding:0 16px 24px} .bloco{grid-template-columns:1fr;gap:8px} .bloco p{font-size:18px}
-    footer{margin:14px 16px 0;padding:22px 0 32px} footer .frase{font-size:19px}
+    header{padding-top:18px}
+    .abre{grid-template-columns:minmax(0,1fr);gap:14px}
+    .lede p{font-size:17px}
+    /* no celular cada banner é um quadro 4:5 com o planeta inteiro (a capa "-celular" via <picture>) */
+    .banner{min-height:0;aspect-ratio:4/5}
+    .banner picture img{object-position:50% 40% !important}
+    .texto{grid-template-columns:minmax(0,1fr);gap:6px;padding-top:18px}
+    .texto p{font-size:17px}
+    .bloco{grid-template-columns:1fr;gap:8px} .bloco p{font-size:18px}
+    footer{padding-block:22px 32px} footer .frase{font-size:19px}
     footer a.insta{padding:18px 16px 20px} footer a.insta .h{font-size:25px} footer a.insta svg{width:118px;height:118px;right:-12px}
   }
-  @media (prefers-reduced-motion:reduce){ .porta img{transition:none} }
+  @media (prefers-reduced-motion:reduce){ .banner h2 a,.app{transition:none} }
 </style>
 </head>
 <body>
-<header><a class="logo" href="./">Datart GenLab</a></header>
+<header><a class="logo" href="./">Datart GenLab</a><p class="sub">Minha curiosidade transformada em trabalhos interativos.</p></header>
 
 <main>
-<section class="abre"><h1>Em casa</h1><p>O mesmo jeito de fazer, levado para dentro de casa: jogos de estudo, um fliperama e uma cozinha da família, feitos sob medida e sem anúncio. O progresso fica salvo no aparelho de quem joga; só o placar do Arcade é compartilhado entre os jogadores.</p><span class="aviso">Em breve com login.</span></section>
-<div class="apps">
+<section class="abre"><h1>Em casa</h1><div class="lede"><p>O mesmo jeito de fazer, levado para dentro de casa: jogos de estudo, um fliperama e uma cozinha da família, feitos sob medida e sem anúncio. O progresso fica salvo no aparelho de quem joga; só o placar do Arcade é compartilhado entre os jogadores.</p></div></section>
+<form class="passe" id="passe">
+  <label for="codigo">Código de acesso</label>
+  <div class="campo"><input id="codigo" name="codigo" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" required /><button type="submit">Entrar</button></div>
+  <p id="passe-msg">Peça o código pelo Instagram @datartgenlab.</p>
+</form>
+<div class="apps" id="apps" hidden>
   <a class="app" href="jogos-do-benjamin/spelling/"><img src="capas/app-spelling.jpg" alt="Figuras das palavras do Spelling Bee" loading="lazy" /><div><b>Spelling Bee</b><span>Treino para a final do Spelling Bee do 3º ano: as 100 palavras da escola com as figuras dos cards, os nomes das letras em inglês e um palco para soletrar em voz alta.</span></div></a>
   <a class="app" href="jogos-do-benjamin/matematica/"><img src="capas/app-matematica.jpg" alt="Tela das missões do dia" loading="lazy" /><div><b>Missões de matemática</b><span>Missões diárias de tabuada, adição, subtração, prova real e multiplicação, com patentes, níveis por tema e um diário dos dias de estudo.</span></div></a>
   <a class="app" href="jogos-do-benjamin/"><img src="capas/app-arcade.jpg" alt="Abertura do Arcade do Pinguim" loading="lazy" /><div><b>Arcade do Pinguim</b><span>Um fliperama da família com 13 jogos — bandeiras, capitais, charadas, cobrinha, labirinto, campo minado, pênalti e outros —, prêmio diário e placar entre os jogadores. Entra-se com apelido e senha de brincadeira.</span></div></a>
@@ -145,15 +148,32 @@
   <a class="app" href="jogos-do-pinguim/"><img src="capas/app-colonia.jpg" alt="A colônia de pinguins no gelo" loading="lazy" /><div><b>Jogos do Pinguim</b><span>Dois jogos de navegador: a Ilha do Pinguim, uma ilha 3D que muda a cada partida, e a Colônia, onde os pinguins pescam e constroem ninhos.</span></div></a>
   <a class="app" href="brigada-da-familia/"><img src="capas/app-brigada.jpg" alt="Receitas por refeição e por nível" loading="lazy" /><div><b>Vamos Cozinhar</b><span>Para a família aprender a cozinhar junta, com o celular na bancada: receitas por refeição e por nível, do que se faz sem fogo e sem faca até o primeiro prato de fogão, com o adulto no fogo.</span></div></a>
 </div>
+<script>
+(function () {
+  var H = "030532649100383c3f7c1199410de0e3cb262b37a321d2408615481c2e49d9f5", K = "genlab-casa", f = document.getElementById("passe"), a = document.getElementById("apps"), m = document.getElementById("passe-msg");
+  function abrir() { f.hidden = true; a.hidden = false; }
+  try { if (localStorage.getItem(K) === H) abrir(); } catch (x) {}
+  f.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var v = new TextEncoder().encode(document.getElementById("codigo").value.trim().toLowerCase());
+    crypto.subtle.digest("SHA-256", v).then(function (b) {
+      var h = Array.prototype.map.call(new Uint8Array(b), function (x) { return ("0" + x.toString(16)).slice(-2); }).join("");
+      if (h !== H) { m.textContent = "Código errado. Confira com quem te passou e tente de novo."; m.className = "erro"; return; }
+      try { localStorage.setItem(K, H); } catch (x) {}
+      abrir();
+    });
+  });
+})();
+</script>
 </main>
 
 <footer>
-  <p class="frase">O Datart GenLab é um laboratório onde dados públicos reais — climáticos, geográficos, ambientais, sociais — são transformados em arte.</p>
-  <p class="desc"><span>Dado público vira obra navegável. E o mesmo jeito de fazer, levado para dentro de casa.</span><a class="casa" href="em-casa.html">Em casa</a></p>
-  <nav class="links"><a href="sobre.html">Quem somos</a><a href="https://andamento.datartgenlab.com.br/">Monitoramento da nuvem →</a></nav>
+  
+  <p class="desc"><span>O dado público vira obra navegável.<br />Mas o mesmo jeito de fazer, levado para dentro de casa, vira jogo, material de estudo, atividade em família. Me chama no Instagram que eu te passo o código para conhecer:</span><a class="casa" href="em-casa.html">Em casa</a></p>
+  <nav class="links"><a href="https://andamento.datartgenlab.com.br/">Monitoramento da nuvem →</a></nav>
   <a class="insta" href="https://www.instagram.com/datartgenlab/" aria-label="Instagram @datartgenlab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.3"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg><span class="r">Instagram</span><span class="h">@datartgenlab →</span></a>
   <div class="pe"><span>Datart GenLab · 2026</span></div>
 </footer>
-<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-26 19:11 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
+<!-- gerado por cozinha/produtos/galeria/gerar_galeria.py em 2026-10-28 23:41 — não edite à mão: edite catalogo.json/modelo.html e rode o gerador -->
 </body>
 </html>

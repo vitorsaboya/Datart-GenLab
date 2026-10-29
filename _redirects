@@ -1,3 +1,9 @@
 # s.86: obra pesada mora no subdomínio dela (D-PUB-10); a porta da galeria aponta /002-brasa/ e o servidor manda direto, sem página no meio
 /002-brasa https://brasa.datartgenlab.com.br/ 302
 /002-brasa/ https://brasa.datartgenlab.com.br/ 302
+# s.90 (Vitor): a página das obras virou a home e "Quem somos" saiu por enquanto. O navegador leva o #id junto
+# (obras.html#000-laminar -> /#000-laminar), então o "voltar" das obras do Arquivo segue caindo na obra certa. 302: reversível.
+/obras.html / 302
+/obras / 302
+/sobre.html / 302
+/sobre / 302
